@@ -1,0 +1,44 @@
+$(function() {
+
+    //http://1251097942.cdn.myqcloud.com/1251097942/platform/haier-test/static/login.html?hash=/#/buyCard/main&actSid=bbb7d26490c447ea8656f135b7fa03b3
+    //getParam('hash', window.location.href); == /#/buyCard/main
+    //getParam('actSid', window.location.href); == bbb7d26490c447ea8656f135b7fa03b3
+    //
+
+    /**
+     * @DateTime 2017-06-05
+     * @param    {[string]}   attr [要获取链接参数的字符串]
+     * @return   字符串
+     */
+    var getParam = function(attr, str) {
+
+        var str = str || window.location.search;
+        var match = RegExp('[?&]' + attr + '=([^&]*)').exec(str)
+
+        return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+    }
+
+    var appid = 'wx29cd2d8b59f3f707';
+    var href = 'http://192.168.10.68:8080' + getParam('city', window.location.href)+ '?actSid='+getParam('actSid', window.location.href);
+    //http://192.168.10.68:8080/#/buyCard/main?actSid=bbb7d26490c447ea8656f135b7fa03b3
+
+
+    window.location.href = "http://m.duyouyou.com/jfwx/oauth/to_auth?appId=" + appid + "&return_url=" + encodeURIComponent(href);
+
+    //http://1251097942.cdn.myqcloud.com/1251097942/platform/fybk/main.html
+    //?areaId=393&
+    //openid=0e3bbd9240a8419b96dc67fb5af4cfcc&
+    //thridOpenid=o9VejwiSlpuoRhp6xr3d2eg7GGZU&
+    //wyOpenid=oaRhqsxgq7m_NdSofgjNpqq6d9i4&
+    //app_code=224bb0bdb299432db7cc269767c57e72&
+    //nickname=6ZKf6IOc&
+    //sex=1&
+    //province=%E6%B9%96%E5%8C%97&
+    //city=%E6%AD%A6%E6%B1%89&
+    //country=%E4%B8%AD%E5%9B%BD&
+    //icon=http://wx.qlogo.cn/mmopen/0ZQXbXv8NA5zGSLbJPXvCaL3ibc3bicooP2zv9oxD5qqGukL7khJBMnCCOeyZThib4pbjiblg5k5tuq1UDXXkU0y0xXADW4zSAvQ/0&
+    //sign=92563a55f25a3bf0a8a4bf9845b461dc&
+    //timestamp=1496640316326
+    //actSid=bbb7d26490c447ea8656f135b7fa03b3
+
+});

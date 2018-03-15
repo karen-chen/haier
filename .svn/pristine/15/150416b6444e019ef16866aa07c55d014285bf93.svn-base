@@ -1,0 +1,31 @@
+import * as config from '@/lib/config'
+import * as tool   from '@/lib/tools'
+let user = tool.userData
+
+
+export default{
+	    //团购会首页title配置
+    indexTitle(req, cb) {
+            $.ajax({
+                type: "GET",
+                url: config.url + "sys/getBaseConfigByType",
+                dataType: "jsonp",
+                data: {
+                    configType:config.recognize_act_base_config,
+                    actSid: 'bbb7d26490c447ea8656f135b7fa03b3',
+                },
+                success: function(data) {
+
+                    console.log(data);
+                    // if (data.ret != 0 {
+                    //     cb && cb('ajax error');
+                    // }
+
+                }
+            });
+        },
+ //团购会首页自定义模板配置
+        
+}
+
+

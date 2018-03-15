@@ -1,0 +1,185 @@
+import * as config from './config';
+
+
+export let userData = {};
+
+//获取url param
+export const getParam = function(attr) {
+
+  let match = RegExp(`[?&]${attr}=([^&]*)`).exec(window.location.search)
+
+  return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+}
+
+//判断页面是否授权
+export const wxChankeAuthorize = function() {
+
+  if (!getParam('openid')) {
+    // window.location.href = `http://user.weshaketv.com/wss/platformMpOauth?app_code=${ config.appcode }&redirect_url=${ window.location.href }`;
+    // TODO 获取目标页面地址
+    // var backUrl="http://192.168.10.68:8080/#/Cardmain";
+    var backUrl = window.location.href;
+    var loginPage = config.cdnUrl + "/static/login.html?backUrl=" + encodeURIComponent(backUrl);
+    window.location.href = "http://m.duyouyou.com/jfwx/oauth/to_auth?appId=" + config.appid + "&return_url=" + encodeURIComponent(encodeURIComponent(loginPage));
+    //console.log('openid不存在');
+    return false;
+  } else {
+    userData.actSid = getParam("actSid");
+    userData.openid = getParam("openid");
+    userData.nickname = getParam("nickname");
+    userData.sex = getParam("sex");
+    userData.province = getParam("province");
+    userData.city = getParam("city");
+    userData.country = getParam("country");
+    userData.headimgurl = getParam("headimgurl");
+    userData.cardOrderId = getParam("cardOrderId");
+    userData.userLogId = getParam("userLogId");
+    userData.hash = getParam("hash"); //判断页面路由跳转;
+
+    return true;
+  }
+}
+
+export const EnumConfigType = {
+
+  RECOGNIZE: 'recognize_act_base_config',
+  SHAKE: 'shake_act_base_config',
+  DRAW: 'draw_act_base_config'
+
+}
+
+export const ShareInfo = {}
+
+
+export const wxconfig = function(sign) {
+  let WX_API_LIST = [
+    'onMenuShareTimeline', 'onMenuShareAppMessage', 'getLocation',  'previewImage', 'uploadImage', 'openLocation'
+  ];
+  wx.config({
+    debug: true,
+    appId: sign.appId,
+    timestamp: sign.timestamp,
+    nonceStr: sign.nonceStr,
+    signature: sign.signature,
+    jsApiList: WX_API_LIST
+  });
+
+}
+export const getJsSign = function(onSuccess) {
+
+  $.ajax({
+    url: config.signServerUrl + '/sign/get_js_sign',
+    dataType: 'jsonp',
+    data: {
+      appId: config.appid,
+      url: location.href.split("#")[0]
+    },
+    success: function(data) {
+      console.log(data.data);
+      if (data.ret == '0') {
+        onSuccess && onSuccess(data.data)
+
+      } else {
+        alert('获取js-sdk配置失败');
+      }
+    },
+    error: function() {
+      alert('获取js-sdk配置失败');
+    }
+  });
+}
+
+
+export const wxShare = function() {
+  wx.ready(function() {
+    wx.onMenuShareTimeline(config.wxShareData);
+    wx.onMenuShareAppMessage(config.wxShareData);
+    //wx.onMenuShareQQ(shareData);
+    //wx.onMenuShareWeibo(shareData);
+    //wx.onMenuShareQZone(shareData)
+  });
+
+}
+
+export const chooseImage = function(onSuccess){
+  wx.chooseImage({
+    count: 5, // 默认9
+    sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+    sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+    success: function (res) {
+      console.log(res.localIds)
+      localId=res.localIds;//把图片的路径保存在images[localId]中--图片本地的id信息，用于上传图片到微信浏览器时使用
+      her.upNum+=res.localIds.length;
+      wx.uploadImage({
+        localId: localId, // 需要上传的图片的本地ID，由chooseImage接口获得
+        isShowProgressTips: 1, // 默认为1，显示进度提示
+        success: function (res) {
+          //var serverId = res.serverId; // 返回图片的服务器端ID
+          onSuccess && onSuccess(res)
+        }
+      });
+    },
+  });
+}
+
+export const previewImage = function(){
+  wx.previewImage({
+    current: '', // 当前显示图片的http链接
+    urls: [] // 需要预览的图片http链接列表
+  });
+}
+export const uploadImage = function(){
+
+}
+export const getLocalImgData = function(){
+  wx.getLocalImgData({
+    localId: 'localId', // 图片的localID
+    success: function (res) {
+      var localData = res.localData; // localData是图片的base64数据，可以用img标签显示
+    }
+  });
+}
+
+
+
+export function TMap(key) {
+  return new Promise(function(resolve, reject) {
+    window.init = function() {
+      resolve(qq) //注意这里
+    }
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = "http://map.qq.com/api/js?v=2.exp&callback=init&key=" + key;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  })
+}
+
+
+export function formatDate(date, fmt) {
+  if (/(y+)/.test(fmt)) {
+    fmt = fmt.replace(RegExp.$1, (date.getFullYear() + '').substr(4 - RegExp.$1.length));
+  }
+  let o = {
+    'M+': date.getMonth() + 1,
+    'd+': date.getDate(),
+    'h+': date.getHours(),
+    'm+': date.getMinutes(),
+    's+': date.getSeconds()
+  };
+  for (let k in o) {
+    if (new RegExp(`(${k})`).test(fmt)) {
+      let str = o[k] + '';
+      fmt = fmt.replace(RegExp.$1, (RegExp.$1.length === 1) ? str : padLeftZero(str));
+    }
+  }
+  return fmt;
+};
+
+function padLeftZero(str) {
+  return ('00' + str).substr(str.length);
+};
+
+
+
+

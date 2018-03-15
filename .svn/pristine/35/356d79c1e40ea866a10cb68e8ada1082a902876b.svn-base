@@ -1,0 +1,207 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+
+const ShopList = resolve => require(['@/pages/shop-list'], resolve);
+const Surveymian = resolve => require(['@/pages/survey'], resolve);
+const Generating = resolve => require(['@/pages/generating-coupon'], resolve);
+const Process = resolve => require(['@/pages/purchase-process'], resolve);
+const Shakepage = resolve => require(['@/pages/shake'], resolve);
+
+
+const Shop = resolve => require(['@/pages/shop-list/shop'], resolve);
+const Activity = resolve => require(['@/pages/shop-list/activity'], resolve);
+const Seach = resolve => require(['@/pages/shop-list/seach'], resolve);
+const Failure = resolve => require(['@/pages/shop-list/failure'], resolve);
+const Comment = resolve => require(['@/pages/shop-list/comment'], resolve);
+
+const Survey = resolve => require(['@/pages/survey/survey'], resolve);
+const Tips = resolve => require(['@/pages/survey/tips'], resolve);
+
+
+const Code = resolve => require(['@/pages/generating-coupon/code'], resolve);
+const Coupon = resolve => require(['@/pages/generating-coupon/coupon'], resolve);
+const Information = resolve => require(['@/pages/generating-coupon/information'], resolve);
+const Uncoupon = resolve => require(['@/pages/generating-coupon/uncoupon'], resolve);
+
+const Flow = resolve => require(['@/pages/purchase-process/flow'], resolve);
+const Purchasing = resolve => require(['@/pages/purchase-process/purchasing'], resolve);
+
+const Count = resolve => require(['@/pages/shake/count'], resolve);
+const Countdown = resolve => require(['@/pages/shake/countdown'], resolve);
+const Shake = resolve => require(['@/pages/shake/shake'], resolve);
+const Shakescreen = resolve => require(['@/pages/shake/shakescreen'], resolve);
+
+const Draw = resolve => require(['@/pages/draw/draw'], resolve);
+
+
+
+
+
+const BuyCard = resolve => require(['@/pages/buyCard'], resolve);
+
+const Quan = resolve => require(['@/pages/buyCard/quan'], resolve);
+const Main = resolve => require(['@/pages/buyCard/main'], resolve);
+const Buy = resolve => require(['@/pages/buyCard/buy'], resolve);
+const Null = resolve => require(['@/pages/buyCard/null'], resolve);
+const Buysuccess = resolve => require(['@/pages/buyCard/buysuccess'], resolve);
+const Submit = resolve => require(['@/pages/buyCard/submit'], resolve);
+const Membershipcard = resolve => require(['@/pages/buyCard/membershipcard'], resolve);
+
+
+
+
+const ConfessTicket = resolve => require(['@/pages/confessTicket'], resolve);
+
+
+const Quanlist = resolve => require(['@/pages/confessTicket/quanlist'], resolve);
+const Offsetquan = resolve => require(['@/pages/confessTicket/offsetquan'], resolve);
+const Quansuccess = resolve => require(['@/pages/confessTicket/quansuccess'], resolve);
+const Verificationcode = resolve => require(['@/pages/confessTicket/verificationcode'], resolve);
+
+
+
+const PrizeTicket = resolve => require(['@/pages/prizeTicket'], resolve);
+
+
+const Prizelist = resolve => require(['@/pages/prizeTicket/prizelist'], resolve);
+const Prizeoffset = resolve => require(['@/pages/prizeTicket/prizeoffset'], resolve);
+const Prizesuccess = resolve => require(['@/pages/prizeTicket/prizesuccess'], resolve);
+const Prizecode = resolve => require(['@/pages/prizeTicket/prizecode'], resolve);
+
+
+
+
+
+const VenueLive = resolve => require(['@/pages/venueLive'], resolve);
+
+const Livemain = resolve => require(['@/pages/venueLive/livemain'], resolve);
+const Livenull = resolve => require(['@/pages/venueLive/livenull'], resolve);
+const Livefaile = resolve => require(['@/pages/venueLive/livefaile'], resolve);
+
+
+
+
+const VenueNavigation = resolve => require(['@/pages/venueNavigation'], resolve);
+
+const Navigationstrat = resolve => require(['@/pages/venueNavigation/navigationstrat'], resolve);
+const Navigationnull = resolve => require(['@/pages/venueNavigation/navigationnull'], resolve);
+const Navigationfaile = resolve => require(['@/pages/venueNavigation/navigationfaile'], resolve);
+
+
+
+Vue.use(Router);
+
+export default new Router({
+
+  routes: [{
+    path: '/buyCard',
+    name: 'BuyCard',
+    component: BuyCard,
+    children: [
+      { path: 'quan', component: Quan },
+      { path: 'main', component: Main },
+      { path: 'buy', component: Buy },
+      { path: 'null', component: Null },
+      { path: 'buysuccess', component: Buysuccess },
+      { path: 'submit', component: Submit },
+      { path: 'membershipcard', component: Membershipcard },
+    ]
+  }, {
+    path: '/confessTicket',
+    name: 'ConfessTicket',
+    component: ConfessTicket,
+    children: [
+      { path: 'quanlist', component: Quanlist },
+      { path: 'offsetquan', component: Offsetquan },
+      { path: 'quansuccess', component: Quansuccess },
+      { path: 'verificationcode', component: Verificationcode },
+    ]
+  }, {
+    path: '/prizeTicket',
+    name: 'PrizeTicket',
+    component: PrizeTicket,
+    children: [
+      { path: 'prizelist', component: Prizelist },
+      { path: 'prizesuccess', component: Prizesuccess },
+      { path: 'prizeoffset', component: Prizeoffset },
+      { path: 'prizecode', component: Prizecode },
+    ]
+  }, {
+    path: '/venueLive',
+    name: 'VenueLive',
+    component: VenueLive,
+    children: [
+      { path: 'livemain', component: Livemain },
+      { path: 'livenull', component: Livenull },
+      { path: 'livefaile', component: Livefaile },
+    ]
+  }, {
+    path: '/venueNavigation',
+    name: 'VenueNavigation',
+    component: VenueNavigation,
+    children: [
+      { path: 'navigationstrat', component: Navigationstrat },
+      { path: 'navigationnull', component: Navigationnull },
+      { path: 'navigationfaile', component: Navigationfaile },
+    ]
+  },
+
+  {
+    path: '/shop-list',
+    name: 'ShopList',
+    component: ShopList,
+    children: [
+      {path: 'shop', component: Shop},
+      {path: 'activity', component: Activity},
+      {path: 'seach', component: Seach},
+      {path: 'failure', component: Failure},
+      {path: 'comment', component: Comment}
+    ]
+  },
+  {
+    path: '/survey',
+    name: 'Surveymian',
+    component: Surveymian,
+    children: [
+      {path: 'survey', component: Survey},
+      {path: 'tips', component: Tips}
+    ]
+  },
+  {
+    path: '/generating-coupon',
+    name: 'Generating',
+    component: Generating,
+    children: [
+      {path: 'code', component: Code},
+      {path: 'coupon', component: Coupon},
+      {path: 'information', component: Information},
+      {path: 'uncoupon', component: Uncoupon}
+    ]
+  },
+  {
+    path: '/purchase-process',
+    name: 'Process',
+    component: Process,
+    children: [
+      {path: 'flow', component: Flow},
+      {path: 'purchasing', component: Purchasing}
+    ]
+  },
+  {
+    path: '/shake',
+    name: 'Shakepage',
+    component: Shakepage,
+    children: [
+      {path: 'shake', component: Shake},
+      {path: 'countdown', component: Countdown},
+      {path: 'count', component: Count},
+      {path: 'shakescreen', component: Shakescreen}
+    ]
+  },
+    {
+    path: '/draw',
+    name: 'Draw',
+    component: Draw
+  }
+]
+});

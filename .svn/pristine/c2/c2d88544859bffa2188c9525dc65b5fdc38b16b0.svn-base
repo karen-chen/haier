@@ -1,0 +1,28 @@
+export const locationUrl = 'http://app38.s.weshaketv.com:9017/fybk3/' 
+export const url ='http://192.168.10.213:9028/' 
+
+
+export const configType='recognize_act_base_config'
+
+// export const url = process.env.NODE_ENV == 'production' ? 'http://app38.s.weshaketv.com:9017/fybk3/' : 'http://192.168.10.47:20000/reader/'
+// export const locationUrl = process.env.NODE_ENV == 'production' ? 'http://app38.s.weshaketv.com:9017/fybk3/' : 'http://192.168.10.47:20000/reader/'
+
+
+export const appid = 'wxa50b99f05f597b80';
+export const appcode = '224bb0bdb299432db7cc269767c57e72';
+
+//摇电视连接
+export const shakeTvUrl = '';
+
+//微信分享
+export const wxShareData = {
+    title: "生活不只看头条，还有更多内容非阅不可",
+    link: "http://1251097942.cdn.myqcloud.com/1251097942/platform/fybk/index.html",
+    imgUrl: "http://1251097942.cdn.myqcloud.com/1251097942/platform/fybk/static/img/must_logo.png",
+    desc: "来自非阅不可"
+};
+
+//延迟加载图片
+export const lazyImgUrl = "http://1251097942.cdn.myqcloud.com/1251097942/platform/fybk/static/img/loading_pic.jpg";
+
+

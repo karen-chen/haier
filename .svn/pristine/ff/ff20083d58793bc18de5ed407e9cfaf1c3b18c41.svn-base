@@ -1,0 +1,102 @@
+.binding_body{
+  background-color: #f2f2f2;
+  @include p_t(40);
+  min-height: 100%;
+  height: auto;
+  .binding_verification{
+    @include m_b(20);
+    background-color: #fff;
+    @include p(45,32);
+    text-align: center;
+    .code_btn{
+      @include size_color(24,#f66051);
+      @include p(15,17);
+      @include border(2,#f66051);
+      @include radius(10);
+      float: right;
+    }
+    h2{
+      clear: both;
+      @include p(43,0);
+      @include size_color(36,#666);
+      font-weight: bold;
+    }
+    .code_box{
+      @include ele-box(460,167);
+      background-color: #f3f3f3;
+      @include lin_hei(167);
+      @include size_color(100,#f66051);
+      font-weight: bold;
+      display: inline-block;
+    }
+    p{
+      @include p_t(30);
+      &.tips1{
+        @include size_color(26,#b9b9b9);
+        span{
+          @include size_color(26,#f66051);
+          @include p(0,5);
+        }
+      }
+      &.tips2{
+        @include size_color(26,#b31404);
+      }
+      &.tips3{
+        @include size_color(26,#517cf6);
+      }
+    }
+  }
+  .remark{
+    background-color: #fff;
+    @include p(0,32);
+    h2{
+      @include size_color(30,#666);
+      @include p(35,0);
+      @include border_b(2,rgba(0,0,0,.1));
+    }
+    .textarea_box{
+      @include p_t(35);
+      @include p_b(25);
+      textarea{
+        @include h(195);
+        font-size: pTR(30);
+        width:100%;
+        border: none;
+      }
+      span{
+        display: inline-block;
+        text-align: right;
+        width: 100%;
+        @include size_color(30,#b9b9b9);
+        b{font-weight: normal;}
+      }
+    }
+    .textarea_fonts{
+      @include h(285);
+      @include p_t(35);
+      @include p_b(25);
+      @include size_color(30,#666);
+    }
+  }
+  .submit_btn{
+    @include m(60,32);
+    background-color: #f66051;
+    @include radius(10);
+    @include h(94);
+    @include lin_hei(94);
+    @include size_color(36,#fff);
+    text-align: center;
+  }
+  .popTips{
+    background-color: rgba(0,0,0,.6);
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    @include size_color(24,#fff);
+    @include p(16,30);
+    @include radius(10);
+  }
+}
+input::-webkit-input-placeholder,textarea::-webkit-input-placeholder { color:#adadad;font-family: "Helvetica Neue", Helvetica, Arial, sans-serif }
+input:focus::-webkit-input-placeholder,textarea:focus::-webkit-input-placeholder { color:#666; }

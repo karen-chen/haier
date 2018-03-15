@@ -1,0 +1,248 @@
+import Vue from 'vue'
+import Router from 'vue-router'
+
+
+//陈红
+const ShopList = resolve => require(['@/pages/shop-list'], resolve);
+const Surveymian = resolve => require(['@/pages/survey'], resolve);
+const Generating = resolve => require(['@/pages/generating-coupon'], resolve);
+const Shakepage = resolve => require(['@/pages/shake'], resolve);
+const Salesmen = resolve => require(['@/pages/salesmen'], resolve);
+
+
+const Shop = resolve => require(['@/pages/shop-list/shop'], resolve);
+const Activity = resolve => require(['@/pages/shop-list/activity'], resolve);
+const Comment = resolve => require(['@/pages/shop-list/comment'], resolve);
+
+const Survey = resolve => require(['@/pages/survey/survey'], resolve);
+const Tips = resolve => require(['@/pages/survey/tips'], resolve);
+
+
+const Code = resolve => require(['@/pages/generating-coupon/code'], resolve);
+const Coupon = resolve => require(['@/pages/generating-coupon/coupon'], resolve);
+const Information = resolve => require(['@/pages/generating-coupon/information'], resolve);
+const Uncoupon = resolve => require(['@/pages/generating-coupon/uncoupon'], resolve);
+
+
+const CountMobile = resolve => require(['@/pages/shake/countmobile'], resolve);
+
+const Draw = resolve => require(['@/pages/draw/draw'], resolve);
+const Flow = resolve => require(['@/pages/purchase-process/flow'], resolve);
+const Purchasepage = resolve => require(['@/pages/purchase-process/inputtingcode'], resolve);
+const Loginpage = resolve => require(['@/pages/salesmen/loginadmin'], resolve);
+const Binding = resolve => require(['@/pages/salesmen/binding'], resolve);
+
+
+
+//陈紫菱
+const BuyCard = resolve => require(['@/pages/buyCard'], resolve);
+
+const Shopdetail = resolve => require(['@/pages/buyCard/shopdetail'], resolve);
+const Quan = resolve => require(['@/pages/buyCard/quan'], resolve);
+const Main = resolve => require(['@/pages/buyCard/main'], resolve);
+const Buy = resolve => require(['@/pages/buyCard/buy'], resolve);
+const Null = resolve => require(['@/pages/buyCard/null'], resolve);
+const Buysuccess = resolve => require(['@/pages/buyCard/buysuccess'], resolve);
+const Submit = resolve => require(['@/pages/buyCard/submit'], resolve);
+const Membershipcard = resolve => require(['@/pages/buyCard/membershipcard'], resolve);
+
+
+//实现懒加载 加载到相应组件 加载相应的js
+const ConfessTicket = resolve => require(['@/pages/confessTicket'], resolve);
+
+const Refundsuccess = resolve => require(['@/pages/confessTicket/refundsuccess'], resolve);
+const Quanlist = resolve => require(['@/pages/confessTicket/quanlist'], resolve);
+const Offsetquan = resolve => require(['@/pages/confessTicket/offsetquan'], resolve);
+const Quansuccess = resolve => require(['@/pages/confessTicket/quansuccess'], resolve);
+const Verificationcode = resolve => require(['@/pages/confessTicket/verificationcode'], resolve);
+const Fullsuccess = resolve => require(['@/pages/confessTicket/fullsuccess'], resolve);
+const Usepage = resolve => require(['@/pages/confessTicket/usepage'], resolve);
+const Fullok = resolve => require(['@/pages/confessTicket/fullok'], resolve);
+
+const PrizeTicket = resolve => require(['@/pages/prizeTicket'], resolve);
+const Prizelist = resolve => require(['@/pages/prizeTicket/prizelist'], resolve);
+const Prizeoffset = resolve => require(['@/pages/prizeTicket/prizeoffset'], resolve);
+const Prizesuccess = resolve => require(['@/pages/prizeTicket/prizesuccess'], resolve);
+const Prizecode = resolve => require(['@/pages/prizeTicket/prizecode'], resolve);
+const Prizema = resolve => require(['@/pages/prizeTicket/prizema'], resolve);
+
+
+const VenueLive = resolve => require(['@/pages/venueLive'], resolve);
+const Livemain = resolve => require(['@/pages/venueLive/livemain'], resolve);
+const Livenull = resolve => require(['@/pages/venueLive/livenull'], resolve);
+const Livefaile = resolve => require(['@/pages/venueLive/livefaile'], resolve);
+
+
+const VenueNavigation = resolve => require(['@/pages/venueNavigation'], resolve);
+
+const Navigationstrat = resolve => require(['@/pages/venueNavigation/navigationstrat'], resolve);
+const Navigationnull = resolve => require(['@/pages/venueNavigation/navigationnull'], resolve);
+const Navigationfaile = resolve => require(['@/pages/venueNavigation/navigationfaile'], resolve);
+
+const Test = resolve => require(["@/pages/buyCard/test"], resolve);
+
+
+
+const Scoring = resolve => require(['@/pages/scoring'], resolve);
+const Commentaries = resolve => require(['@/pages/scoring/commentaries'], resolve);
+const Score_complete = resolve => require(['@/pages/scoring/score_complete'], resolve);
+
+
+Vue.use(Router);
+
+export default new Router({
+  routes: [{
+      path: "/buyCard",
+      name: "BuyCard",
+      component: BuyCard,
+      children: [
+
+        { path: "shopdetail", name: "Shopdetail", component: Shopdetail },
+        { path: "test", name: "Test", component: Test },
+        { path: "quan", name: "Quan", component: Quan },
+        { path: "main", name: "Main", component: Main },
+        { path: "buy", name: "Buy", component: Buy },
+        { path: "null", name: "Null", component: Null },
+        { path: "buysuccess", name: "Buysuccess", component: Buysuccess },
+        { path: "submit", name: "Submit", component: Submit },
+        {
+          path: "membershipcard",
+          name: "Membershipcard",
+          component: Membershipcard
+        }
+      ]
+    },
+    {
+      path: "/confessTicket",
+      name: "ConfessTicket",
+      component: ConfessTicket,
+      children: [
+        { path: "refundsuccess", name: "Refundsuccess", component: Refundsuccess },
+        { path: "usepage", name: "Usepage", component: Usepage },
+        { path: "fullsuccess", name: "Fullsuccess", component: Fullsuccess },
+        { path: "quanlist", name: "Quanlist", component: Quanlist },
+        { path: "offsetquan", name: "Offsetquan", component: Offsetquan },
+        { path: "quansuccess", name: "Quansuccess", component: Quansuccess },
+        { path: "verificationcode", name: "Verificationcode", component: Verificationcode },
+
+        { path: "fullok", name: "Fullok", component: Fullok },
+      ]
+    },
+    {
+      path: "/scoring",
+      name: "Scoring",
+      component: Scoring,
+      children: [
+        { path: "commentaries", name: "Commentaries", component: Commentaries },
+        { path: "score_complete", name: "Score_complete", component: Score_complete }
+      ]
+    },
+    {
+      path: "/prizeTicket",
+      name: "PrizeTicket",
+      component: PrizeTicket,
+      children: [
+
+        { path: "prizema", name: "Prizema", component: Prizema },
+        { path: "prizelist", name: "Prizelist", component: Prizelist },
+        { path: "prizesuccess", name: "Prizesuccess", component: Prizesuccess },
+        { path: "prizeoffset", name: "Prizeoffset", component: Prizeoffset },
+        { path: "prizecode", name: "Prizecode", component: Prizecode }
+      ]
+    },
+    {
+      path: "/venueLive",
+      name: "VenueLive",
+      component: VenueLive,
+      children: [
+        { path: "livemain", name: "Livemain", component: Livemain },
+        { path: "livenull", name: "Livenull", component: Livenull },
+        { path: "livefaile", name: "Livefaile", component: Livefaile }
+      ]
+    },
+    {
+      path: "/venueNavigation",
+      name: "VenueNavigation",
+      component: VenueNavigation,
+      children: [{
+          path: "navigationstrat",
+          name: "Navigationstrat",
+          component: Navigationstrat
+        },
+        {
+          path: "navigationnull",
+          name: "Navigationnull",
+          component: Navigationnull
+        },
+        {
+          path: "navigationfaile",
+          name: "Navigationfaile",
+          component: Navigationfaile
+        }
+      ]
+    },
+
+    {
+      path: "/shop-list",
+      name: "ShopList",
+      component: ShopList,
+      children: [
+        { path: "shop", name: "Shop", component: Shop },
+        { path: "activity", name: "Activity", component: Activity },
+        { path: "comment", name: "Comment", component: Comment }
+      ]
+    },
+    {
+      path: "/survey",
+      name: "Surveymian",
+      component: Surveymian,
+      children: [
+        { path: "survey", name: "Survey", component: Survey },
+        { path: "tips", name: "Tips", component: Tips }
+      ]
+    },
+    {
+      path: "/generating-coupon",
+      name: "Generating",
+      component: Generating,
+      children: [
+        { path: "code", name: "Code", component: Code },
+        { path: "coupon", name: "Coupon", component: Coupon },
+        { path: "information", name: "Information", component: Information },
+        { path: "uncoupon", name: "Uncoupon", component: Uncoupon }
+      ]
+    },
+    {
+      path: "/shake",
+      name: "Countdown",
+      component: Shakepage,
+      children: [
+        { path: "countmobile", name: "CountMobile", component: CountMobile }
+      ]
+    },
+    {
+      path: "/drawpage",
+      name: "Draw",
+      component: Draw
+    },
+    {
+      path: "/flowpage",
+      name: "Flow",
+      component: Flow
+    },
+    {
+      path: "/purchasepage",
+      name: "Purchasepage",
+      component: Purchasepage
+    },
+    {
+      path: "/salesmen",
+      name: "Salesmen",
+      component: Salesmen,
+      children: [
+        { path: "loginadmin", name: "Loginpage", component: Loginpage },
+        { path: "binding", name: "Binding", component: Binding },
+      ]
+    }
+  ]
+});

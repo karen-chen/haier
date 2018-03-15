@@ -1,0 +1,290 @@
+<template>
+  <div class="binding_body">
+    <div class="binding_verification">
+      <div class="code_btn" @click="codeBtn">生成新验证码</div>
+      <h2>购券动态验证码</h2>
+      <div class="code_box">{{codeList.saleCode}}</div>
+      <div class="tips_box">
+        <p class="tips1" v-show="tips1">本验证码将在<span>{{time}}</span>秒后失效</p>
+        <p class="tips2" v-show="tips2">该验证码已失效</p>
+        <p class="tips3" v-show="tips3">该验证码已使用</p>
+      </div>
+    </div>
+    <div class="remark">
+      <h2>备注信息</h2>
+      <div class="textarea_box" v-show="textarea">
+        <textarea placeholder="请输入备注信息" v-model="textareaFonts" @keyup="textareaChange"></textarea>
+        <span><b>{{num}}</b>/100</span>
+      </div>
+      <div class="textarea_fonts" v-show="remark_fonts">{{remark}}</div>
+    </div>
+    <div class="submit_btn" @click="submitBtn" v-show="showBtn">提交</div>
+    <div class="popTips" v-show="showTips">{{msg}}</div>
+  </div>
+</template>
+<script>
+  import * as config from '@/lib/config'
+  import {
+    formatDate
+  } from '@/lib/tools';
+  export default({
+    data(){
+      return{
+        tips1:true,
+        tips2:false,
+        tips3:false,
+        textarea:true,
+        remark_fonts:false,
+        remark:"",
+        userId:'',
+        token:'',
+        codeList:'',
+        time:'',
+        showTips:false,
+        textareaFonts:'',
+        msg:'',
+        num:0,
+        sid:'',
+        showBtn:true,
+        setId:'',
+        timeId:''
+      }
+    },
+    created(){
+      var _this = this
+      this.userId = localStorage.getItem('adminuserId')
+      this.token = localStorage.getItem('admintoken')
+      this.getLastCode()
+
+        _this.setId = setInterval(function(){
+          var _this = this
+          $.ajax({
+            type: "GET",
+            url: config.locationUrl + "/code/getLastCode",
+            dataType: "jsonp",
+            data: {
+              token: _this.token,
+              userId: _this.userId
+            },
+            success: function (data) {
+              if (data.ret == 0) {
+                if(data.data.flagStatus == '1'){
+                  return
+                }
+                if(data.data.flagStatus == '2'){
+                  _this.tips1 = false;
+                  _this.tips2 = false;
+                  _this.tips3 = true;
+                  return
+                }
+              }
+            },
+            error(res) {
+              console.log('/code/getLastCode', 'fail');
+            }
+          });
+       },8000)
+      console.log(1111,_this.setId)
+    },
+    methods:{
+      codeBtn(){
+        this.tips1 = true;
+        this.tips2 = false;
+        this.tips3 = false;
+        console.log(888888,this.timeId)
+        window.clearInterval(this.timeId)
+        /*window.clearInterval(this.setId)*/
+        this.createCode()
+      /*  this.getLastCode()*/
+      },
+      textareaChange(){
+        this.num = this.textareaFonts.length
+      },
+      getLastCode(){
+        var _this = this
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/code/getLastCode",
+          dataType: "jsonp",
+          data: {
+            token: _this.token,
+            userId: _this.userId
+          },
+          success: function (data) {
+            if (data.ret == 0) {
+              _this.codeList = data.data
+              _this.sid = data.data.sid
+              localStorage.setItem('codeSid', _this.sid)
+              console.log(data.currentTime)
+              _this.time = formatDate(new Date(data.data.endDate),'yyyyMMddhhmmss') - formatDate(new Date(data.currentTime),'yyyyMMddhhmmss')
+              _this.timeId = setInterval(function(){
+
+                if(_this.time == '0' || _this.time == 0){
+                  _this.tips1 = false;
+                  _this.tips2 = true
+                  console.log(5555,_this.setId)
+                  console.log(89898989,_this.timeId)
+                  window.clearInterval(_this.timeId)
+//                  window.clearInterval(_this.setId)
+                  return
+                }else {
+                  _this.time = _this.time - 1
+                }
+              },1000)
+              if(data.currentTime > data.data.endDate){
+                _this.tips1 = false;
+                _this.tips2 = true
+                console.log(6666,_this.setId)
+                window.clearInterval(_this.timeId)
+//                window.clearInterval(_this.setId)
+                return
+              }
+              if(data.data.flagStatus == '2'){
+                _this.tips1 = false;
+                _this.tips2 = false;
+                _this.tips3 = true;
+              }
+              if(data.data.remark == null || data.data.remark == ''){
+                _this.textarea = true;
+                _this.remark_fonts = false;
+              }else {
+                _this.textarea = false;
+                _this.remark_fonts = true;
+                _this.remark = data.data.remark
+                _this.showBtn = false
+              }
+
+            }else if(data.ret == 403){
+              _this.showTips = true;
+              _this.msg = '系统超时，请重新登录';
+              setTimeout(function(){
+                _this.showTips = false;
+              },1000);
+              _this.$router.push({
+                name: 'Loginpage'
+              })
+            }else {
+              _this.createCode()
+            }
+          },
+          error(res) {
+            console.log('/code/getLastCode', 'fail');
+          }
+        });
+      },
+      createCode(){
+        var _this = this
+        window.clearInterval(this.timeId)
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/code/createCode",
+          dataType: "jsonp",
+          data: {
+            token: _this.token,
+            userId: _this.userId
+          },
+          success: function (data) {
+            if (data.ret == 0) {
+              _this.codeList = data.data
+              _this.sid = data.data.sid
+              localStorage.setItem('codeSid', _this.sid)
+              _this.time = formatDate(new Date(data.data.endDate),'yyyyMMddhhmmss') - formatDate(new Date(data.currentTime),'yyyyMMddhhmmss')
+              console.log(_this.time)
+              _this.timeId = setInterval(function(){
+
+                if(_this.time == '0' || _this.time == 0){
+                  _this.tips1 = false;
+                  _this.tips2 = true
+                  console.log(5555,_this.setId)
+                  console.log(89898989,timeId)
+                  window.clearInterval(_this.timeId)
+                 /* window.clearInterval(_this.setId)*/
+                  return
+                }else {
+                  _this.time = _this.time - 1
+                }
+              },1000)
+              if(data.currentTime > data.data.endDate){
+                _this.tips1 = false;
+                _this.tips2 = true
+                console.log(6666,_this.setId)
+                window.clearInterval(_this.timeId)
+           /*     window.clearInterval(_this.setId)*/
+                return
+              }
+              if(data.data.flagStatus == '2'){
+                _this.tips1 = false;
+                _this.tips2 = false;
+                _this.tips3 = true;
+              }
+            }else if(data.ret == 403){
+              _this.showTips = true;
+              _this.msg = '系统超时，请重新登录';
+              setTimeout(function(){
+                _this.showTips = false;
+              },1000);
+              _this.$router.push({
+                name: 'Loginpage'
+              })
+            }else {
+              console.log('/code/createCode', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/code/createCode', 'fail');
+          }
+        });
+      },
+      submitBtn(){
+        var _this = this
+        _this.sid = localStorage.getItem('codeSid')
+        if(_this.textareaFonts == ''){
+          _this.showTips = true;
+          _this.msg = '请填写备注';
+          setTimeout(function(){
+            _this.showTips = false;
+          },1000);
+        }
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/code/saveRemark",
+          dataType: "jsonp",
+          data: {
+            token: _this.token,
+            sid: _this.sid,
+            remark: _this.textareaFonts,
+            userId: _this.userId
+          },
+          success: function (data) {
+            if (data.ret == 0) {
+              _this.showTips = true;
+              _this.msg = '提交成功';
+              setTimeout(function(){
+                _this.showTips = false;
+              },1000);
+            }else if(data.ret == 403){
+              _this.showTips = true;
+              _this.msg = '系统超时，请重新登录';
+              setTimeout(function(){
+                _this.showTips = false;
+              },1000);
+                _this.$router.push({
+                  name: 'Loginpage'
+                })
+
+            }else {
+              console.log('/code/saveRemark', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/code/saveRemark', 'fail');
+          }
+        });
+      }
+    }
+  })
+</script>
+<style lang="scss" scoped>
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_binding.scss';
+</style>

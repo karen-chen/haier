@@ -1,0 +1,343 @@
+import * as config from './config';
+
+
+export let userData = {};
+
+//获取url param
+export const getParam = function(attr) {
+
+    let match = RegExp(`[?&]${attr}=([^&]*)`).exec(window.location.search)
+
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+}
+
+//判断页面是否授权
+export const wxChankeAuthorize = function() {
+
+    if (!getParam('openid') && !getParam("areaId")) {
+        //window.location.href = `http://user.weshaketv.com/wss/platformMpOauth?app_code=${ config.appcode }&redirect_url=${ window.location.href }`;
+        console.log('openid不存在');
+        return;
+    } else {
+        userData.areaId = getParam("areaId");
+        userData.openid = getParam("openid");
+        userData.thridOpenid = getParam("thridOpenid");
+        userData.wyOpenid = getParam("wyOpenid");
+        userData.app_code = getParam("app_code");
+        userData.nickname = getParam("nickname");
+        userData.sex = getParam("sex");
+        userData.province = getParam("province");
+        userData.city = getParam("city");
+        userData.country = getParam("country");
+        userData.icon = getParam("icon");
+        userData.timestamp = getParam("timestamp");
+        userData.sign = getParam("sign");
+
+        //console.log(storageLocal)
+
+        for (let i in userData) {
+            //console.log(userData[i]);
+            window.localStorage.setItem(i, userData[i]);
+        }
+
+        // alert(123)
+        // localStorage.clear();
+        // cookie.remove('latitude');
+        // cookie.remove('longitude');
+
+    }
+}
+
+const daysTime = 10;
+
+export const wxlocationFn = function(cb, cb1) {
+    wx.getLocation({
+        type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+        success: function(res) {
+            var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+            var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+            var speed = res.speed; // 速度，以米/每秒计
+            var accuracy = res.accuracy; // 位置精度
+
+            cookie.set('latitude', latitude, daysTime);
+            cookie.set('longitude', longitude, daysTime);
+
+            cb && cb({
+                latitude: latitude,
+                longitude: longitude,
+                areaId: 0
+            })
+
+        },
+        fail: function() {
+            cb1 && cb1();
+        }
+    });
+}
+
+/**
+ * 微信地理位置
+ * @DateTime 2017-06-05
+ * @return   {[type]}   [description]
+ * 
+ */
+export const wxlocation = function(cb) {
+
+    //摇电视进来的页面会有areaId字段
+    if (userData.areaId) {
+        console.log('摇电视')
+
+        cb && cb({
+            latitude: '',
+            longitude: '',
+            areaId: userData.areaId
+        });
+
+    } else {
+
+        //不是摇电视进来的页面，先判断cookie是否有定位坐标值，没有就调用微信的地理定位接口，有就直接传cookie值，调用后台接口
+
+        let latitude = cookie.get('latitude');
+        let longitude = cookie.get('longitude');
+
+        if (latitude && longitude) {
+            console.log('不是调用地理位置' + latitude + ':' + longitude);
+
+            cb && cb({
+                latitude: latitude,
+                longitude: longitude,
+                areaId: 0
+            })
+
+        } else {
+            console.log('调用地理位置');
+            wx.getLocation({
+                type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+                success: function(res) {
+                    var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+                    var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+                    var speed = res.speed; // 速度，以米/每秒计
+                    var accuracy = res.accuracy; // 位置精度
+
+                    cookie.set('latitude', latitude, daysTime);
+                    cookie.set('longitude', longitude, daysTime);
+
+                    cb && cb({
+                        latitude: latitude,
+                        longitude: longitude,
+                        areaId: 0
+                    })
+
+                }
+            });
+
+        }
+
+    }
+}
+
+
+/**
+ * @DateTime 2017-06-05
+ * @param    {Function} cb  [数据统计接口]
+ * @param    {[Function]}   cb1 [获取地理位置回调函数]
+ * @return   void
+ */
+
+let wxConfigData = {};
+
+export const wxJsSign = function(cb) {
+    $.ajax({
+        type: "GET",
+        url: "http://user.weshaketv.com/wss/api/jsSign",
+        dataType: "jsonp",
+        data: {
+            url: window.location.href.split('#')[0]
+        },
+        success: function(data) {
+            wxConfigData = data;
+            cb && cb();
+        }
+    });
+}
+
+wxJsSign();
+
+export const wxConfig = function() {
+
+    if (!wxConfigData.appid) {
+
+        wxJsSign(() => {
+            wx.config({
+                debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+                appId: wxConfigData.appid, // 必填，公众号的唯一标识
+                timestamp: wxConfigData.timestamp, // 必填，生成签名的时间戳
+                nonceStr: wxConfigData.nonceStr, // 必填，生成签名的随机串
+                signature: wxConfigData.signature, // 必填，签名，见附录1
+                jsApiList: [
+                        "onMenuShareTimeline",
+                        "onMenuShareAppMessage",
+                        "hideMenuItems",
+                        "getLocation"
+                    ] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+            });
+
+            wxHideMenu();
+        });
+
+    } else {
+        wx.config({
+            debug: false, // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+            appId: wxConfigData.appid, // 必填，公众号的唯一标识
+            timestamp: wxConfigData.timestamp, // 必填，生成签名的时间戳
+            nonceStr: wxConfigData.nonceStr, // 必填，生成签名的随机串
+            signature: wxConfigData.signature, // 必填，签名，见附录1
+            jsApiList: [
+                    "onMenuShareTimeline",
+                    "onMenuShareAppMessage",
+                    "hideMenuItems",
+                    "getLocation"
+                ] // 必填，需要使用的JS接口列表，所有JS接口列表见附录2
+        });
+
+        wxHideMenu();
+    }
+
+}
+
+export const wxShare = function() {
+    var shareData = Object.assign(config.wxShareData, {
+        success: function() {
+            $.ajax({
+                type: "GET",
+                url: config.url + "log/log_Share",
+                dataType: "jsonp",
+                data: {
+                    openid: user.openid,
+                    source: '1', //0.文章 1.首页 2.阅单详情
+                    articleId: null
+                },
+                success: function(data) {}
+            });
+        }
+    });
+
+    wx.ready(function() {
+        wx.onMenuShareTimeline(shareData);
+        wx.onMenuShareAppMessage(shareData);
+    });
+
+}
+
+export const wxHideMenu = function() {
+    wx.ready(function() {
+        wx.hideMenuItems({
+            menuList: [
+                    //传播类
+                    'menuItem:share:qq', //分享到QQ
+                    'menuItem:share:weiboApp', //分享到Weibo
+                    'menuItem:favorite', //收藏
+                    'menuItem:share:facebook', //分享到facebook
+                    'menuItem:share:QZone', //分享到QQ空间
+
+                    //保护类
+                    'menuItem:editTag', //编辑标签
+                    'menuItem:delete', //删除
+                    'menuItem:copyUrl', //复制链接
+                    'menuItem:originPage', //原网页
+                    'menuItem:readMode', //阅读模式
+                    'menuItem:openWithQQBrowser', //在QQ浏览器中打开
+                    'menuItem:openWithSafari', //在Safari中打开
+                    'menuItem:share:email', //邮件
+                    'menuItem:share:brand' //一些特殊公众号
+                ] // 要隐藏的菜单项，只能隐藏“传播类”和“保护类”按钮
+        });
+    });
+
+}
+
+
+export const storage = function() {
+
+    if (!window.sessionStorage) return;
+
+    function get(key) {
+        return window.sessionStorage.getItem(key);
+    }
+
+    function set(key, value) {
+        return window.sessionStorage.setItem(key, value);
+    }
+
+    function remove(key) {
+        return window.sessionStorage.removeItem(key);
+    }
+
+    function clear() {
+        return window.sessionStorage.clear();
+    }
+
+    return {
+        get: get,
+        set: set,
+        remove: remove,
+        clear: clear
+    }
+
+}()
+
+export const cookie = {
+    get: function(cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i].trim();
+            if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+        }
+        return "";
+    },
+    set: function(cname, cvalue, days) {
+        var d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        var expires = "expires=" + d.toGMTString();
+        document.cookie = cname + "=" + cvalue + "; " + expires;
+    },
+    remove: function(cname) {
+
+        var val = this.get(cname);
+
+        if (val) {
+            document.cookie = cname + "=" + val + ";expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        } else {
+            return '';
+        }
+
+    }
+}
+
+
+//判断是安卓还是ios
+export const modelType = function() {
+    var u = navigator.userAgent;
+    var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
+    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+
+    if (isAndroid) {
+        return 1;
+    }
+
+    if (isiOS) {
+        return 2;
+    }
+}
+
+//判断语言
+export const language = function() {
+   
+    var currentLang = navigator.language; //判断除IE外其他浏览器使用语言
+   
+    if (!currentLang) { //判断IE浏览器使用语言
+        currentLang = navigator.browserLanguage;
+    }
+    return currentLang;
+}

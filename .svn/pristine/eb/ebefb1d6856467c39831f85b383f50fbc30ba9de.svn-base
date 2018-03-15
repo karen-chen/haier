@@ -1,0 +1,28 @@
+
+import Vue from 'vue'
+import Router from 'vue-router'
+
+
+import Crad from '@/pages/crad'
+
+const Activity = resolve => require(['@/pages/activity'], resolve);
+
+
+Vue.use(Router)
+
+export default new Router({
+  routes: [
+    {
+      path: '/crad',
+      name: 'Crad',
+      component: Crad
+    },{
+        path: '/activity',
+        name: 'Activity',
+        component: Activity
+    }
+  ]
+})
+
+
+

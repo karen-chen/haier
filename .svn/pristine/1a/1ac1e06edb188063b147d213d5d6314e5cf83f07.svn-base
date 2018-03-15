@@ -1,0 +1,132 @@
+<template>
+  <div class="content">
+    <ul>
+      <li class="item" v-for="item in cardlist">
+        <div class="top">
+          <img :src="imageServerUrl+item.card.merchant.merchantLogo">
+          <p>{{item.card.resourceName}}</p>
+        </div>
+        <div @click="showbuyRoute(item)" class="bottom">立即领取</div>
+      </li>
+    </ul>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      cardlist: [],
+      imageServerUrl: config.imageServerUrl
+    }
+  },
+
+  created() {
+    var self = this;
+
+    //activity/getRecognizeCardList
+    $.ajax({
+      url: config.locationUrl + "/activity/getRecognizeCardList",
+      dataType: "jsonp",
+      data: {
+        actSid: userData.actSid
+      },
+      success: function(data) {
+        // console.log(data);
+        if (data.ret === "0") {
+          if (data.list == '[]') {
+            this.$router.push({
+              name: 'Null'
+            })
+          }
+          self.cardlist = data.list
+        } else {
+          //处理接口调用失败
+          self.error('getRecognizeCardList');
+        }
+      },
+      error(res) {
+        self.error('getRecognizeCardList');
+      }
+    });
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    showbuyRoute(item) {
+      this.$router.push({
+        name: 'Buy',
+        params: {
+          sid: item.sid,
+          
+        }
+      })
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  height: 100%;
+  background: #f0f1f2;
+  ul {
+    padding: pTR(20) 0;
+    .item {
+      display: flex;
+      width: pTR(722);
+      height: pTR(264);
+      margin: 0 auto pTR(20);
+      background: url(../../assets/czlImg/quanMain.png) 0 0 no-repeat;
+      background-size: 100%;
+      flex-direction: column;
+      .top {
+        height: pTR(150);
+        padding-left: pTR(144);
+        color: #fff;
+        font-size: pTR(42);
+        position: relative;
+        img {
+          position: absolute;
+          width: pTR(88);
+          height: pTR(97);
+          top: 55%;
+          transform: translateY(-50%);
+          left: pTR(30);
+        }
+        p {
+          line-height: pTR(150);
+          width: pTR(550);
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+      .bottom {
+        box-flex: 1;
+        flex: 1;
+        color: #f52b3a;
+        font-size: pTR(30);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+}
+
+</style>

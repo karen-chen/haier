@@ -1,0 +1,518 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <img class="personPic" :src="imageServerUrl + picUrl">
+      <p class="logo">{{logo}}</p>
+      <h2 class="title">{{title}}</h2>
+      <div :class="[ allow ? '' : 'nouse','buyBtn']" @click="showmessRoute(obj)">
+        {{buyBtn}}
+      </div>
+      <div class="tips">
+        <h2>有效日期</h2>
+        <p>{{startDate}}至 {{endDate}}</p>
+      </div>
+      <div class="tips">
+        <h2>使用说明</h2>
+        <p v-html="description"></p>
+      </div>
+    </div>
+    <!-- <div class="nullbox"></div> -->
+    <!-- 活动结束 -->
+    <div class="endBox" v-show="endActive">
+      <div class="textline">
+        <div class="img"></div>
+        该活动已关闭
+      </div>
+    </div>
+    <!-- 卡券已经停止投放 -->
+    <div class="popBox" v-show="Resure">
+      <div class="RefundBox">
+        <div class="text">
+          该卡券已下架
+        </div>
+        <div class="butList">
+          <div class="btn2" @click="returnPage">
+            确定
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 提示弹框 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+  </div>
+</template>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      imageServerUrl: config.imageServerUrl,
+      money: 0,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      canCustomerInfo: '',
+      recognizeCardSid: '',
+      cardNo: '',
+      sign: {},
+      allow: true,
+      status: 0,
+      endActive: false,
+      onoff: true,
+      tips: false,
+      Resure: false,
+      masseg: ''
+    }
+  },
+
+  created() {
+    document.title = '认筹活动详情';
+    //设置调用微信支付接口配置
+    if (typeof WeixinJSBridge === "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', this.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', this.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', this.onBridgeReady);
+      }
+    } else {
+      this.onBridgeReady();
+    }
+
+    var self = this;
+
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+
+    //存储接口传参所需数据
+
+    this.recognizeCardSid = localStorage.getItem('recognizeCardSid')
+
+    this.getRecognizeCardDetial();
+  },
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    showmessRoute(item) {
+      var self = this;
+      if (!self.allow) {
+        return;
+      }
+      self.getRecognizeCardDetial(function() {;
+        if (self.status == 0) {
+           //如果不需要填客户信息,并且金额为0,直接跳转success
+          if (self.canCustomerInfo === '0' && self.money === 0) {
+            if (self.onoff) {
+              //防止多次点击
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.wx_pay();
+              self.$router.push({
+                name: 'Buysuccess'
+              })
+            } else {
+              return
+            }
+
+
+          }
+          if (self.canCustomerInfo === '0' && self.money !== 0) {
+            //如果不需要填客户信息,并且金额不为0,如果金额不为零,直接调接口
+            // console.log(3333333333);
+            if (self.onoff) {
+
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.wx_pay();
+            } else {
+              return
+            }
+            // self.wx_pay();
+
+          }
+          if (self.canCustomerInfo === '1') {
+            // console.log(444444444);
+            self.$router.push({
+
+              name: 'Submit',
+              params: {
+                money: self.money,
+                recognizeCardSid: self.recognizeCardSid
+              }
+            })
+          }
+        } else {
+          return
+        }
+      })
+    },
+
+    //详情接口状态判断
+    getRecognizeCardDetial(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/activity/getRecognizeCardDetial",
+        dataType: "jsonp",
+        data: {
+          recognizeCardSid: this.recognizeCardSid,
+          openid: userData.openid
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.status = parseInt(data.ret);
+            self.buyBtn = data.obj.card.configBean.price.value + '元购买';
+          }
+          if (data.ret === "-1") {
+            self.Resure = true
+
+          }
+          if (data.ret === "2") {
+            self.allow = false,
+            self.status = parseInt(data.ret);
+            self.buyBtn = '该卡券已过期';
+            cb && self.tipsShow('卡券已过期');
+
+          }
+          if (data.ret === "3") {
+            self.allow = false,
+              self.status = parseInt(data.ret);
+            self.buyBtn = '该卡券已领完';
+            cb && self.tipsShow('库存不够');
+          }
+          if (data.ret === "4") {
+            self.allow = false,
+              self.status = parseInt(data.ret);
+            self.buyBtn = '购买数量已达上限';
+            cb && self.tipsShow('购买数量已达上限');
+          }
+          if (data.ret === "-88") {
+            self.endActive = true;
+          }
+          self.obj = data.obj;
+          self.money = Math.round(data.obj.card.configBean.price.value * 100);
+          self.picUrl = data.obj.card.merchant.merchantLogo;
+          self.logo = data.obj.card.merchant.merchantName;
+          self.title = data.obj.card.resourceName;
+          self.startDate = data.obj.card.configBean.startDate.value;
+          self.endDate = data.obj.card.configBean.endDate.value;
+          self.description = "<p>" + data.obj.card.configBean.description.value.replace(/\n/g, "</p><p>") + "</p>";
+          self.canCustomerInfo = data.obj.card.configBean.canCustomerInfo.value;
+          self.cardNo = data.obj.card.sid;
+          localStorage.setItem('checkMember', self.cardNo);
+          localStorage.setItem('money', self.money);
+          cb && cb();
+        },
+        error(res) {
+          self.error('getRecognizeCardList');
+        }
+      });
+    },
+
+    //请求接口,获取微信支付签名
+
+    wx_pay() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/wx_pay/pay_sign",
+        dataType: "jsonp",
+        type: "post",
+        data: {
+          openid: userData.openid,
+          money: self.money,
+          cardNo: self.cardNo,
+          recognizeCardSid: self.recognizeCardSid,
+          actId: userData.actSid,
+          saleOpenid: userData.saleOpenid,
+        },
+        success: function(data) {
+
+
+          // console.log(data);
+          if (data.ret === "0") {
+            if (self.money == 0) {
+              return
+            } else {
+
+              self.invokePayDlg(data);
+            }
+            // self.sign = data.sign;
+
+          } else {
+            //处理接口调用失败
+            self.error('getCustomData');
+          }
+        },
+        error(res) {
+          self.error('getCustomData');
+        }
+      });
+    },
+
+    invokePayDlg(ret) {
+      var self = this;
+      WeixinJSBridge.invoke(
+        'getBrandWCPayRequest',
+        ret.sign,
+        function(res) {
+          //alert(res.err_msg);
+          // $("#log_info").append("<p>支付结果："+res.err_msg+"</p>");
+          // 使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回    ok，但并不保证它绝对可靠。
+          if (res.err_msg == "get_brand_wcpay_request:ok") {
+            //CT：实际是否成交以后台接口为准
+            // $("#out_trade_no").val(now_time);
+            self.$router.push({
+              name: 'Buysuccess'
+            })
+          } else {
+            //其他情况：get_brand_wcpay_request:cancel或者get_brand_wcpay_request:fail，后者在配置错误时也会出现，日
+          }
+        }
+      );
+    },
+
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+
+    //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      self.tips = true;
+      self.masseg = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 600);
+    },
+    //返回页面弹框
+    returnPage() {
+      this.$router.push({
+        name: 'Quan'
+      })
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f52b3a;
+  padding: pTR(80) pTR(20);
+  display:flex;
+  .main {
+    width: 100%;
+    background: #fff;
+    position: relative;
+    padding: pTR(66) pTR(28) pTR(100);
+    text-align: center;
+    .personPic {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      display: block;
+      left: 50%;
+      transform: translateX(-50%);
+      top: pTR(-50);
+      border-radius: 50%;
+    }
+    .logo {
+      font-size: pTR(28);
+      color: #666;
+    }
+    .title {
+      padding: pTR(40) 0 pTR(60);
+    }
+    .buyBtn {
+      width: pTR(320);
+      height: pTR(70);
+      line-height: pTR(70);
+      background: #f52b3a;
+      color: #fff;
+      font-size: pTR(30);
+      border-radius: pTR(5);
+      margin: 0 auto pTR(85);
+    }
+    .nouse {
+      background: #929292;
+    }
+    .logoPic {
+      width: 100%;
+      height: pTR(236);
+      background: url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin-bottom: pTR(10);
+    }
+
+    .tips {
+      text-align: left;
+      padding-top: pTR(33);
+      h2 {
+        font-size: pTR(28);
+        color: #333;
+        line-height: pTR(30);
+      }
+      p {
+        padding-top: pTR(10);
+        color: #999999;
+        font-size: pTR(28);
+        line-height: pTR(30);
+        word-break: break-all;
+      }
+    }
+  }
+
+}
+
+.endBox {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  .textline {
+    font-size: pTR(35);
+    color: #999;
+    text-align: center;
+    padding-top: pTR(180);
+    .img{
+    display: block;
+    width:pTR(198);
+    height:pTR(129);
+    background: url(../../assets/czlImg/endPic.png) 0 0 no-repeat;
+    background-size:100%;
+    margin:0 auto pTR(75);
+  }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 999;
+  .RefundBox {
+    width: pTR(500);
+    height: pTR(300);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .text {
+      padding: pTR(80) 0 pTR(50);
+      text-align: center;
+      color: #757575;
+      font-size: pTR(36);
+    }
+    .butList {
+      display: flex;
+      justify-content: center;
+      .btn1 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #929292;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+      .btn2 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #f52b3a;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+    }
+  }
+  .tipsBox {
+    width: pTR(560);
+    height: pTR(356);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    text-align: center;
+    .tipstext {
+      padding: pTR(114) 0 pTR(50);
+      color: #757575;
+      font-size: pTR(36);
+    }
+
+    .tipsday {
+      color: #999999;
+      font-size: pTR(30);
+    }
+    .tipsBtn {
+      position: absolute;
+      width: pTR(50);
+      height: pTR(50);
+      background: url(../../assets/czlImg/closeBtn.png) center center no-repeat;
+      background-size: pTR(16) pTR(16);
+      right: 0;
+      top: 0;
+    }
+  }
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(288);
+  height: pTR(100);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(100);
+  color: #fff;
+}
+
+</style>

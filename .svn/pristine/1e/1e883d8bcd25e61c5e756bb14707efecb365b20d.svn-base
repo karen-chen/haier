@@ -1,0 +1,184 @@
+<template>
+	<div class="navigationstrat">
+		<div class="nearby">
+			<div class="head">
+				<div class="left">
+					<i></i>距离您最近的会场
+				</div>
+				<div class="right">
+				<i></i>武汉
+				</div>
+			</div>
+			<div class="main">
+				<div class="title">
+					<div class="left">海尔团购会</div>
+					<div class="right">未开始</div>
+				 </div>
+				<div class="time">
+					<div class="left">2017-06-12至2017-06-13</div>
+					<div class="right">距离1.2公里</div>
+				</div>
+				<p class="address">武汉市青山区青山区武昌和平大道青山区武昌和平大道1542 号青山百货商场2层 </p>
+				<div class="startBtn">开始导航</div>
+			</div>
+		</div>
+		<div class="others nearby">
+			<div class="head">
+				<div class="left">
+					<i></i>其它会场
+				</div>
+			</div>
+			<div class="main">
+				<div class="title">
+					<div class="left">海尔团购会</div>
+					<div class="right">未开始</div>
+				 </div>
+				<div class="time">
+					<div class="left">2017-06-12至2017-06-13</div>
+					<div class="right">距离1.2公里</div>
+				</div>
+				<p class="address">武汉市青山区青山区武昌和平大道青山区武昌和平大道1542 号青山百货商场2层 </p>
+				<div class="startBtn">开始导航</div>
+			</div>
+		</div>
+	</div>
+</template>
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss"  scoped>
+ @import '../../assets/scss/_mixins.scss';
+	.navigationstrat{
+		width:100%;
+		min-height:100%;
+		background:#fff;
+		.nearby{
+			.head{
+				background:#fbfbfb;
+				width:100%;
+				padding:0 pTR(32);
+				height:pTR(64);
+				display: flex;
+				justify-content:space-between;
+				align-items:center;
+				.left{
+					position: relative;
+					color:#333;
+					font-size:pTR(24);
+					padding-left:pTR(15);
+					i{
+						position:absolute;
+						width:pTR(5);
+						height:pTR(28);
+						background:#f52b3a;
+						left:0;
+						border:pTR(10);
+						top:50%;
+						transform:translateY(-50%);
+					}
+				}
+				.right{
+					position: relative;
+					color:#999999;
+					font-size:pTR(24);
+					padding-left:pTR(44);
+					i{
+						position:absolute;
+						width:pTR(33);
+						height:pTR(44);
+						background:url(../../assets/czlImg/address.png) 0 0 no-repeat;
+						background-size:100%;
+						left:0;
+						border:pTR(10);
+						top:50%;
+						transform:translateY(-50%);
+					}
+				}
+			}
+			.main{
+				padding:pTR(35) 0;
+				margin:0 pTR(32);
+
+				.title{
+					display: flex;
+					justify-content:space-between;
+					padding-bottom:pTR(34);
+					.left{
+						color:#333333;
+						font-size:pTR(28);
+						line-height:pTR(36);
+						box-flex: 1;
+						flex:1;
+						display:block;
+						white-space:nowrap;
+						 overflow:hidden; 
+						 text-overflow:ellipsis;
+
+					}
+					.right{
+						width:pTR(150);
+						color:#333333;
+						font-size:pTR(28);
+						line-height:pTR(36);
+						text-align:right;
+					}
+				}
+				.time{
+					display: flex;
+					justify-content:space-between;
+					padding-bottom:pTR(34);
+					.left{
+						color:#999999;
+						font-size:pTR(24);
+						line-height:pTR(36);
+						box-flex: 1;
+						flex:1;
+						display:block;
+						white-space:nowrap;
+						 overflow:hidden;
+						  text-overflow:ellipsis;
+
+					}
+					.right{
+						width:pTR(250);
+						color:#999999;
+						font-size:pTR(24);
+						line-height:pTR(36);
+						text-align:right;
+					}
+				}
+				.address{
+					color:#999;
+					font-size:pTR(20);
+					line-height:pTR(30);
+					overflow:hidden; 
+					text-overflow:ellipsis;
+					display:-webkit-box; 
+					-webkit-box-orient:vertical;
+					-webkit-line-clamp:2;
+				}
+				.startBtn{
+					width:pTR(320);
+					height:pTR(70);
+					text-align:center;
+					border-radius: pTR(10);
+					line-height:pTR(70);
+					margin:pTR(30) auto 0;
+					color:#fff;
+					font-size:pTR(30);
+					background:#f52b3a;
+
+				}
+			}
+			
+		}
+		.others{
+			.main{
+				border-bottom:1px solid rgba(0,0,0,0.1);
+			}
+		}
+	}
+</style>

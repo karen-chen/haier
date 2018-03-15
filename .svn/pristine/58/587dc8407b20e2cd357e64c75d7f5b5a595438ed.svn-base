@@ -1,0 +1,23 @@
+<template>
+  <div class="screen_body">
+    <div class="erweima_pic">
+      <img src="../../assets/images/screen_code.jpg">
+    </div>
+    <div class="screen_main">
+      <img src="../../assets/images/ing_main.png">
+    </div>
+    <div class="barrage_main">
+      <div id="mountNode"></div>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_screen.scss';
+</style>
+<script>
+  import '@/assets/js/bundle';
+  //import '@/assets/js/barrage';
+
+</script>

@@ -1,0 +1,735 @@
+<template>
+  <div class="submit">
+    <div class="top"></div>
+    <div class="mainBox">
+      <div class="title">
+        请填写你的信息
+      </div>
+      <div class="main">
+        <ul class="list">
+          <li v-for="item in list">
+            <div v-show="item.value">
+              <!-- <div class="area1"> -->
+              <div class="item" v-for="(area, index) in item.area"  @click="textCenter1">
+                <div class="textCenter" v-show="textCenterone">{{area.label}}</div>
+                <span>{{area.label}}: </span>
+                <select v-model="area.input" :placeholder="'请填写您的' + area.label" @change="areaChange(index, item.area)">
+                  <option value="">请选择</option>}
+                  <template v-for="(obj, i) in area.items">
+                    <option :value="obj">{{obj.text}}</option>
+                  </template>
+                </select>
+              </div>
+              <!-- </div> -->
+              <div class="item">
+                <span>{{item.label}}: </span>
+                <input v-model="item.input" :placeholder="'请填写您的' + item.label" :maxlength="item.max" @blur="phoneNum(item)">
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div class="submitBtn" @click="showsuccesspage">
+          提交并支付
+        </div>
+      </div>
+    </div>
+    <div class="pop_tips" v-show="showTips">{{messg}}</div>
+    <!-- 活动结束 -->
+    <div class="endBox" v-show="endActive">
+      <div class="textline">
+        该活动已结束
+      </div>
+    </div>
+    <!-- 卡券已经停止投放 -->
+    <div class="popBox" v-show="Resure">
+      <div class="RefundBox">
+        <div class="text">
+          {{pagemess}}
+        </div>
+        <div class="butList">
+          <div class="btn2" @click="returnPage">
+            确定
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  checkInject,
+  checkTel
+} from '@/lib/tools';
+import AreaData from '@/lib/AreaData'
+
+export default {
+  data() {
+    return {
+      money: 0,
+      list: [],
+      cardNo: '',
+      recognizeCardSid: '',
+      customDataId: '',
+      localStorageList: {},
+      showTips: false,
+      msg: '',
+      endActive: false,
+      onoff: true,
+      Resure: false,
+      pagemess: '',
+      messg: '',
+      textCenterone:true
+    }
+  },
+
+  created() {
+    var self = this;
+    // window.localStorage.removeItem("backLink");
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    //接口传参的数据需要存储在本地缓存
+    self.money = parseInt(localStorage.getItem('money'));
+
+    // console.log(typeof this.money);
+    // console.log("localStorage.getItem('money')",localStorage.getItem('money'));
+    self.cardNo = localStorage.getItem('checkMember');
+    self.recognizeCardSid = localStorage.getItem('recognizeCardSid');
+
+    //判断微信接口是否加载
+    if (typeof WeixinJSBridge == "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', self.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', self.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', self.onBridgeReady);
+      }
+    } else {
+      self.onBridgeReady();
+    }
+
+
+    // recognizeCard/getCustomData
+
+    $.ajax({
+      url: config.locationUrl + "/recognizeCard/getCustomData",
+      dataType: "jsonp",
+      data: {
+        cardId: self.cardNo,
+        openid: userData.openid
+      },
+      success: function(data) {
+        if (data.ret === "0") {
+          console.log(data.list);
+          data.list = data.list || [];
+          data.list.forEach(function(obj, index) {
+
+            if (data.data) {
+              obj.input = data.data[obj.name];
+              if (obj.name == 'address' && obj.value == 1) {
+                console.log("address")
+                var area = [];
+                area.push({
+                  label: "选择省份",
+                  name: "province",
+                  value: 1,
+                  input: JSON.parse(data.data["province"]),
+                  items: AreaData.provs_data
+                });
+                area.push({
+                  label: "选择城市",
+                  name: "city",
+                  value: 1,
+                  input: JSON.parse(data.data["city"]),
+                  items: JSON.parse(data.data["city"]) ? AreaData.citys_data[JSON.parse(data.data["province"]).value] : []
+                });
+                area.push({
+                  label: "选择区域",
+                  name: "country",
+                  value: 1,
+                  input: JSON.parse(data.data["country"]),
+                  items: JSON.parse(data.data["country"]) ? AreaData.dists_data[JSON.parse(data.data["city"]).value] : []
+                });
+                obj.area = area;
+              }
+            } else {
+
+              if (obj.name == 'address' && obj.value == 1) {
+                obj.area = [{
+                  label: "选择省",
+                  name: "province",
+                  value: 1,
+                  input: {},
+                  items: AreaData.provs_data
+                }, {
+                  label: "选择市",
+                  name: "city",
+                  value: 1,
+                  input: {},
+                  items: []
+                }, {
+                  label: "选择区",
+                  name: "country",
+                  value: 1,
+                  input: {},
+                  items: []
+                }]
+              }
+
+
+            }
+
+            if (obj.name == 'name') {
+              obj.max = '10'
+            }
+            if (obj.name == 'intention') {
+              obj.max = '20'
+            }
+            if (obj.name == 'address') {
+              obj.max = '30'
+            }
+
+
+          });
+
+          console.log(data);
+
+          // console.log(data);
+
+          self.list = data.list
+          // console.log(self.list);
+
+        } else {
+          //处理接口调用失败
+          self.error('getCustomData');
+        }
+      },
+
+      error(res) {
+        self.error('getCustomData');
+      }
+
+    });
+
+
+  },
+
+  methods: {
+
+    phoneNum(item) {
+      var self = this;
+      console.log(item);
+      var val = item.input;
+
+      //手机输入框,验证手机号码和特殊js脚本字段  
+      if (item.name == "phone") {
+        var pattern1 = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1})|(17[0-9]{1}))+\d{8})$/;
+        if (checkTel(val) && !checkInject(val)) {
+          return true;
+        } else {
+          if (self.showTips == false) {
+            self.showTips = true;
+            self.messg = "号码填写错误";
+            setTimeout(() => {
+              self.showTips = false;
+            }, 1000)
+          }
+          return false;
+        }
+      } else {
+        //其它输入框特殊js脚本字段        
+        if (!checkInject(val)) {
+          return true
+        } else {
+          if (self.showTips == false) {
+            self.showTips = true;
+            self.messg = "输入内容不能包含字符<>";
+            setTimeout(() => {
+              self.showTips = false;
+            }, 1000)
+          }
+          return false;
+        }
+      }
+
+    },
+    //报错提示
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+
+    //点击提交并支付按钮事件
+    showsuccesspage() {
+
+      //提交用户保存数据
+      var self = this;
+
+      self.getRecognizeCardDetial();
+
+    },
+
+    areaChange(index, areaList) {
+      //找到address的索引，更新用
+      let addressIndex = 0;
+      this.list.forEach(function(item, i) {
+        if (item.name == "address") {
+          addressIndex = i;
+        }
+      });
+
+      switch (index) {
+        case 0:
+          {
+            this.$set(this.list[addressIndex].area[index + 1], "items", AreaData.citys_data[areaList[index].input.value])
+            this.$set(this.list[addressIndex].area[index + 2], "items", [])
+            break;
+          }
+        case 1:
+          {
+            if (areaList[index].input) {
+              this.$set(this.list[addressIndex].area[index + 1], "items", AreaData.dists_data[areaList[index].input.value])
+            }
+          }
+      }
+    },
+
+
+    //请求接口,获取微信支付签名
+
+    wx_pay() {
+      var self = this;
+      // console.log('self.customDataId', self.customDataId)
+      $.ajax({
+        url: config.locationUrl + "/wx_pay/pay_sign",
+        dataType: "jsonp",
+        type: "post",
+        data: {
+          openid: userData.openid,
+          money: self.money,
+          cardNo: self.cardNo,
+          recognizeCardSid: self.recognizeCardSid,
+          customDataId: self.customDataId,
+          actId: userData.actSid,
+          saleOpenid: userData.saleOpenid,
+        },
+        success: function(data) {
+          console.log(data);
+
+          if (data.ret === "0") {
+            // self.sign = data.sign;
+
+            if (self.money == 0) {
+              return
+            } else {
+
+              self.invokePayDlg(data);
+            }
+
+          } else {
+            //处理接口调用失败
+            self.error('getCustomData');
+          }
+        },
+        error(res) {
+          self.error('getCustomData');
+        }
+      });
+    },
+
+    invokePayDlg(ret) {
+      var self = this;
+      // console.log(ret.sign);
+      WeixinJSBridge.invoke(
+        'getBrandWCPayRequest',
+        ret.sign,
+        function(res) {
+
+          // alert(JSON.stringify(res));
+          // $("#log_info").append("<p>支付结果："+res.err_msg+"</p>");
+          // 使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回    ok，但并不保证它绝对可靠。
+          if (res.err_msg == "get_brand_wcpay_request:ok") {
+            self.$router.push({
+              name: 'Buysuccess'
+            })
+            //CT：实际是否成交以后台接口为准
+            // $("#out_trade_no").val(now_time);
+          } else {
+            //其他情况：get_brand_wcpay_request:cancel或者get_brand_wcpay_request:fail，后者在配置错误时也会出现，日
+          }
+        }
+      );
+    },
+    //详情接口状态判断
+    getRecognizeCardDetial() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/activity/getRecognizeCardDetial",
+        dataType: "jsonp",
+        data: {
+          recognizeCardSid: self.recognizeCardSid,
+          openid: userData.openid
+        },
+        success: function(data) {
+          if (data.ret === "0") {
+            if (self.onoff) {
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 1000)
+              var result = {};
+              //填充所需数据
+              self.list.forEach(item => {
+                if (item.value == "1") {
+                  if (item.input && item.input.length > 0 && self.phoneNum(item)) {
+                    result[item.name] = item.input;
+                    if (item.name == 'address') {
+                      if (item.area) {
+                        item.area.forEach((obj, index) => {
+                          if (obj.input) {
+                            result[obj.name] = JSON.stringify(obj.input) || "";
+                          } else {
+                            console.log(item.label + 'bu neng wei kong!');
+                            if (self.showTips == false) {
+                              self.showTips = true;
+                              self.messg = "请填写完整信息";
+                              setTimeout(() => {
+                                self.showTips = false;
+                              }, 1000)
+                            }
+
+                            throw ''
+                          }
+                        })
+                      }
+                    }
+                  } else {
+                    console.log(item.label + 'bu neng wei kong!');
+                    if (self.showTips == false) {
+                      self.showTips = true;
+                      self.messg = "请填写完整信息";
+                      setTimeout(() => {
+                        self.showTips = false;
+                      }, 1000)
+                    }
+
+                    throw ''
+                  }
+                }
+              })
+              result.openid = userData.openid;
+              result.actSid = userData.actSid;
+              console.log(333, result);
+              //请求接口,保存用户填写信息
+              $.ajax({
+                url: config.locationUrl + "/recognizeCard/saveCustomData",
+                dataType: "jsonp",
+                type: "post",
+                data: result,
+                success: function(data) {
+                  // console.log(data.ret);
+                  // console.log(data);
+                  if (data.ret === "0") {
+                    //self.intention = data.data.sid";
+                    self.customDataId = data.data.sid;
+                    // console.log()
+                    // console.log('self.customDataId', self.customDataId);
+
+                    //判断金额是否为0,如果为0的话,直接跳转到支付成功页面,如果不为零,则调用wx支付接口
+                    if (self.money == 0) {
+                      console.log(12533333333333333);
+                      self.wx_pay();
+                      self.$router.push({
+                        name: 'Buysuccess'
+                      })
+                    } else {
+                      self.wx_pay();
+                    }
+                  }
+                  if (data.ret == '-88') {
+                    self.endActive = true;
+                  } else {
+                    //处理接口调用失败
+                    self.error('getCustomData');
+                  }
+                },
+                error(res) {
+                  self.error('getCustomData');
+                }
+              });
+
+            } else {
+              return
+            }
+          }
+          if (data.ret === "-1") {
+            self.pagemess = '该卡券已下架,您可返回购买其它卡券';
+            self.Resure = true
+
+          }
+          if (data.ret === "2") {
+            self.pagemess = '该卡券已过期';
+            self.Resure = true;
+
+
+          }
+          if (data.ret === "3") {
+            self.pagemess = '该卡券已领完';
+            self.Resure = true;
+
+          }
+          if (data.ret === "4") {
+            self.pagemess = '购买数量已达上限';
+            self.Resure = true;
+
+          }
+          if (data.ret === "-88") {
+            self.endActive = true;
+          }
+        },
+        error(res) {
+          self.error('getRecognizeCardList');
+        }
+      });
+    },
+
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+    //返回页面弹框
+    returnPage() {
+      this.$router.push({
+        name: 'Quan'
+      })
+    },
+    textCenter1(){
+      this.textCenterone=false;
+    }
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+
+
+.textCenter{
+  position:absolute;
+  font-size:pTR(30);
+  color:#777;
+  left:pTR(200);
+  pointer-events:none;
+}
+.pop_tips {
+  background-color: rgba(0, 0, 0, .6);
+  min-width: pTR(400);
+  padding: pTR(20) 0;
+  text-align: center;
+  color: #fff;
+  font-size: pTR(30);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.submit {
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+
+  .top {
+    width: 100%;
+    height: pTR(455);
+    background: #f52b3a;
+  }
+  .mainBox {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 pTR(32);
+    .title {
+      height: pTR(152);
+      line-height: pTR(152);
+      color: #fff;
+      font-size: pTR(36);
+      text-align: center;
+    }
+    .main {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: pTR(10);
+      padding: 0 pRT(60);
+      .list {
+        padding: pTR(50) pTR(60);
+        width: 100%;
+        .item {
+          height: pTR(100);
+          display: flex;
+          align-items: center;
+          border-bottom: pTR(2) solid #e5e5e5;
+          padding-top: pTR(50);
+          position:relative;
+          span {
+            width: pTR(200);
+            height: pTR(50);
+            line-height: pTR(50);
+            color: #333333;
+            font-size: pTR(30);
+            text-align: justify;
+          }
+          input {
+            width:pTR(400);
+            height: pTR(50);
+            line-height: pTR(50);
+            background: transparent;
+            padding-left: pTR(30);
+            font-size: pTR(30);
+          }
+          select {
+            width:pTR(400);
+            height: pTR(50);
+            padding-left: pTR(30);
+            line-height: pTR(50);
+            background: transparent;
+            font-size: pTR(30);
+          }
+        }
+      }
+      .submitBtn {
+        width: pTR(562);
+        height: pTR(77);
+        line-height: pTR(77);
+        background: #f52b3a;
+        border-radius: pTR(10);
+        margin: pTR(50) auto;
+        font-size: pTR(36);
+        color: #fff;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 999;
+  .RefundBox {
+    width: pTR(500);
+
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22) pTR(30);
+    .text {
+      padding: pTR(80) 0 pTR(50);
+      text-align: center;
+      color: #757575;
+      font-size: pTR(36);
+      line-height: pTR(50);
+    }
+    .butList {
+      display: flex;
+      justify-content: center;
+      .btn1 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #929292;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+      .btn2 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #f52b3a;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+    }
+  }
+  .tipsBox {
+    width: pTR(560);
+    height: pTR(356);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    text-align: center;
+    .tipstext {
+      padding: pTR(114) 0 pTR(50);
+      color: #757575;
+      font-size: pTR(36);
+    }
+
+    .tipsday {
+      color: #999999;
+      font-size: pTR(30);
+    }
+    .tipsBtn {
+      position: absolute;
+      width: pTR(50);
+      height: pTR(50);
+      background: url(../../assets/czlImg/closeBtn.png) center center no-repeat;
+      background-size: pTR(16) pTR(16);
+      right: 0;
+      top: 0;
+    }
+  }
+}
+
+.endBox {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  z-index: 999;
+  .textline {
+    font-size: pTR(35);
+    color: #000;
+    text-align: center;
+    padding-top: pTR(400);
+    background: #fff;
+  }
+}
+
+</style>

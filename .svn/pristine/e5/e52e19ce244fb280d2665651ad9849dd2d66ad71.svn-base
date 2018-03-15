@@ -1,0 +1,194 @@
+<template>
+  <div class="shake_body countdown_body">
+    <div class="top el-row">
+      <div class="text-center el-col el-col-4"><span>{{user_count}}</span><br>参与互动
+      </div>
+      <div class="el-col el-col-17 el-col-offset-3">
+        <div class="top_right">
+          <ul>
+            <li class="biandan">
+              <img
+                src="http://1251097942.cdn.myqcloud.com/1251097942/demos/photo/photo1.jpg"
+                width="200" height="200">
+            </li>
+            <li>
+              <img
+                src="http://1251097942.cdn.myqcloud.com/1251097942/demos/photo/photo1.jpg"
+                width="200" height="200">
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="count_main text-center">
+      <h2>距离下一轮摇奖开始</h2>
+      <div class="count_box">
+        <span>{{count_hour}}</span>时
+        <span>{{count_min}}</span>分
+        <span>{{count_second}}</span>秒
+      </div>
+    </div>
+    <div class="rule_btn" @click="showRuleDlg"></div>
+    <div class="minegift_btn"></div>
+    <!--摇奖规则弹框-->
+    <div class="pop_mask" id="ruleBox"  v-show="isShowRule">
+      <div class="pop_box rule_box">
+        <h3>活动规则</h3>
+        <div class="rule_list" v-html="act_rule">
+        </div>
+        <div class="off_btn" @click="closeRule">&times;</div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_countdown.scss';
+  @import '../../assets/scss/pages/_shake.scss';
+  @import '../../assets/scss/pages/_pop.scss';
+</style>
+<script>
+
+  import * as config from '@/lib/config'
+  import {
+    userData,
+    getParam
+  } from '@/lib/tools';
+
+  export default {
+    data() {
+      return {
+        act_rule: "",
+        count_hour: 0,
+        count_min: 0,
+        count_second: 0,
+        user_list: [],
+        user_count: 0,
+        user_refresh_interval: 6000,
+        timer_refresh_interval: 13000,
+        actSid: "",
+        timerSid: "",
+        share_info: {},
+        isShowRule:false
+      }
+    },
+    created(){
+      this.actSid = getParam("actSid");
+      this.initPage();
+
+      this.refreshTimer();
+      setTimeout(this.refreshTimer, this.user_refresh_interval);
+
+      this.refreshUser();
+      setTimeout(this.refreshUser, this.user_refresh_interval);
+    },
+    methods:{
+      initPage(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/sys/getBaseConfigByType",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+            configType: 'shake_act_base_config'
+          },
+          success: function(data) {
+            console.log("after getBaseConfigByType");
+            console.log(data);
+            if (data.ret == 0) {
+              //refresh public share info, title, act rule
+              _this.act_rule = "<p>"+data.ruleTip.replace(/\n/g,"</p><p>") + "</p>";
+              document.title = data.title;
+              //TODO need public to share api
+              _this.share_info.shareTitle = data.shareTitle;
+              _this.share_info.shareDesc = data.shareDesc;
+              _this.share_info.shareUrl = data.shareUrl;
+              _this.share_info.shareImg = config.imageServerUrl+data.shareImg;
+            }else {
+              console.log('getBaseConfigByType:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getBaseConfigByType:', 'fail');
+          }
+        });
+      },
+      refreshTimer(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/timer/getCurrTimer",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+          },
+          success: function(data) {
+            console.log("after getCurrTimer");
+            console.log(data);
+            if (data.ret == 0) {
+              if(data.timerSid){
+                _this.timerSid = data.timerSid;
+              }else{
+                _this.timerSid="";
+              }
+            }else {
+              _this.timerSid="";
+              console.log('getCurrTimer:', 'ret != 0');
+            }
+          },
+          error(res) {
+            _this.timerSid="";
+            console.log('getCurrTimer:', 'fail');
+          }
+        });
+      },
+      refreshUser(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/getParticipantInfo",
+          dataType: "jsonp",
+          data: {
+            timerSid: _this.timerSid
+          },
+          success: function(data) {
+            console.log("after getParticipantInfo");
+            console.log(data);
+            if (data.ret == 0) {
+              _this.user_count = data.amount;
+              _this.user_list = data.userList;
+            }else {
+              console.log('getParticipantInfo:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getParticipantInfo:', 'fail');
+          }
+        });
+      },
+      countDown(){
+        var _this = this;
+        if(!_this.timerSid){
+          return;
+        }
+        this.toShake();
+      },
+      toShake(){
+        this.$router.push({name: '/shake/shakemobile', params: {timerSid: this.timerSid}});
+      }
+      , closeRule(){
+        this.isShowRule = false;
+      }
+      , showRuleDlg(){
+        this.isShowRule = true;
+      }
+    }
+
+  }
+</script>

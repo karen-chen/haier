@@ -1,0 +1,33 @@
+.information_body{
+  height: 100%;
+  .el-row{
+    @include m_b(82);
+    @include m_r(65);
+    @include m_l(65);
+  }
+  .el-input input{
+    background-color: #d2d2d2;
+    @include border(2,#eee);
+    @include size_color(36,#666);
+    @include h(80);
+    @include lin_hei(80);
+    &::-webkit-input-placeholder { color:#666; }
+    &:focus::-webkit-input-placeholder { color:#333; }
+  }
+  .el-button{
+    @include m_t(258);
+    @include ele-box(562,77);
+    background-color: #f52b3a;
+    @include size_color(36,#fff);
+    @include radius(10);
+    border: none;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  .pop_tips{
+    max-width: pTR(500);
+    @include p(10,20);
+    @include radius(10);
+    @include size_color(26,#f52b3a);
+  }
+}

@@ -1,0 +1,104 @@
+import * as config from './config';
+
+
+export let userData = {};
+
+//获取url param
+export const getParam = function(attr) {
+
+    let match = RegExp(`[?&]${attr}=([^&]*)`).exec(window.location.search)
+
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+}
+
+//判断页面是否授权
+export const wxChankeAuthorize = function() {
+
+    if (!getParam('openid') || !getParam('actSid') ) {
+        //window.location.href = `http://user.weshaketv.com/wss/platformMpOauth?app_code=${ config.appcode }&redirect_url=${ window.location.href }`;
+        console.log('openid不存在');
+        return;
+    } else {
+        userData.actSid = getParam("actSid");
+        userData.openid = getParam("openid");
+        userData.nickname = getParam("nickname");
+        userData.sex = getParam("sex");
+        userData.province = getParam("province");
+        userData.city = getParam("city");
+        userData.country = getParam("country");
+        userData.headimgurl = getParam("headimgurl");
+        userData.hash = getParam("hash");  //判断页面路由跳转;
+    }
+}
+
+export const EnumConfigType = {
+
+    RECOGNIZE: 'recognize_act_base_config',
+    SHAKE: 'shake_act_base_config',
+    DRAW:'draw_act_base_config'
+
+}
+
+export const wxconfig = function(sign) {
+  let WX_API_LIST=[
+    'onMenuShareTimeline', 'onMenuShareAppMessage', 'onMenuShareQQ', 'onMenuShareWeibo', 'onMenuShareQZone','getLocation'
+  ];
+  wx.config({
+    debug: true,
+    appId: sign.appId,
+    timestamp: sign.timestamp,
+    nonceStr: sign.nonceStr,
+    signature: sign.signature,
+    jsApiList: WX_API_LIST
+  });
+
+}
+export const getJsSign = function (onSuccess) {
+
+  $.ajax({
+    url: config.signServerUrl + '/sign/get_js_sign',
+    dataType: 'jsonp',
+    data: {
+      appId: config.appid,
+      url: location.href.split("#")[0]
+    },
+    success: function (data) {
+      if (data.ret == '0') {
+        onSuccess && onSuccess(data.data);
+      } else {
+        // alert('获取js-sdk配置失败');
+      }
+    },
+    error: function () {
+      // alert('获取js-sdk配置失败');
+    }
+  });
+}
+/*定位*/
+export const wxlocationFn = function(cb, cb1) {
+  wx.getLocation({
+    type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+    success: function(res) {
+      var latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+      var longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+      var speed = res.speed; // 速度，以米/每秒计
+      var accuracy = res.accuracy; // 位置精度
+
+      cookie.set('latitude', latitude, daysTime);
+      cookie.set('longitude', longitude, daysTime);
+
+      cb && cb({
+        latitude: latitude,
+        longitude: longitude,
+        areaId: 0
+      })
+
+    },
+    fail: function() {
+      cb1 && cb1();
+      this.$router.push({path: 'failure'})
+    }
+  });
+}
+
+export const ShareInfo = {}

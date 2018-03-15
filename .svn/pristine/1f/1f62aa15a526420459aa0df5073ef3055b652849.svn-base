@@ -1,0 +1,126 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <img class="personPic" :src="imageServerUrl + item.card.merchant.merchantLogo">
+      <p class="logo">{{item.card.merchant.merchantName}}</p>
+      <h2 class="title">{{item.card.resourceName}}</h2>
+      <div class="buyBtn" @click="showmessRoute">
+        {{item.card.configBean.price.value}}元购买
+      </div>
+      <div class="logoPic"></div>
+      <div class="tips">
+        <h2>有效日期</h2>
+        <p>{{item.card.configBean.startDate.value}}至 {{item.card.configBean.endDate.value}}</p>
+      </div>
+      <div class="tips">
+        <h2>使用说明</h2>
+        <p>{{item.card.configBean.description.value}}</p>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      item: {},
+      imageServerUrl: config.imageServerUrl
+    }
+  },
+
+  created() {
+    this.item = this.$route.params.item
+    console.dir(this.item);
+  },
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    showmessRoute(item) {
+      this.$router.push({
+        name: 'Submit'
+      })
+
+
+
+
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f52b3a;
+  padding: pTR(80) pTR(20);
+  .main {
+    width: 100%;
+    background: #fff;
+    position: relative;
+    padding: pTR(66) pTR(28) pTR(100);
+    text-align: center;
+    .personPic {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      display: block;
+      left: 50%;
+      transform: translateX(-50%);
+      top: pTR(-50);
+    }
+    .logo {
+      font-size: pTR(28);
+      color: #666;
+    }
+    .title {
+      padding: pTR(40) 0 pTR(60);
+    }
+    .buyBtn {
+      width: pTR(320);
+      height: pTR(70);
+      line-height: pTR(70);
+      background: #f52b3a;
+      color: #fff;
+      font-size: pTR(30);
+      border-radius: pTR(5);
+      margin: 0 auto pTR(85);
+    }
+    .logoPic {
+      width: 100%;
+      height: pTR(236);
+      background: url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin-bottom: pTR(10);
+    }
+
+    .tips {
+      text-align: left;
+      padding-top: pTR(33);
+      h2 {
+        font-size: pTR(28);
+        color: #333;
+        line-height: pTR(30);
+      }
+      p {
+        padding-top: pTR(10);
+        color: #999999;
+        font-size: pTR(28);
+        line-height: pTR(30);
+      }
+    }
+  }
+}
+
+</style>

@@ -1,0 +1,92 @@
+<template>
+  <div class="login_body">
+     <div class="login_logo"><img src="../../assets/images/login_logo.png"></div>
+     <div class="login_main">
+       <h2>海尔营销互动系统</h2>
+       <div class="input_list">
+         <span class="name"></span>
+         <input type="text" placeholder="用户名" v-model="name">
+       </div>
+       <div class="input_list">
+         <span class="key"></span>
+         <input type="text" placeholder="密码" v-model="key">
+       </div>
+       <div class="login_btn" @click="loginBtn">登录</div>
+     </div>
+    <div class="popTips" v-show="showTips">{{msg}}</div>
+  </div>
+</template>
+<script>
+  import * as config from '@/lib/config'
+  export default({
+    data(){
+      return{
+        name:'',
+        key:'',
+        adminname:'',
+        adminkey:'',
+        token:'',
+        userList:[],
+        showTips:false,
+        msg:''
+      }
+    },
+    created(){
+      this.name = localStorage.getItem('adminname')
+      this.key = localStorage.getItem('adminkey')
+    },
+    methods:{
+      loginBtn(){
+        var _this = this
+        if(this.name == '' || this.key == ''){
+          _this.showTips = true;
+          _this.msg = '请输入账号或者密码';
+          setTimeout(function(){
+            _this.showTips = false;
+          },1000);
+          return;
+        }
+        localStorage.setItem('adminname', this.name)
+        localStorage.setItem('adminkey', this.key)
+        console.log(localStorage.getItem('adminname'))
+        this.adminname = localStorage.getItem('adminname')
+        this.adminkey = localStorage.getItem('adminkey')
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/user/saleLogin",
+          dataType: "jsonp",
+          data: {
+            userName: _this.adminname,
+            userPwd: _this.adminkey
+          },
+          success: function (data) {
+            if (data.ret == 0) {
+              _this.token = data.token
+              localStorage.setItem('admintoken', _this.token)
+              _this.userList = data.user;
+              localStorage.setItem('adminuserId', _this.userList.sid)
+              setTimeout(function(){
+                _this.$router.push({
+                  name: 'Binding'
+                })
+              },1000)
+            }else {
+                _this.showTips = true;
+                _this.msg = data.msg;
+                setTimeout(function(){
+                  _this.showTips = false;
+                },1000)
+            }
+          },
+          error(res) {
+            console.log('/user/saleLogin', 'fail');
+          }
+        });
+      }
+    }
+  })
+</script>
+<style lang="scss" scoped>
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_loginadmin.scss';
+</style>

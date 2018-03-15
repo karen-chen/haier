@@ -1,0 +1,77 @@
+<template>
+  <div class="survey_body">
+    <div class="top">
+      海尔团购会问卷调查
+    </div>
+    <div class="title">
+      感谢你参加了我们2017年8月24日的团购会活动，
+      我们真诚的邀请你参加针对当天活动的一个问卷调
+      查
+    </div>
+    <div class="survey_main">
+      <div class="survey_list">
+        <h2>1）你对本活动的满意度</h2>
+        <div class="question_list">
+          <ul>
+            <li>
+              <input type="radio">
+              非常满意
+            </li>
+            <li>
+              <input type="radio">
+              满意
+            </li>
+            <li>
+              <input type="radio">
+              一般
+            </li>
+            <li>
+              <input type="radio">
+              无法评价
+            </li>
+            <li>
+              <input type="radio">
+              不满意
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="survey_list">
+        <h2>2）你本次购买的认筹券是</h2>
+        <div class="question_list">
+          <ul>
+            <li>
+              <input type="radio">
+              100元抵500元认筹券
+            </li>
+            <li>
+              <input type="radio">
+              200元抵1000元认筹券
+            </li>
+            <li>
+              <input type="radio">
+              200元抵1000元认筹券
+            </li>
+            <li>
+              <input type="radio">
+              200元抵1000元认筹券
+            </li>
+            <li>
+              <input type="radio">
+              200元抵1000元认筹券
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="submit_btn">提交</div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/survey.scss';
+</style>
+<script>
+
+</script>

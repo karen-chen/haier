@@ -1,0 +1,19 @@
+.uncoupon_body{
+  height: 100%;
+  .el-row{
+    justify-content: center;
+  }
+
+  .icon_uncoupon{
+    display: inline-block;
+    @include ele-box(198,126);
+    @include bg(url("../../assets/images/icon_uncoupon.png"));
+    @include m_t(180);
+    @include m_b(75);
+  }
+  .text{
+    display: inline-block;
+    @include size_color(36,#999);
+    @include lin_hei(50);
+  }
+}

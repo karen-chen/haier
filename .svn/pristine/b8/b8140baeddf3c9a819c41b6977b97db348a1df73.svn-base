@@ -1,0 +1,36 @@
+.failure_body{
+  height: 100%;
+  .text-center{
+    text-align: center;
+  }
+  .top{
+    @include m-t(183);
+    span{
+      display: inline-block;
+      @include ele-box(120,120);
+      @include m_b(85);
+      @include bg(url("../../assets/images/icon_failure.png"));
+    }
+    p{
+      @include size_color(36,#999);
+    }
+  }
+  .btn{
+    @include m_t(505);
+    @include m_r(93);
+    @include m_l(93);
+    button{
+      width: 100%;
+      @include h(77);
+      border: none;
+      &.reset_locate{
+        background-color: #f52b3a;
+        @include size_color(36,#fff);
+      }
+      &.choose_locate{
+        @include size_color(36,#f52b3a);
+        background: none;
+      }
+    }
+  }
+}

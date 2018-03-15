@@ -1,0 +1,204 @@
+<template>
+  <div class="newpage">
+    <div class="detailBox">
+      <div class="detailTtitle">
+        <div class="left"></div>
+        <div class="right">活动详情 </div>
+        <div class="more">更多></div>
+      </div>
+      <div class="detailList">
+        <div class="detailItem">
+          <div class="detailtime">时间:</div>
+          <div class="timetext">2017年12月27日至31日</div>
+          <span class="icon1"></span>
+        </div>
+        <div class="detailItem">
+          <div class="detailtime">地点：</div>
+          <div class="timetext"> 成都市青羊区苏坡东路西单商场旁居然 之家(金沙店)1楼“海尔旺年会”</div>
+          <span class="icon2"></span>
+        </div>
+      </div>
+    </div>
+    <div class="soundBox">
+      <div class="soundtitle">
+        <div class="left"></div>
+        <div class="right">活动解说 </div>
+      </div>
+      <div class="soundList">
+        <div class="soundlogo"></div>
+        <div class="soundline"></div>
+        <div class="soundtxt">1'39"</div>
+      </div>
+    </div>
+  </div>
+</template>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  wxShare,
+  wxHideMenu
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+
+    }
+  },
+  created() {
+
+  },
+  methods: {
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.newpage {
+  width: 100%;
+  min-height: 100%;
+  background: #f1f1f1 url(../../assets/czlImg/bgTitle.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+  padding: 0 pTR(28);
+  overflow-y: scroll;
+  padding-top: pTR(548);
+  .detailBox {
+    width: 100%;
+    background: #fff;
+    padding: 0 pTR(24) pTR(10);
+    border-radius: pTR(10);
+    margin-bottom: pTR(23);
+    .detailTtitle {
+      height: pTR(100);
+      border-bottom: pTR(2) solid #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position:relative;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detail1.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+      .more{
+        position:absolute;
+        right:0;
+        color:#999999;
+        font-size:pTR(24);
+      }
+    }
+    .detailList {
+      padding-left: pTR(70);
+      padding-top: pTR(36);
+      .detailItem {
+        width: 100%;
+        display: flex;
+        position: relative;
+        padding-bottom: pTR(36);
+        .detailtime {
+          font-size: pTR(30);
+          color: #333333;
+          line-height: pTR(44);
+          width: pTR(103);
+        }
+        .timetext {
+          box-flex: 1;
+          flex: 1;
+          color: #8a8a8a;
+          font-size: pTR(28);
+          line-height: pTR(44);
+          word-break: break-all;
+        }
+        .icon1 {
+          width: pTR(23);
+          height: pTR(23);
+          position: absolute;
+          background: #f1f1f1 url(../../assets/czlImg/detailTime.png) 0 0 no-repeat;
+          -webkit-background-size: 100%;
+          background-size: 100%;
+          left: pTR(-70);
+          top: pTR(5);
+        }
+        .icon2 {
+          width: pTR(20);
+          height: pTR(27);
+          position: absolute;
+          background: #f1f1f1 url(../../assets/czlImg/detailAdd.png) 0 0 no-repeat;
+          -webkit-background-size: 100%;
+          background-size: 100%;
+          left: pTR(-70);
+          top: pTR(5);
+        }
+      }
+    }
+  }
+  .soundBox {
+    width: 100%;
+    background: #fff;
+    padding: 0 pTR(24) 0;
+    border-radius: pTR(10);
+    margin-bottom: pTR(23);
+    .soundtitle {
+      height: pTR(100);
+      border-bottom: pTR(2) solid #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detailadv.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+    }
+    .soundList {
+      height: pTR(153);
+      width: 100%;
+      display:flex;
+      justify-content: center;
+      align-items:center;
+      .soundlogo {
+        width: pTR(74);
+        height: pTR(74);
+        background: url(../../assets/czlImg/haierLogo.png) 0 0 no-repeat;
+        background-size: 100%;
+        border-radius:50%;
+        border:pTR(2) solid #f1f1f1;
+      }
+      .soundline {
+        width: pTR(390);
+        height: pTR(72);
+        background: url(../../assets/czlImg/message.png) 0 0 no-repeat;
+        background-size: 100%;
+        margin:0 pTR(20);
+      }
+      .soundtxt{
+        color:#999999;
+        font-size:pTR(30);
+      }
+    }
+  }
+}
+
+</style>

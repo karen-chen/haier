@@ -1,0 +1,51 @@
+.code_body{
+  height: 100%;
+  .el-row{
+    justify-content: center;
+    @include m(0,30);
+    span{
+      display: inline-block;
+      text-align: left;
+      @include w(500);
+      word-wrap:break-word;
+      vertical-align: top;
+    }
+  }
+  .mtb{
+    @include m_t(200);
+    @include m_b(40);
+  }
+  .code_pic{
+    display: inline-block;
+    @include ele-box(450,450);
+    @include m_b(45);
+  }
+  .size30{
+    @include size_color(30,#666);
+    @include p_b(25);
+  }
+  .size24{
+    @include size_color(24,#666);
+  }
+}
+.inputting_code{
+  .input_box{
+    margin: pTR(247) pTR(65) pTR(197);
+    input{
+      width: 100%;
+      @include h(80);
+      background-color: #d2d2d2;
+      @include lin_hei(80);
+      @include p(0,20);
+      @include size_color(30,#333);
+    }
+  }
+  .code_btm{
+    @include ele-box(320,70);
+    background-color: #f52b3a;
+    @include size_color(30,#fff);
+    @include lin_hei(70);
+    text-align: center;
+    margin: 0 auto;
+  }
+}

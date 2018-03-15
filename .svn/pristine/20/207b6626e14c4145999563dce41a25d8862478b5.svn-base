@@ -1,0 +1,73 @@
+<template>
+  <div>
+    <button @click="show">点击</button>
+    <vue-city-picker ref="picker" @select="select" :selected-index="selectedIndex" :data="data"></vue-city-picker>
+    <div >{{selectData}}</div>
+
+    <select>
+      <option value="" v-for="(list, index) in areaData" :key="index">{{list.townName}}</option>
+    </select>
+  </div>
+</template>
+<script>
+import * as config from "@/lib/config";
+import vueCityPicker from "vue-city-bspicker";
+import { province, city, area } from "@/lib/city-data";
+
+export default {
+  components: {
+    vueCityPicker
+  },
+  data() {
+    return {
+      areaData: [], //区数据
+      selectedIndex: [0,0,0] , //数据回显
+      // selectData: [],
+      selectData:'',
+      data: [province, city, area]
+    };
+  },
+  methods: {
+    show: function() {
+      this.$refs["picker"].show();
+    },
+    select: function() {
+      console.log(arguments);
+      console.log("区接口参数：", arguments[0][2]);
+      console.log("回显：", arguments[1]);
+      console.log("地址：", arguments[2]);
+      
+      // this.selectData.length = 0;
+      // arguments[2].forEach(element => {
+      //   this.selectData.push(element);
+      // });
+      this.selectData=arguments[2].join(" ")
+      //区id
+      if (arguments[0][2]) {
+        this.getArea(arguments[0][2], res => {
+          console.log(res)
+          
+          this.areaData.length = 0;
+          res.forEach(el => {
+            this.areaData.push(el);
+          });
+        });
+      }
+    },
+    getArea(villageId, cb) {
+      $.ajax({
+        url: config.locationUrl + "/town/getTowns",
+        dataType: "jsonp",
+        data: {
+          villageId:villageId
+        },
+        success: (data)=>{
+          if (data.ret == 0) {
+            cb && cb(data.rows);
+          }
+        }
+      });
+    }
+  }
+};
+</script>

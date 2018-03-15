@@ -1,0 +1,116 @@
+<template>
+  <div class="popPicBox">
+    <img :src="imageServerUrlpic+imgPic">
+  </div>
+</template>
+<style lang="scss">
+@import '../../assets/scss/_mixins.scss';
+
+.popPicBox{
+  position:fixed;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  z-index:999;
+  img{
+    width:100%;
+    height:100%;
+  }
+}
+
+</style>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  userData,
+  getJsSign,
+  wxconfig,
+  wxHideMenu
+} from '@/lib/tools';
+export default {
+  data: function() {
+    return {
+      actSid: '',
+      link: '',
+      showPop: false,
+      msg: '',
+      imgPic:'',
+      imageServerUrlpic: config.imageServerUrl,
+    }
+  },
+
+  created() {
+    document.title = "活动售券二维码";
+    var _this = this;
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wxHideMenu()
+    wx.ready(function() {
+      wx.showMenuItems({
+        menuList: [
+          'menuItem:favorite',
+        ] // 要显示的菜单项，所有menu项见附录3
+      });
+    })
+    _this.actSid = _this.$route.params.activity;
+    $.ajax({
+      type: "GET",
+      url: config.locationUrl + "/user/getActSalePic",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid,
+        actSid: this.actSid
+      },
+      success: function(data) {
+        if (data.ret == 0) {
+          _this.imgPic=data.url;
+
+        } else if (data.ret == 1) {
+          _this.showPop = true
+          _this.msg = "该活动已删除，无法生成售券二维码"
+          setTimeout(function() {
+            _this.showPop = false
+          }, 2000)
+        } else if (data.ret == 2) {
+          _this.showPop = true
+          _this.msg = "该活动已结束，无法生成售券二维码"
+          setTimeout(function() {
+            _this.showPop = false
+          }, 2000)
+        } else if (data.ret == 3) {
+          _this.showPop = true
+          _this.msg = "无法生成售券二维码，请重新绑定"
+          setTimeout(function() {
+            _this.showPop = false
+          }, 2000)
+        } else if (data.ret == 4) {
+          _this.showPop = true
+          _this.msg = "无法售卖该活动的认筹券"
+          setTimeout(function() {
+            _this.showPop = false
+          }, 2000)
+        } else {
+          console.log('/user/getActSaleInfo:', 'ret != 0');
+        }
+      },
+      error(res) {
+        console.log('/user/getActSaleInfo:', 'fail');
+      }
+    });
+
+  },
+  methods: {
+    convertCanvasToImage: function(canvas) {
+      var image = new Image();
+      console.dir(canvas)
+
+      image.src = canvas.toDataURL("image/png");
+      return image;
+    }
+  }
+}
+
+</script>

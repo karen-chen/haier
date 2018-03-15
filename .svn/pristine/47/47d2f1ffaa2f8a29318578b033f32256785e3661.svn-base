@@ -1,0 +1,120 @@
+.pop_mask{
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,.8);
+  position: fixed;
+  @include top(0);
+  @include left(0);
+  @include center;
+  flex-direction: column;
+  .pop_box{
+    text-align: center;
+    position: relative;
+    @include radius(10);
+    .btn {
+      @include h(90);
+      @include lin_hei(90);
+      background-color: #f52b3a;
+      @include radius(5);
+      @include size_color(36, #fff);
+    }
+    .off_btn{
+      @include ele-box(52,52);
+      @include lin_hei(52);
+      border-radius: 50%;
+      @include border(2,#fff);
+      @include size_color(40,#fff);
+      position: absolute;
+      @include bottom(-100);
+      left: 50%;
+      transform: translate(-50%,0);
+    }
+  }
+  .no_win{
+    @include ele-box(646,670);
+    background-color: #fff;
+    @include p(60,60);
+    h3{
+      @include size_color(48,#2e2e2e);
+      @include p_t(20);
+    }
+    p{
+      @include size_color(28,#888);
+      @include p_t(10);
+    }
+    span{
+      display: inline-block;
+      @include ele-box(322,174);
+      @include bg(url("../../assets/images/pop_01.png"));
+      @include m_t(75);
+      @include m_b(90);
+    }
+  }
+  .code_box {
+    @include ele-box(636, 670);
+    background-color: #f52b3a;
+    @include p(40,45);
+    h3 {
+      @include size_color(36,#fff);
+      @include lin_hei(50);
+    }
+    p {
+      @include size_color(28, #fff);
+    }
+    span {
+      display: inline-block;
+      @include ele-box(368,368);
+      @include m(37,0);
+    }
+  }
+  .gift_box {
+    @include w(640);
+    background-color: #f52b3a;
+    @include p(60,60);
+    h3 {
+      @include size_color(36,#fff);
+      @include p_b(20);
+      word-wrap: break-word;
+      word-break: break-all;
+      span{
+        word-wrap: break-word;
+        word-break: break-all;
+      }
+    }
+    p {
+      @include size_color(28, #fff);
+      @include m_b(70);
+    }
+    .btn{
+      background-color: #fff;
+      @include size_color(36,#f52b3a);
+    }
+  }
+  .rule_box{
+    @include ele-box(635,670);
+    background-color: #f52b3a;
+    @include size_color(35,#fff);
+    @include p(50,35);
+    h3{
+      @include size_color(42,#fff);
+      font-weight: bold;
+      @include m_b(30);
+    }
+    .rule_list{
+      max-height: pTR(500);
+      overflow-y: auto;
+    }
+    p{
+      text-align: left;
+      @include lin_hei(50);
+      word-wrap: break-word;
+      word-break: break-all;
+    }
+  }
+  .pickup_box{
+    .pick_btn{
+      background-color: #fff;
+      color: #f52b3a;
+    }
+  }
+}

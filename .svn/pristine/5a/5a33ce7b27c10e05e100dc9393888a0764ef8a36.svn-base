@@ -1,0 +1,185 @@
+@charset "UTF-8";
+// rem计算基准值
+$baseSize: 75 !default;
+// 将px转换为rem单位
+@function pTR($px) {
+  @return $px / $baseSize * 1rem;
+}
+
+
+@mixin ele-box($width:null,$height:null,$margin:null){
+  @if $height == null {
+    width: pTR($width);
+    margin: $margin;
+  } @else if $width == null {
+    height: pTR($height);
+    margin: $margin;
+  } @else {
+    width: pTR($width);
+    height: pTR($height);
+    margin: $margin;
+  }
+}
+
+@mixin w($var){
+  width:pTR($var);
+};
+
+@mixin h($var){
+  height:pTR($var);
+};
+@mixin bg-position($var){
+  background-position:pTR($var) pTR($var);
+};
+
+@mixin border($var,$color){
+  border:pTR($var) solid $color;
+};
+@mixin border_b($var,$color){
+  border-bottom:pTR($var) solid $color;
+};
+
+
+@mixin shadow-inset($x,$y,$s, $ss, $color){
+  -webkit-box-shadow: pTR($x) pTR($y) pTR($s) pTR($ss) $color inset;
+};
+
+@mixin shadow($x,$y,$s, $ss, $color){
+  -webkit-box-shadow: pTR($x) pTR($y) pTR($s) pTR($ss);
+};
+
+@mixin translate($x,$y){
+  -webkit-transform: translate3d(pTR($x),pTR($y));
+};
+
+
+@mixin lin_hei($var){
+  line-height: pTR($var);
+};
+
+@mixin radius($var){
+  border-radius:pTR($var);
+};
+
+@mixin radius_fx($tl, $tr, $bl, $br){
+  border-top-left-radius:pTR($tl);
+  border-top-right-radius:pTR($tr) ;
+  border-bottom-right-radius:pTR($br);
+  border-bottom-left-radius:pTR($bl);
+};
+
+
+
+@mixin text-indent($var){
+  text-indent:pTR($var);
+};
+
+@mixin size_color($var,$color){
+  font-size:pTR($var);
+  color:$color;
+};
+
+
+@mixin p($var,$so){
+  padding-top:pTR($var);
+  padding-bottom:pTR($var);
+  padding-left:pTR($so);
+  padding-right:pTR($so);
+};
+
+@mixin p_t($var){
+  padding-top:pTR($var);
+};
+
+@mixin p_r($var){
+  padding-right:pTR($var);
+};
+
+@mixin p_b($var){
+  padding-bottom:pTR($var);
+};
+
+@mixin p_l($var){
+  padding-left:pTR($var);
+};
+
+@mixin m($var, $so ){
+  margin-top:pTR($var);
+  margin-bottom:pTR($var);
+  margin-left:pTR($so);
+  margin-right:pTR($so);
+};
+
+@mixin m_t($var){
+  margin-top:pTR($var);
+};
+
+@mixin m_r($var){
+  margin-right:pTR($var);
+};
+
+@mixin m_b($var){
+  margin-bottom:pTR($var);
+};
+
+@mixin m_l($var){
+  margin-left:pTR($var);
+};
+
+@mixin bg($img){
+  background-image: $img;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+};
+
+
+@mixin font_apostrophe{
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+};
+
+
+
+@mixin flex{
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: flex;
+};
+
+
+@mixin flex_center{
+  -webkit-box-pack: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  align-items: center;
+};
+
+@mixin center{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin right($var){
+  right:pTR($var);
+};
+
+@mixin top($var){
+  top:pTR($var);
+};
+
+@mixin bottom($var){
+  bottom:pTR($var);
+};
+
+@mixin left($var){
+  left:pTR($var);
+};
+
+
+
+
+

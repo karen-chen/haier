@@ -1,0 +1,36 @@
+import * as config from '@/lib/config'
+import * as tool from '@/lib/tools'
+let user = tool.userData
+
+
+export default {
+  //团购会首页title配置
+  //配置类型:(recognize_act_base_config:宣传页配置;shake_act_base_config:摇奖页配置;draw_act_base_config:抽奖页配置)
+  getBaseConfigByType(req, cb) {
+    $.ajax({
+      type: "GET",
+      url: config.url + "sys/getBaseConfigByType",
+      dataType: "jsonp",
+      data: {
+        configType: req.configType,
+        actSid: 'bbb7d26490c447ea8656f135b7fa03b3',
+      },
+      success(res) {
+
+        console.log(res);
+
+        if (res.ret == 0) {
+          cb && cb(res);
+        } else {
+          console.log('sys/getBaseConfigByType:', 'ret != 0');
+        }
+
+      },
+      error(res) {
+          console.log('sys/getBaseConfigByType:', 'fail');
+      }
+    });
+  }
+  //团购会首页自定义模板配置
+
+}

@@ -1,0 +1,25 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+import buyCard from './modules/buyCard'
+import confessTicket from './modules/confessTicket'
+import prizeTicket from './modules/prizeTicket'
+import venueLive from './modules/venueLive'
+import venueNavigation from './modules/venueNavigation'
+
+import shop from './modules/shop'
+
+Vue.use(Vuex)
+
+const store = new Vuex.Store({
+  modules: {
+    buyCard,
+    confessTicket,
+    prizeTicket,
+    venueLive,
+    venueNavigation,
+   shop
+  }
+})
+
+export default store;

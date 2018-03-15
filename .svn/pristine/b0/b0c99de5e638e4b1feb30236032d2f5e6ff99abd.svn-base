@@ -1,0 +1,65 @@
+<template>
+  <div class="inputting_code">
+    <div class="input_box">
+      <input type="text" placeholder="请输入购买码" v-model="code">
+    </div>
+    <div class="code_btm" @click="codeBtn">确定</div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_code.scss';
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import '@/assets/js/jquery.qrcode.min'
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    wxHideMenu
+  } from '@/lib/tools';
+  export default {
+    data(){
+      return{
+        code:""
+      }
+    },
+    created(){
+      getJsSign(function (sign) {
+        wxconfig(sign);
+      })
+      wxHideMenu()
+      wx.ready(function () {
+        wx.showMenuItems({
+          menuList: [
+            'menuItem:favorite',
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+      })
+    },
+    methods:{
+      codeBtn(){
+        var _this = this
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/user/getSaleLink",
+          dataType: "jsonp",
+          data: {
+            saleCode:_this.code
+          },
+          success:function(data){
+            if(data.ret == 0){
+              _this.$router.push({path:'main'})
+            }else{
+              console.log('/user/getSaleLink:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/user/getSaleLink:', 'fail');
+          }
+        })
+      }
+    }
+  }
+</script>

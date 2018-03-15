@@ -1,0 +1,390 @@
+<template>
+  <div class="membershipcard">
+    <div class="top"></div>
+    <div class="popBox">
+      <div class="title">
+        请填写你的信息，领取海尔会员卡
+      </div>
+      <div class="main">
+        <ul class="list">
+          <li class="item">
+            <span>姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名：</span>
+            <input v-model="result.name" placeholder="请填写您的姓名" maxlength="10" @blur="elseCheck">
+          </li>
+          <li class="item">
+            <span>电&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;话：</span>
+            <input v-model="result.phone" placeholder="请填写您的电话号码" @blur="phoneNum">
+          </li>
+          <li class="item">
+            <!-- <div class="city"> -->
+            <div class="textCenter" v-show="textCenterone">选择省份</div>
+            <span>选择省份: </span>
+            <select v-model="result.province" @change="areaChange('province')" @focus="textCenter1">
+              <option disabled value="">请选择</option>
+              <!--               <option>A</option>
+              <option>B</option>
+              <option>C</option> -->
+              <!-- v-for="(obj, i) in area.items" -->
+              <template v-for="obj in province">
+                <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+              </template>
+            </select>
+            <!-- </div> -->
+          </li>
+          <li class="item">
+            <!-- <div class="city"> -->
+            <div class="textCenter" v-show="textCentertwo">选择城市</div>
+            <span>选择城市: </span>
+            <!-- @change="areaChange(0, item.area)" -->
+            <select v-model="result.city" @change="areaChange('city')" @focus="textCenter2">
+              <option value="">请选择</option>}
+              <template v-for="obj in city ">
+                <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+              </template>
+            </select>
+            <!-- </div> -->
+          </li>
+          <li class="item">
+            <!-- <div class="city"> -->
+            <div class="textCenter" v-show="textCenterthree">选择区域</div>
+            <span>选择区域: </span>
+            <select v-model="result.country"  @focus="textCenter3">
+              <option value="">请选择</option>}
+              <template v-for="obj in country ">
+                <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+              </template>
+            </select>
+            <!-- </div> -->
+          </li>
+          <li class="item">
+            <span>详细地址：</span>
+            <input v-model="result.address" placeholder="请填写您的地址" maxlength="30" @blur="elseCheck">
+          </li>
+        </ul>
+        <div class="submitBtn" @click="showCardpage">
+          领取会员卡
+        </div>
+      </div>
+    </div>
+    <div class="pop_tips" v-show="showTips">{{messg}}</div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  checkInject,
+  checkTel
+} from '@/lib/tools';
+import AreaData from '@/lib/AreaData'
+
+export default {
+  data() {
+    return {
+      result: {},
+      province: [],
+      city: [],
+      country: [],
+      sign: {},
+      showTips: false,
+      messg: '',
+      textCenterone: true,
+      textCentertwo: true,
+      textCenterthree: true
+    }
+  },
+
+  created() {
+    document.title = '会员卡信息填写';
+    this.province = AreaData.provs_data;
+
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+  },
+
+
+
+  // },
+  methods: {
+    phoneNum() {
+      var self = this;
+      var val = self.result.phone;
+      if (checkTel(val) && !checkInject(val)) {
+        return true;
+      } else {
+        if (self.showTips == false) {
+          self.showTips = true;
+          self.messg = "号码填写错误";
+          setTimeout(() => {
+            self.showTips = false;
+          }, 1000)
+        }
+
+        return false;
+      }
+    },
+
+    elseCheck() {
+      var self = this;
+      var val1 = self.result.name;
+      var val2 = self.result.address;
+      if (!checkInject(val1) && !checkInject(val2)) {
+        return true;
+      } else {
+        if (self.showTips == false) {
+          self.showTips = true;
+          self.messg = "输入内容不能包含字符<>";
+          setTimeout(() => {
+            self.showTips = false;
+          }, 1000)
+        }
+        return false;
+      }
+    },
+    //报错提示
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+
+    //点击提交并支付按钮事件
+    showCardpage() {
+      var self = this;
+
+      this.result.openid = userData.openid;
+      this.result.actSid = userData.actSid;
+      if (this.result.openid && this.result.name && this.result.phone && this.result.province && this.result.city && this.result.country && this.result.address && self.phoneNum() && self.elseCheck()) {
+        // debugger;
+        //保存用户信息,并获取到微信会员卡签名
+        $.ajax({
+          url: config.locationUrl + "/wxMember/saveWxMember",
+          dataType: "jsonp",
+          type: "post",
+          data: this.result,
+          success: function(data) {
+            // console.log(typeof(data.ret));
+
+            if (data.ret == "0" || data.ret == "2") {
+              // console.log(data);
+              self.sign = data.sign;
+              self.openCard(self.sign);
+            } else {
+              //处理接口调用失败
+              self.error('getCustomData');
+
+            }
+          },
+          error(res) {
+            self.error('getCustomData');
+          }
+        });
+
+      } else {
+        //弹出弹框 姓名不能为空
+        console.log('bu neng wei kong!');
+        if (self.showTips == false) {
+          self.showTips = true;
+          self.messg = "请填写完整信息";
+          setTimeout(() => {
+            self.showTips = false;
+          }, 1000)
+        }
+        throw ''
+      }
+
+    },
+
+    areaChange(type) {
+      switch (type) {
+        case 'province':
+          {
+            let province = JSON.parse(this.result.province).value
+            this.city = AreaData.citys_data[province]
+            break;
+          }
+        case 'city':
+          {
+            if (this.result.city) {
+              let city = JSON.parse(this.result.city).value
+              this.country = AreaData.dists_data[city]
+            }
+            break;
+          }
+      }
+    },
+
+    //调取微信接口,获取卡片相关信息
+    openCard(sign) {
+      var self = this
+      var cardExt = {};
+      cardExt.code = sign.code;
+      cardExt.openid = sign.openid;
+      cardExt.timestamp = sign.timestamp;
+      cardExt.signature = sign.signature;
+      cardExt.nonce_str = sign.nonce_str;
+      wx.addCard({
+        cardList: [{
+          cardId: sign.card_id,
+          cardExt: JSON.stringify(cardExt)
+        }],
+        success: function(res) {
+          self.successApi()
+        },
+        cancel: function(res) {}
+      });
+
+    },
+
+    //领取成功之后回调接口,通知后台,相应加积分
+
+    successApi() {
+      $.ajax({
+
+        url: config.locationUrl + "/wxMember/addWxPackage",
+        dataType: "jsonp",
+        type: "post",
+        data: {
+          openid: userData.openid
+        },
+        success: function(data) {
+          // console.log('用户已经领取会员卡')
+        },
+        error(res) {
+
+        }
+      });
+    },
+
+    textCenter1() {
+      this.textCenterone = false;
+
+    },
+    textCenter2() {
+      this.textCentertwo = false;
+    },
+    textCenter3() {
+      this.textCenterthree = false;
+    }
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.membershipcard {
+  width: 100%;
+  min-height: 100%;
+  position: relative;
+
+  .top {
+    width: 100%;
+    height: pTR(455);
+    background: #f52b3a;
+  }
+  .popBox {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 pTR(32);
+    .title {
+      height: pTR(152);
+      line-height: pTR(152);
+      color: #fff;
+      font-size: pTR(36);
+      text-align: center;
+    }
+    .main {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: pTR(10);
+      padding: 0 pRT(60);
+      .list {
+        padding: pTR(50) pTR(60);
+        width: 100%;
+        .item {
+          height: pTR(100);
+          display: flex;
+          align-items: center;
+          border-bottom: pTR(2) solid #e5e5e5;
+          padding-top: pTR(50);
+          position: relative;
+          span {
+            display: block;
+            width: pTR(200);
+            height: pTR(50);
+            line-height: pTR(50);
+            color: #333333;
+            font-size: pTR(30);
+          }
+          input {
+            width: pTR(400);
+            height: pTR(50);
+            line-height: pTR(50);
+            background: transparent;
+            font-size: pTR(30);
+          }
+
+          select {
+            width: pTR(400);
+            height: pTR(50);
+            line-height: pTR(50);
+            background: transparent;
+            font-size: pTR(30);
+          }
+        }
+      }
+      .submitBtn {
+        width: pTR(562);
+        height: pTR(77);
+        line-height: pTR(77);
+        background: #f52b3a;
+        border-radius: pTR(10);
+        margin: pTR(50) auto;
+        font-size: pTR(36);
+        color: #fff;
+        text-align: center;
+      }
+    }
+  }
+}
+
+
+.textCenter {
+  position: absolute;
+  left: pTR(193);
+  top: 73%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: pTR(30);
+  color: #999;
+}
+
+.pop_tips {
+  background-color: rgba(0, 0, 0, .6);
+  min-width: pTR(400);
+  padding: pTR(20) 0;
+  text-align: center;
+  color: #fff;
+  border-radius: pTR(10);
+  font-size: pTR(30);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+</style>

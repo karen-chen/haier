@@ -1,0 +1,283 @@
+<template>
+  <div class="shake_body">
+    <div class="top el-row">
+      <div class="text-center el-col el-col-4"><span>{{user_count}}</span><br>参与互动
+      </div>
+      <div class="el-col el-col-16 el-col-offset-4">
+
+        <div class="marquee_main" v-for="prizeUser in prizeUserList" :key="prizeUser.sid">
+          <div class="marquee_list">
+            <div class="pic">
+              <img src="http://1251097942.cdn.myqcloud.com/1251097942/futures/images/icon_01.png">
+            </div>
+            <p><span>小鱼获得</span> <b>88.88</b> 现金红包</p>
+          </div>
+      </div>
+    </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        <div class="title"></div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        摇奖正在进行，一起来摇吧~
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        <div class="shake_main"><span class="tada"></span></div>
+      </div>
+    </div>
+    <div class="el-row" v-show="false">
+      <div class="text-center el-col el-col-24">
+        <div class="gifts_title"></div>
+      </div>
+    </div>
+    <div class="gigts_list" v-show="false">
+      <div class="el-row">
+        <div class="el-col el-col-18">测试自定义code</div>
+        <div class="el-col el-col-5 el-col-offset-1">剩余<span>81</span>个</div>
+      </div>
+    </div>
+  <!--未中奖弹框-->
+  <div class="pop_mask" id="noWin" v-show="isShowNoPrize" >
+    <div class="pop_box no_win">
+      <h3>未中奖</h3>
+      <p>活动最重要的是开心咯！</p>
+      <span></span>
+      <div class="btn" @click="closeNoPrizeDlg">再来一次</div>
+      <div class="off_btn" @click="closeNoPrizeDlg">&times;</div>
+    </div>
+  </div>
+  <!--关注公众号弹框-->
+  <div class="pop_mask" id="codeBox"  v-show="isShowQrcode">
+    <div class="pop_box code_box">
+      <h3>请在“海尔电视”公众号<br>
+        菜单“我的券”中进行查看</h3>
+      <span><img src="../../assets/images/pop_code.jpg"></span>
+      <p>长按二维码，即可关注“海尔电视”公众号</p>
+      <div class="off_btn" @click="closeQrcodeDlg">&times;</div>
+    </div>
+  </div>
+  <!--中奖弹框-->
+  <div class="pop_mask" id="giftBox"  v-show="isShowPrize">
+    <div class="pop_box gift_box">
+      <h3>恭喜你获得<span>{{prize_title}}</span>奖品</h3>
+      <p>奖品已自动放入“我的券”中</p>
+      <div class="btn" @click="showQrcodeDlg">查看奖品使用说明</div>
+      <div class="off_btn"@click="closePrizeDlg">&times;</div>
+    </div>
+  </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_shake.scss';
+</style>
+<script>
+/*  import '@/assets/js/jquery.marquee.min';
+  import '@/assets/js/wy.base.steadyoutput';
+  import '@/assets/js/wy.effect.marquee';*/
+import * as config from '@/lib/config'
+import {
+  userData,
+  getParam
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      isShowNoPrize:false,
+      isShwoQrcode:false,
+      isShowPrize:false,
+      timerSid:"",
+      actSid:"",
+      isShaking: false,
+      t_timer:null,
+      t_userList:null,
+      prizeUserList:[]
+    }
+  },
+
+  created() {
+    this.actSid = getParam("actSid");
+//    this.timerSid = getParam("timerSid");
+    this.timerSid =this.$router.params.timerSid
+    if(!this.timerSid){
+      this.timerSid = localStorage.getItem("shakemobile_timerSid")
+    }else{
+      localStorage.setItem("shakemobile_timerSid", this.timerSid)
+    }
+    this.initPage();
+
+    this.refreshTimer();
+    this.t_timer = setInterval(this.refreshTimer, this.user_refresh_interval);
+
+    this.refreshUser();
+    this.t_userList = setInterval(this.refreshPrizeUser, this.user_refresh_interval);
+  },
+
+  methods:{
+    initPage(){
+      var _this = this;
+      //shake regist
+      var u = navigator.userAgent, app = navigator.appVersion;
+      var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+      var shakeSpeed = 8;
+      if (isiOS){
+        shakeSpeed = 30;
+      }
+      $(document).shake({
+        shake_speed:shakeSpeed,
+        time_difference:30,
+        shakeAfter : function(){
+          _this.doShake();
+        }
+      });
+
+      //page info
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/sys/getBaseConfigByType",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid,
+          configType: 'shake_act_base_config'
+        },
+        success: function(data) {
+          console.log("after getBaseConfigByType");
+          console.log(data);
+          if (data.ret == 0) {
+            //refresh public share info, title, act rule
+            document.title = data.title;
+
+            config.wxShareData.title = data.shareTitle;
+            config.wxShareData.desc = data.shareDesc;
+            config.wxShareData.link = data.shareUrl;
+            config.wxShareData.imgUrl = config.imageServerUrl + data.shareImg;
+          }else {
+            console.log('getBaseConfigByType:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('getBaseConfigByType:', 'fail');
+        }
+      });
+    },
+    refreshTimer(){
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/timer/getCurrTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid,
+        },
+        success: function(data) {
+          console.log("after getCurrTimer");
+          console.log(data);
+          if (data.ret == 0) {
+            if(data.timerSid && data.timerSid!=_this.timerSid){
+              _this.timerSid = data.timerSid;
+              if(data.status==1){
+                //shaking time
+              }else{
+                _this.toCountDownPage();
+              }
+
+            }else{
+              _this.timerSid="";
+            }
+          }else {
+            _this.timerSid="";
+            console.log('getCurrTimer:', 'ret != 0');
+          }
+        },
+        error(res) {
+          _this.timerSid="";
+          console.log('getCurrTimer:', 'fail');
+        }
+      });
+    },
+    refreshPrizeUser(){
+// get latest 30 prizeusers
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/lottery/getPrizeUserList",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid
+        },
+        success: function(data) {
+          console.log("after getPrizeUserList");
+          if(data.ret == 0 ){
+            _this.user_count = data.amount;
+            if(data.rows){
+              _this.prizeUserList = _this.prizeUserList.concat(data.rows)
+            }
+          }
+
+        },
+        error(res) {
+          console.log('lottery/shake:', 'fail');
+          _this.showNoPrizeDlg();
+        }
+      });
+    },
+    toCountDownPage(){
+      clearInterval(this.t_userList);
+      clearInterval(this.t_timer);
+
+      this.$router.push({name: 'CountMobile', params: {actSid: this.actSid}});
+    },
+    doShake(){
+      var _this = this;
+      if(!_this.timerSid){
+        alert("抽奖还未开始，请耐心等待！这个提示需要等待公共组件后替换。")
+      }
+      console.log("in startDraw");
+      if(_this.isShaking){
+        return;
+      }
+      _this.isShaking = true;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/lottery/shake",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          timerSid: _this.timerSid
+        },
+        success: function(data) {
+          _this.lottery_result = data;
+          console.log("after shake");
+          if(data.ret == 0 && data.timerPrize){
+            //TODO set prize title
+            _this.prize_title = data.timerPrize.resourceName;
+            _this.showPrizeDlg();
+          }else{
+            _this.showNoPrizeDlg();
+          }
+
+        },
+        error(res) {
+          console.log('lottery/shake:', 'fail');
+          _this.showNoPrizeDlg();
+        }
+      });
+    },
+    showQrcodeDlg(){this.isShowQrcode = true},
+    closeQrcodeDlg(){this.isShowQrcode = false},
+    showNoPrizeDlg(){this.isShowNoPrize = true},
+    closeNoPrizeDlg(){this.isShowNoPrize = false; this.isShaking = false},
+    showPrizeDlg(){this.isShowPrize = true},
+    closePrizeDlg(){this.isShowPrize = false; this.isShaking = false}
+
+  }
+}
+
+</script>

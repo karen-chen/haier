@@ -1,0 +1,86 @@
+<template>
+  <div class="buysuccess">
+    <div class="right">
+      <img src="../../assets/czlImg/survey_tips.png">
+      <p>核销成功</p>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      cardOrderId: '',
+
+    }
+  },
+
+  created() {
+    //拒绝分享
+    document.title = "我的券包";
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+
+  },
+
+  methods: {
+
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.buysuccess {
+  width: 100%;
+  min-height: 100%;
+  background: #fff;
+  padding: pTR(185);
+  .right {
+    text-align: center;
+    img {
+      width: pTR(120);
+      height: pTR(120);
+      display: inline-block;
+    }
+    p {
+      color: #f52b3a;
+      font-size: pTR(36);
+      padding-top: pTR(80);
+    }
+  }
+  .successBtn {
+    position: fixed;
+    width: pTR(562);
+    height: pTR(77);
+    text-align: center;
+    border-radius: pTR(10);
+    background: #f52b3a;
+    color: #fff;
+    font-size: pTR(36);
+    line-height: pTR(77);
+    bottom: pTR(100);
+    left: 50%;
+    margin-left: pTR(-281);
+  }
+}
+
+</style>

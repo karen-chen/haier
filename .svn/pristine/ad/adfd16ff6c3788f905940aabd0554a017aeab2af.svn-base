@@ -1,0 +1,20 @@
+<template>
+  <div class="failure_body">
+    <div class="top text-center">
+      <span></span>
+      <p>定位失败</p>
+    </div>
+    <div class="btn">
+      <button type="button" class="reset_locate">重新定位</button>
+      <button type="button" class="choose_locate">手动选择</button>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_failure.scss';
+</style>
+<script>
+
+</script>

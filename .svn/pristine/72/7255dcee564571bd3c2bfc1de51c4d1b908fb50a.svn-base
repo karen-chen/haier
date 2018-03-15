@@ -1,0 +1,516 @@
+<template>
+  <div class="seach_body list_body">
+
+    <!--定位搜索框-->
+    <div class="el-row row_p17">
+      <div class="el-col el-col-2">
+        <div class="pic_icon" @click="chooseAddress">
+          <img src="../../assets/images/icon_address.png">
+        </div>
+      </div>
+      <div class="text-center el-col el-col-4">
+        <p class="p" @click="chooseAddress">{{choosecity}}</p>
+      </div>
+      <div class="el-col el-col-14 inputbox">
+        <input placeholder="输入门店名或地址" class="el-input" v-model="seachValue">
+        <button class="del_btn" @click="delBtn" v-show="showDel">&times;</button>
+      </div>
+      <div class="el-col el-col-4">
+        <button class="seach_btn" @click="seachBtn">搜索</button>
+      </div>
+    </div>
+    <div class="find">
+      <!--banner-->
+      <div class="row_p0 el-row" v-show="showBanner">
+        <div class="swiper-container">
+          <div class="swiper-wrapper">
+            <div class="swiper-slide center-swiper" v-for="banner in list"  ><img :src="imageServerUrl + banner.imgUrl" :data-src="banner.linkUrl"></div>
+          </div>
+          <div class="swiper-bottom">
+            <div class="bottom_main">
+              <!-- Add Pagination -->
+              <div class="swiper-pagination"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 搜索到门店-->
+      <div class="list_seach el-row">
+        <ul>
+          <li v-for="(item,index) in rows">
+            <div class="el-row">
+              <div class="el-col el-col-3">
+                <div class="logo_shop">
+                  <img :src="imageServerUrl+item.merchant.merchantLogo">
+                </div>
+              </div>
+              <div class="p10 el-col el-col-19" @click="listShop(item,index)">
+                <h3>{{item.name}}</h3>
+                <h4 v-show="showDistance">距离{{item.distance}}km</h4>
+              </div>
+              <div class="text-right el-col el-col-2" @click="navigationBtn(item)">
+                <i class="seach_icon"></i>
+              </div>
+            </div>
+            <div class="el-row p0" v-show="item.showHui">
+              <div class="el-col el-col-2">
+                <div class="pic_icon">
+                  <img src="../../assets/images/icon_hui.jpg">
+                </div>
+              </div>
+              <div class="el-col el-col-22">
+                <p>{{item.discountInfo}}</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!--没有搜索到门店-->
+    <!--没有结果-->
+    <div class="not_find" v-show="showSeachshop">
+      <span class="icon"></span>
+      <p>被你难倒了，暂时没找到结果</p>
+    </div>
+    <div class="not_find" v-show="showSeach">
+      <span></span>
+      <p>您所在的城市暂无门店</p>
+    </div>
+    <div class="pop_choose" v-show="showAddress">
+      <div class="select_box">
+        <p class="headTitle">手动选取城市</p>
+        <div class="choose">
+          <ul>
+            <li>
+              <select v-model="result.province" @change="areaChange('province')" @focus="textCenter1">
+                <option disabled value="">省</option>
+                <template v-for="obj in province">
+                  <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+                </template>
+              </select>
+              <div class="textCenter" v-show="textCenterone">请选择省份</div>
+            </li>
+            <li>
+              <select v-model="result.city" @change="areaChange('city')" @focus="textCenter2">
+                <option disabled value="">市</option>
+                <template v-for="obj in city ">
+                  <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+                </template>
+              </select>
+              <div class="textCenter" v-show="textCentertwo">请选择城市</div>
+            </li>
+          </ul>
+        </div>
+        <div class="check_btn" @click="cityBtn">确定</div>
+        <div class="closeBtn" @click="closeBtn"></div>
+      </div>
+    </div>
+    <div class="failure_body" v-show="showFailure">
+      <div class="top text-center">
+        <span></span>
+        <p>定位失败</p>
+      </div>
+      <div class="btn">
+        <button type="button" class="choose_locate" @click="chooseBtn">手动选择</button>
+      </div>
+    </div>
+    <!--提示弹框-->
+    <div class="pop_mask" v-show="showtips"><div class="tips">{{citymsg}}</div></div>
+  </div>
+
+</template>
+<style lang="scss">
+@import '../../assets/scss/_mixins.scss';
+@import '../../assets/scss/pages/_index.scss';
+@import '../../assets/scss/pages/_seach.scss';
+@import '../../assets/scss/pages/_failure.scss';
+@import '../../assets/scss/swiper.min.css';
+.area_roll>div:last-child {
+  display: none;
+}
+.swiper-container{width:100%}
+.swiper-container img{width:100%; height:100%;}
+</style>
+<script>
+import swiper from 'swiper'
+import AreaData from '@/lib/AreaData'
+import * as config from '@/lib/config'
+
+import {
+  wxconfig,
+  getJsSign,
+  userData,
+  TMap,
+  wxHideMenu,
+  wxShare,
+  formatDate
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      showBanner:true,
+      choose_index:-1,
+      show: false,
+      seachValue: '',
+      showSeach: false,
+      showAddress:false,
+      showFailure:false,
+      showDistance:false,
+      pageIndex: 0,
+      pageSize: 10,
+      rows: [],
+      imageServerUrl: config.imageServerUrl,
+      list: [],
+      rowsIndex:0,
+      result: {},
+      province: [],
+      city: [],
+      choosecity:'',
+      latitude:"",
+      longitude:"",
+      isShopListLoading:false,
+      citymsg:"",
+      showtips:false,
+      showSeachshop:false,
+      cityTime:"",
+      latitudeTime:"",
+      longitudeTime:"",
+      showDel:false,
+      textCenterone: true,
+      textCentertwo: true
+    }
+  },
+
+  created() {
+    var _this = this
+    document.title = "异业联盟商户列表"
+    getJsSign(function(sign) {
+      wxconfig(sign);
+      wxHideMenu()
+      wx.ready(function(){
+        wx.showMenuItems({
+          menuList: [
+            "menuItem:share:appMessage",//发送给朋友
+            'menuItem:favorite',
+            'menuItem:copyUrl',
+            'menuItem:share:email',
+            'menuItem:share:qq', //分享到QQ
+            'menuItem:share:weiboApp', //分享到Weibo
+            'menuItem:share:QZone', //分享到QQ空间
+            "menuItem:share:timeline" //分享到朋友圈
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+        // console.log("ready to showMenuItems");
+        if(!flagCity){
+          wx.getLocation({
+            type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+            success: function(res) {
+              if (res.errMsg != 'getLocation:ok') {
+                _this.showAddress = true;
+              }else {
+                _this.latitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+                _this.longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+                localStorage.setItem(_this.latitudeTime, _this.latitude)
+                localStorage.setItem(_this.longitudeTime, _this.longitude)
+                var citylocation = null;
+                TMap('BYFBZ-MHWRP-BMYDJ-LRPOB-XNUY3-HNBXH').then(qq => {
+                  citylocation = new qq.maps.CityService({
+                  complete: function (results) {
+                    // alert(JSON.stringify(results));
+                    var detail = results.detail.detail.split(",");
+                    _this.choosecity = detail[1];
+                    localStorage.setItem(_this.cityTime, _this.choosecity)
+                    _this.showDistance = true
+                    _this.getShoplist();
+                    _this.getCityBannerList()
+                  }
+                });
+                var latLng = new qq.maps.LatLng(_this.latitude, _this.longitude);
+                citylocation.searchCityByLatLng(latLng);
+              })
+              }
+            },
+            fail: function() {
+              _this.showFailure = true
+            },
+            cancel: function() {
+              _this.showAddress = true;
+              localStorage.removeItem(_this.latitudeTime)
+              localStorage.removeItem(_this.longitudeTime)
+            }
+          });
+        }
+      })
+      config.wxShareData.title = "附近的门店"
+      config.wxShareData.desc = "附近的门店"
+      config.wxShareData.imgUrl = config.cdnUrl + '/static/share/share4.jpg';
+      config.wxShareData.link = config.cdnUrl + '/index.html#/shoplist';
+      wxShare()
+    });
+    _this.province = AreaData.provs_data;
+    _this.cityTime = 'city' + formatDate(new Date(),'yyyyMMddhh')
+    _this.latitudeTime = 'latitude' + formatDate(new Date(),'yyyyMMddhh')
+    _this.longitudeTime = 'longitude' + formatDate(new Date(),'yyyyMMddhh')
+    var flagCity = false;
+    if(localStorage.getItem(_this.cityTime)){
+      _this.choosecity = localStorage.getItem(_this.cityTime)
+      if(localStorage.getItem(_this.latitudeTime) && localStorage.getItem(_this.longitudeTime)){
+        _this.latitude  = localStorage.getItem(_this.latitudeTime)
+        _this.longitude  = localStorage.getItem(_this.longitudeTime)
+        _this.showDistance = true
+        console.log( _this.latitude,_this.longitude)
+      }
+      _this.getShoplist();
+      _this.getCityBannerList()
+      flagCity = true;
+    }
+  },
+  mounted:function(){
+    var self=this;
+    $(window).scroll(function(){
+      var scrollTop = $(this).scrollTop();    //滚动条距离顶部的高度
+      var scrollHeight = $(document).height();   //当前页面的总高度
+      var clientHeight = $(this).height();    //当前可视的页面高度
+      if(scrollTop + clientHeight >= scrollHeight){
+        if(self.rowsIndex == 0){
+          return
+        }
+        self.getShoplist();
+      }
+    })
+  },
+  methods: {
+    swiper(){
+      var swiper = new Swiper('.swiper-container', {
+         pagination: '.swiper-pagination',
+         autoplay: 5000,
+         loop:true,
+         autoplayDisableOnInteraction: false,
+         observer:true,//修改swiper自己或子元素时，自动初始化swiper
+         observeParents:true//修改swiper的父元素时，自动初始化swiper
+       });
+    },
+    closeBtn(){
+      this.showAddress = false
+    },
+    chooseBtn(){
+      this.showFailure = false
+      this.showAddress = true
+    },
+    areaChange(type) {
+      switch (type) {
+        case 'province':
+        {
+          let province = JSON.parse(this.result.province).value
+          this.city = AreaData.citys_data[province]
+
+          break;
+        }
+        case 'city':
+        {
+          if (this.result.city) {
+            //把json字符串转换成 json对象   以便于之后做switch循环
+            let province = JSON.parse(this.result.province)
+            let city = JSON.parse(this.result.city)
+            this.country = AreaData.dists_data[city.value]
+            switch(province.text) {
+              case "北京市":
+              case "天津市":
+              case "上海市":
+              case "重庆市":
+                this.result.city = this.result.province
+                break;
+            }
+          }
+          break;
+        }
+      }
+    },
+    chooseAddress(){
+      this.showAddress = true
+    },
+    cityBtn(){
+      var _this = this
+      if(!this.result.city || !this.result.province){
+        this.showtips = true
+        this.citymsg = "信息没有填写完整"
+        setTimeout(function(){
+          _this.showtips = false
+        },2000)
+        return
+      }
+      this.showAddress = false
+      this.choosecity = JSON.parse(this.result.city).text
+      this.pageIndex = 0
+      this.latitude = ""
+      this.longitude = ""
+      this.list = []
+      this.rows = []
+      this.showSeach = false
+      this.showDistance = false
+      localStorage.setItem(_this.cityTime, this.choosecity)
+      localStorage.removeItem(_this.latitudeTime)
+      localStorage.removeItem(_this.longitudeTime)
+      this.getShoplist()
+      this.getCityBannerList()
+    },
+    getCityBannerList(){
+      var _this = this
+      _this.showBanner = true
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/banner/getCityBannerList",
+        dataType: "jsonp",
+        data: {
+          city: _this.choosecity
+        },
+        success: function (data) {
+          if (data.ret == 0) {
+            _this.list = data.list;
+           if(data.list){
+             if (_this.list.length <= 0) {
+               _this.showBanner = false
+             }
+             setTimeout(function(){
+               _this.swiper();
+               $('.swiper-container img').on('click', function(){
+                 var link = $(this).attr('data-src');
+                 if(!link || link == ""){
+                   return
+                 }else {
+                   window.location.href = link
+                 }
+               })
+             },10)
+           }
+          }else if(data.ret == -1){
+            _this.showBanner = false
+          }else {
+            console.log('banner/getCityBannerList:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('banner/getCityBannerList:', 'fail');
+        }
+      });
+    },
+    getShoplist(){
+      var _this = this
+      if(_this.isShopListLoading){
+        return;
+      }
+      _this.isShopListLoading = true;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/shop/getShopList",
+        dataType: "jsonp",
+        data: {
+          pageIndex: _this.pageIndex,
+          pageSize: _this.pageSize,
+          city: _this.choosecity,
+          searchKey: _this.seachValue,
+          latitude: _this.latitude,
+          longitude: _this.longitude
+        },
+        success: function (data) {
+
+          if (data.ret == 0) {
+            if (data.rows) {
+              _this.rowsIndex = data.rows.length;
+              _this.pageIndex = data.pageIndex;
+              _this.rows = _this.rows.concat(data.rows);
+              console.log(_this.rows)
+              _this.rows.forEach(function(item){
+                item.distance = Math.round(item.distance)
+                if(item.discountInfo == ""){
+                 item.showHui = false
+                }else {
+                  item.showHui = true
+                }
+              })
+              if(_this.seachValue != ""){
+                if (_this.rows.length <= 0) {
+                  _this.showSeachshop = true
+                }
+              }else {
+                if (_this.rows.length <= 0) {
+                  _this.showSeachshop = false
+                  _this.showSeach = true
+                }
+              }
+            }
+          } else {
+            console.log('shop/getShopList:', 'ret != 0');
+          }
+          _this.isShopListLoading = false;
+        },
+        error(res) {
+          console.log('shop/getShopList:', 'fail');
+          _this.isShopListLoading = false;
+        }
+      });
+    },
+    listShop(item,index) {
+      this.choose_index = index;
+      if (this.choose_index >= 0) {
+        this.$router.push({
+          name: 'Activity',
+          params: {
+            shoplist: this.rows[this.choose_index].code
+          }
+        })
+      }
+    },
+    seachBtn() {
+      var self = this;
+      self.showBanner = false
+      self.pageIndex = 0
+      self.showSeach = false
+      self.showSeachshop = false
+      self.rows = [];
+      self.list = [];
+      if(self.seachValue == ""){
+        self.showDel = false
+        self.getCityBannerList()
+      }else {
+        self.showDel = true
+      }
+      self.getShoplist()
+    },
+    delBtn() {
+      var _this = this;
+      _this.showSeach = false;
+      _this.showSeachshop = false;
+      _this.seachValue = '';
+      _this.showBanner = true;
+      _this.showDel = false;
+      _this.rows = [];
+      _this.list = [];
+      _this.pageIndex = 0;
+      _this.getCityBannerList()
+      _this.getShoplist()
+    },
+    navigationBtn(item){
+     wx.ready(function(){
+       wx.openLocation({
+         latitude: Number(item.latitude), // 纬度，浮点数，范围为90 ~ -90
+         longitude: Number(item.longitude), // 经度，浮点数，范围为180 ~ -180。
+         name: item.name, // 位置名
+         address: item.address, // 地址详情说明
+         scale: 15, // 地图缩放级别,整形值,范围从1~28。默认为最大
+         infoUrl: '' // 在查看位置界面底部显示的超链接,可点击跳转
+       });
+     })
+      },
+    textCenter1() {
+      this.textCenterone = false;
+    },
+    textCenter2() {
+      this.textCentertwo = false;
+    }
+  }
+}
+
+</script>

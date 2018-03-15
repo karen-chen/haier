@@ -1,0 +1,88 @@
+<template>
+  <div class="flow_body">
+    <div class="el-row mt110">
+      <div class="text-center el-col el-col-24">
+        购买流程
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="type text-center">1</div>
+      </div>
+      <div class="el-col el-col-22"><h3>复制购买码</h3>
+        <div class="flow_pic num_pic">
+          <div class="buy_code text-center num">{{data.saleCode}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="type text-center">2</div>
+      </div>
+      <div class="el-col el-col-22"><h3>在微信中搜索“海尔电视”公众号关注该公众号，点击底部菜单“购买券”</h3>
+        <div class="flow_pic"><img src="../../assets/images/flow_pic.png"></div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="type text-center">3</div>
+      </div>
+      <div class="el-col el-col-22"><h3>输入步骤一中购买码即可开始购买</h3></div>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_flow.scss';
+</style>
+
+<script>
+  import * as config from '@/lib/config'
+  import {
+    userData,
+    getParam
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return{
+        actSid:'',
+        openid:'',
+        data:{}
+      }
+    },
+
+    created(){
+      var _this = this;
+      _this.actSid = getParam("actSid");
+      _this.saleOpenid = getParam("saleOpenid");
+        var ua = window.navigator.userAgent.toLowerCase();
+        if (ua.match(/MicroMessenger/i) == 'micromessenger') {
+          window.location.href = config.locationUrl + '/index.html?actSid=' +  _this.actSid + '&saleOpenid=' + _this.saleOpenid + '#/cardmain'
+        } else {
+          $.ajax({
+            type: "GET",
+            url: config.locationUrl + "/user/getActSaleCode",
+            dataType: "jsonp",
+            data: {
+              userId:_this.saleOpenid,
+              actSid:_this.actSid
+            },
+            success: function(data) {
+              if (data.ret == 0) {
+                _this.data=data.data;
+              }else {
+                console.log('/user/getActSaleCode:', 'ret != 0');
+              }
+            },
+            error(res) {
+              console.log('/user/getActSaleCode:', 'fail');
+            }
+          });
+        }
+    }
+  }
+
+</script>

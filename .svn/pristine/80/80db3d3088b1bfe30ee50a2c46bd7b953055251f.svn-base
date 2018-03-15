@@ -1,0 +1,25 @@
+<template>
+  <div class="coupon_body">
+    <div class="el-row">
+      <div class="size36 text-center mt110 el-col el-col-24">
+        选择认筹活动，生成售券二维码
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="click ? icon : icon active el-col el-col-2"></div>
+      <div class="el-col el-col-22"><h4>光谷海尔团购会认筹券活动</h4>
+        <p>活动日期：2017-5-27~2017-5-29</p></div>
+    </div>
+    <div class="text-center el-row">
+      <button type="button" class="el-button el-button--default"><!----><!----><span>开始生成售劵二维码</span></button>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_coupon.scss';
+</style>
+<script>
+
+</script>

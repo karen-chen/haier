@@ -1,0 +1,81 @@
+<template>
+  <div class="coupon_body">
+    <div class="el-row">
+      <div class="size36 text-center mt110 el-col el-col-24">
+        选择认筹活动，生成售券二维码
+      </div>
+    </div>
+    <div class="el-row" v-for="(activity,index) in list" @click="chooseBtn(index)">
+      <div class="icon el-col el-col-2" :class="{active: choose_index==index}"></div>
+      <div class="el-col el-col-22"><h4>{{activity.actName}}</h4>
+        <p>活动日期：{{activity.startDate}} - {{activity.endDate}}</p></div>
+    </div>
+    <div class="text-center el-row">
+      <button type="button" class="el-button el-button--default" @click="codeBtn"><!----><!----><span>开始生成售劵二维码</span></button>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_coupon.scss';
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import {
+    userData
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return {
+        list:[],
+        choose_index:-1
+      }
+    },
+    created(){
+       var _this = this
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/user/getActList",
+        dataType: "jsonp",
+        data: {
+          openid:userData.openid
+        },
+        success: function(data) {
+          console.log(data.list.length)
+          if (data.ret == 0) {
+            if(data.list.length <= 0){
+              _this.$router.push({path:'uncoupon'})
+            }else {
+              _this.list = data.list
+            }
+          }else{
+            console.log('/user/getActList:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('/user/getActList:', 'fail');
+        }
+      });
+    },
+    methods:{
+      chooseBtn(index){
+       this.choose_index = index;
+      },
+      codeBtn(){
+        if(this.choose_index>=0){
+          this.$router.push(
+            {
+              name:'Code',
+              params:{
+                activity:this.list[this.choose_index].sid
+              }
+            })
+        }
+
+      }
+    }
+  }
+</script>

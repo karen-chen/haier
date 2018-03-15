@@ -1,0 +1,243 @@
+<template>
+  <div class="coupon_body">
+    <div class="activeTitle">
+      查看认筹活动售券二维码
+    </div>
+    <ul class="quanBoxList">
+      <li v-for="(activity,index) in list" @click="chooseBtn(index)">
+        <h4>{{activity.actName}}</h4>
+        <p>活动日期：{{activity.startDate}} - {{activity.endDate}}</p>
+        <div class="rcmBtm" @click="codeBtn(activity)">认筹码</div>
+      </li>
+    </ul>
+    <div class="pop_mask" v-show="showPop">
+      {{msg}}
+    </div>
+    <div class="popPicBox" v-show="popPic">
+      <img :src="imageServerUrlpic+imgPic">
+    </div>
+  </div>
+</template>
+<style lang="scss">
+@import '../../assets/scss/_mixins.scss';
+@import '../../assets/scss/pages/_index.scss';
+@import '../../assets/scss/pages/_coupon.scss';
+html,
+body {
+  background: #f9f9f9;
+}
+.popPicBox{
+  position:fixed;
+  left:0;
+  top:0;
+  width:100%;
+  height:100%;
+  z-index:999;
+  img{
+    width:100%;
+    height:100%;
+  }
+}
+
+.pop_mask {
+  background-color: rgba(0, 0, 0, .6);
+  max-width: 80%;
+  @include p(10, 20);
+  @include radius(10);
+  @include size_color(26, #fff);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.activeTitle {
+  width: 100%;
+  height: pTR(110);
+  background: url(../../assets/images/activeTop.jpg) 0 0 no-repeat;
+  background-size: 100%;
+  text-align: center;
+  line-height: pTR(110);
+  color: #fff;
+  font-size: pTR(36);
+}
+
+.quanBoxList {
+  padding-bottom: pTR(30);
+  li {
+    background: #fff;
+    margin-top: pTR(30);
+    height: pTR(200);
+    padding: 0 pTR(48);
+    position: relative;
+    h4 {
+      padding-top: pTR(50);
+      color: #333333;
+      font-size: pTR(32);
+      width: pTR(520);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    p {
+      color: #999999;
+      font-size: pTR(26);
+      padding-top: pTR(35);
+      width: pTR(520);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .rcmBtm {
+      width: pTR(123);
+      height: pTR(61);
+      background: #f66051;
+      color: #fff;
+      font-size: pTR(26);
+      text-align: center;
+      line-height: pTR(61);
+      position: absolute;
+      top: 50%;
+      right: pTR(35);
+      transform: translateY(-50%);
+      border-radius: pTR(50);
+    }
+  }
+}
+
+</style>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  formatDate,
+  getJsSign,
+  wxconfig,
+  wxHideMenu
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      list: [],
+      choose_index: -1,
+      showPop: false,
+      msg: "",
+      popPic:false,
+      imgPic:'',
+      imageServerUrlpic: config.imageServerUrl,
+    }
+  },
+  created() {
+    document.title = "生成售券二维码";
+    var _this = this;
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wxHideMenu()
+    wx.ready(function() {
+      wx.showMenuItems({
+        menuList: [
+          'menuItem:favorite',
+        ] // 要显示的菜单项，所有menu项见附录3
+      });
+    })
+    $.ajax({
+      type: "GET",
+      url: config.locationUrl + "/user/getActList",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid
+      },
+      success: function(data) {
+        console.log(data.list.length)
+        if (data.ret == 0) {
+          if (data.list.length <= 0) {
+            _this.$router.push({ path: 'uncoupon' })
+          } else {
+            _this.list = data.list
+            console.log(1111111111, _this.list)
+            _this.list.forEach(function(item) {
+              console.log(item.startDate)
+              item.startDate = formatDate(new Date(item.startDate.replace(/-/g, "/")), 'yyyy-MM-dd')
+              item.endDate = formatDate(new Date(item.endDate.replace(/-/g, "/")), 'yyyy-MM-dd')
+              // console.log(list.startDate)
+            })
+          }
+        } else {
+          console.log('/user/getActList:', 'ret != 0');
+        }
+      },
+      error(res) {
+        console.log('/user/getActList:', 'fail');
+      }
+    });
+  },
+  methods: {
+    chooseBtn(index) {
+      this.choose_index = index;
+    },
+    codeBtn(activity) {
+      var _this = this
+      var activitySid=activity.sid
+      console.log(activity);
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/user/getActSalePic",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          actSid: activitySid
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret == 0) {
+
+            _this.$router.push({
+              name: 'Code',
+              params: {
+                activity: activitySid
+              }
+            })
+
+          } else if (data.ret == 1) {
+            _this.showPop = true
+            _this.msg = "该活动已删除，无法生成售券二维码"
+            setTimeout(function() {
+              _this.showPop = false
+            }, 2000)
+          } else if (data.ret == 2) {
+            _this.showPop = true
+            _this.msg = "该活动已结束，无法生成售券二维码"
+            setTimeout(function() {
+              _this.showPop = false
+            }, 2000)
+          } else if (data.ret == 3) {
+            _this.showPop = true
+            _this.msg = "无法生成售券二维码，请重新绑定"
+            setTimeout(function() {
+              _this.showPop = false
+            }, 2000)
+          } else if (data.ret == 4) {
+            _this.showPop = true
+            _this.msg = "无法售卖该活动的认筹券"
+            setTimeout(function() {
+              _this.showPop = false
+            }, 2000)
+          } else {
+            console.log('/user/getActSaleInfo:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('/user/getActSaleInfo:', 'fail');
+        }
+      });
+
+    }
+  }
+}
+
+</script>

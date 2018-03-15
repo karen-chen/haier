@@ -1,0 +1,355 @@
+.draw_body {
+  height: 100%;
+  width: 100%;
+  background: #cb164a url("../../assets/images/draw_bj.jpg") 0 0 no-repeat;
+  background-size: 100%;
+  .draw_main {
+    @include h(1040);
+    position: relative;
+    .lottery {
+      .dotted {
+        position: absolute;
+        @include ele-box(60,
+        60);
+        background: url("../../assets/images/dot1.png") 0 0 no-repeat;
+        background-size: 100%;
+        left: pTR(80);
+        top: pTR(13);
+      }
+      .dotted1 {
+        position: absolute;
+        @include ele-box(60,
+        60);
+        background: url("../../assets/images/dot2.png") 0 0 no-repeat;
+        background-size: 100%;
+        left: pTR(80);
+        top: pTR(13);
+      }
+
+      .active {
+        background: url("../../assets/images/dot2.png") 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .active1 {
+        background: url("../../assets/images/dot1.png") 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .dot2 {
+        left: pTR(180);
+        top: pTR(13);
+      }
+      .dot3 {
+        left: pTR(280);
+        top: pTR(13);
+      }
+      .dot4 {
+        left: pTR(380);
+        top: pTR(13);
+      }
+      .dot5 {
+        left: pTR(480);
+        top: pTR(13);
+      }
+      .dot6 {
+        left: pTR(580);
+        top: pTR(13);
+      }
+      .dot7 {
+        left: pTR(630);
+        top: pTR(60);
+      }
+      .dot8 {
+        left: pTR(630);
+        top: pTR(180);
+      }
+      .dot9 {
+        left: pTR(630);
+        top: pTR(300);
+      }
+      .dot10 {
+        left: pTR(630);
+        top: pTR(400);
+      }
+      .dot11 {
+        left: pTR(630);
+        top: pTR(500);
+      }
+      .dot12 {
+        left: pTR(580);
+        top: pTR(568);
+      }
+      .dot13 {
+        left: pTR(480);
+        top: pTR(568);
+      }
+      .dot14 {
+        left: pTR(380);
+        top: pTR(568);
+      }
+      .dot15 {
+        left: pTR(280);
+        top: pTR(568);
+      }
+      .dot16 {
+        left: pTR(180);
+        top: pTR(568);
+      }
+      .dot17 {
+        left: pTR(80);
+        top: pTR(568);
+      }
+      .dot18 {
+        left: pTR(20);
+        top: pTR(500);
+      }
+      .dot19 {
+        left: pTR(20);
+        top: pTR(400);
+      }
+      .dot20 {
+        left: pTR(20);
+        top: pTR(300);
+      }
+      .dot21 {
+        left: pTR(20);
+        top: pTR(180);
+      }
+      .dot22 {
+        left: pTR(20);
+        top: pTR(60);
+      }
+      @include ele-box(710,
+      651);
+      @include bg(url("../../assets/images/draw_main.png"));
+      position: absolute;
+      @include bottom(0);
+      left:50%;
+      transform: translate(-50%,
+      0);
+      .lottery-box {
+        @include ele-box(545,
+        480);
+        position: relative;
+        @include m(80,
+        80);
+      }
+      .lottery-box>div {
+        @include ele-box(240,
+        243);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        .btn-start {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .lottery-box img {
+        z-index: 88;
+        position: relative;
+        width: 60%;
+        display: inline-block;
+      }
+
+      .elric-dial-unit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        @include ele-box(173,
+        149);
+        @include bg( url("../../assets/images/bg_pan.png"));
+        position: absolute;
+        @include top(0);
+        @include left(0);
+        text-align: center;
+        padding: 0;
+      }
+
+      .gray {
+        @include bg( url("../../assets/images/gray.png"));
+        z-index: 10;
+        position: absolute;
+        @include top(0);
+        @include left(0);
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .lottery-box .active .gray {
+        display: none;
+      }
+
+      .lottery-box .active {
+        /*box-shadow: 0px 5px 5px 0px rgba(204, 40, 30, 0.75);*/
+      }
+
+      .lottery-unit-0 {
+        // @include p_t(20);
+      }
+
+      .lottery-unit-1 {
+        @include left(180);
+        @include top(0); // @include p_t(40);
+      }
+
+      .lottery-unit-2 {
+        @include left(370);
+        @include top(0); // @include p_t(40);
+      }
+
+      .lottery-unit-3 {
+        @include left(375);
+        @include top(160); // @include p_t(20);
+      }
+
+      .lottery-unit-4 {
+        @include left(375);
+        @include top(320); // @include p_t(40);
+      }
+
+      .lottery-unit-5 {
+        @include left(180);
+        @include top(320); // @include p_t(40);
+      }
+
+      .lottery-unit-6 {
+        @include left(0);
+        @include top(320); // @include p_t(20);
+      }
+
+      .lottery-unit-7 {
+        @include left(0);
+        @include top(160); // @include p_t(40);
+      }
+    }
+  }
+  .not_win {
+    @include ele-box(500,
+    390);
+    background-color: #fff;
+    @include p(70,
+    0);
+    p {
+      @include size_color(32,
+      #333333);
+    }
+    span {
+      display: inline-block;
+      @include ele-box(322,
+      174);
+      @include bg(url("../../assets/images/pop_01.png"));
+      @include m_b(60);
+    }
+  }
+  .advertising_box {
+    @include w(642);
+    height: auto;
+    position: relative;
+    p {
+      @include lin_hei(50);
+      @include size_color(36,
+      #fff);
+      position: absolute;
+      text-align: center;
+      width: 100%;
+      top: pTR(-80);
+      i {
+        @include size_color(60,
+        #ffd715);
+        margin-right: pTR(20);
+      }
+    }
+  }
+  .pickup_box {
+    @include ele-box(600,
+    470);
+    background-color: #fff;
+    @include p(60,
+    60);
+    p {
+      @include size_color(36,
+      #333333);
+
+      &.sm_font {
+        @include size_color(28,
+        #999999);
+      }
+      i {
+        display: inline-block;
+        color: #f40c3b;
+        margin: 0 pTR(10);
+      }
+    }
+    span {
+      display: block;
+      font-size: pTR(48);
+      color: #333333;
+      @include m_t(40);
+      @include m_b(40);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pick_btn {
+      background-color: #f66051;
+      color: #fff;
+      @include m_t(65);
+      @include ele-box(277,
+      80);
+      border-radius: pTR(10);
+    }
+  }
+  .gift_btn {
+    @include ele-box(569,
+    133);
+    @include bg(url("../../assets/images/mine_gift.png"));
+    margin: 0 auto pTR(50);
+  }
+  .rules_main {
+    @include m(0,
+    44);
+    h2 {
+      position: relative;
+      @include size_color(32,
+      #ffed35);
+      @include p_b(30);
+      @include p_t(30);
+      text-align: center;
+      font-weight: bold;
+    }
+    h2:after {
+      content: '';
+      position: absolute;
+      width: pTR(250);
+      left: 0;
+      height: pTR(1);
+      background: #ffed35;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    h2:before {
+      content: '';
+      position: absolute;
+      width: pTR(250);
+      right: 0;
+      height: pTR(1);
+      background: #ffed35;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    div {
+      @include lin_hei(50);
+      @include size_color(24,
+      #ffed35);
+      word-break: break-all;
+      word-wrap: break-word;
+      padding-bottom: pTR(50);
+      p {
+        min-height: pTR(20);
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+<template>
+  <div id="app">
+    <transition mode="out-in">
+      <router-view></router-view>
+    </transition>
+  </div>
+</template>
+<script>
+import {
+  getParam,
+  wxChankeAuthorize,
+  userData,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+import * as config from '@/lib/config'
+
+export default {
+  name: 'app',
+  created() {
+    if ($.inArray(window.location.hash.substr(2), ['flow', 'flowpage', 'purchase-process/flow']) >= 0 || wxChankeAuthorize()) {
+      //判断页面路由跳转
+      this.toPage(window.location.hash.substr(2));
+    } else {
+      return;
+    }
+  },
+  methods: {
+    toPage(page) {
+      // console.log(111,userData.hash)
+      switch (page) {
+        //陈紫菱路由页面跳转
+        case 'cardmain': //buyCard/main
+          this.$router.push('/buyCard/main')
+          break;
+        case 'prizelist': //prizeTicket/quanlist
+          this.$router.push('/prizeTicket/prizelist')
+          break;
+        case 'quanlist': //prizeTicket/quanlist
+          this.$router.push('/confessTicket/quanlist')
+          break;
+        case 'livemain': //VenueLive/livemain
+          this.$router.push('/VenueLive/livemain')
+          break;
+        case 'navigationstart': //VenueNavigation/navigationstrat
+          this.$router.push('/VenueNavigation/navigationstrat')
+          break;
+        case 'prizeCode': //VenueNavigation/navigationstrat
+          this.$router.push('/prizeTicket/PrizeCode')
+          break;
+        case 'verificationcode': //VenueNavigation/navigationstrat
+          this.$router.push('/confessTicket/verificationcode')
+          break;
+        case 'offsetquan': //VenueNavigation/navigationstrat
+          this.$router.push('/confessTicket/offsetquan')
+          break;
+        case 'membershipcard': //VenueNavigation/navigationstrat
+          this.$router.push('/buyCard/membershipcard')
+          break;
+
+
+          //陈红路由页面跳转
+        case 'shoplist': //shop-list/shop
+          this.$router.push('/shop-list/shop')
+          break;
+
+        case 'shopdetail': //shop-list/shop
+          this.$router.push('/shop-list/activity')
+          break;
+
+        case 'shopcomment': //shop-list/shop
+          this.$router.push('/shop-list/comment')
+          break;
+
+        case 'qshake': //ConfessTicket/Quanlist
+
+          this.$router.push('/shake/countmobile')
+          break;
+
+        case 'qsurvey': //survey/survey
+          this.$router.push('/survey/survey')
+          break;
+
+        case 'coupon': //VenueLive/livemain
+          this.$router.push('/generating-coupon/information')
+          break;
+
+        case 'draw': //draw/draw
+          this.$router.push('/drawpage')
+          break;
+
+        case 'flow': //draw/draw
+          this.$router.push('/flowpage')
+          break;
+
+        case 'purchase': //draw/draw
+          this.$router.push('/purchasepage')
+          break;
+
+        default:
+          this.$router.push('/' + page)
+
+      }
+    }
+  }
+
+}
+
+</script>
+<style>
+@import './assets/scss/_reset.scss';
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+.body {
+  height: 100%;
+}
+
+
+.v-enter {
+  opacity: 0
+}
+
+.v-enter-to {
+  opacity: 1
+}
+
+.v-enter-active {
+  transition: 1s
+}
+
+.v-leave {
+  opacity: 1
+}
+
+.v-leave-to {
+  opacity: 0
+}
+
+.v-leave-active {
+  transition: 1s
+}
+
+</style>

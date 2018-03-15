@@ -1,0 +1,248 @@
+<template>
+  <div class="comment_body">
+    <form id="commentForm">
+      <div class="el-row">
+        <div class="el-col">
+          <div class="el-textarea"><textarea v-model="text" placeholder="写几句评价吧" type="textarea"
+                                             rows="2" maxlength="100" class="el-textarea__inner" style="height: 100px;"></textarea></div>
+        </div>
+      </div>
+      <div class="bor-b2 el-row">
+        <div class="el-col el-col-24">
+          <div class="comment_pic" v-for="(image,idx) in imageList">
+            <span><img :src="image"></span>
+            <div class="del_btn" @click="delImage(idx)">&times;</div>
+          </div>
+          <div class="add_pic el-input" @click="addPic" v-show="showAddpic">
+          </div>
+        </div>
+      </div>
+      <div class="el-row"><div class="center el-col el-col-24"><button @click="submitBtn" type="button" class="el-button submit_btn el-button--default"><!----><!----><span>确定</span></button></div></div>
+      <!--提示弹框-->
+      <div class="pop_comment" v-show="show">{{commentmsg}}</div>
+    </form>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_comment.scss';
+  .pop_comment{
+    background-color: rgba(0,0,0,.6);
+    max-width: 80%;
+  @include p(10,20);
+  @include radius(10);
+  @include size_color(26,#fff);
+    position: fixed;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+</style>
+<script>
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    chooseImage,
+    wxHideMenu,
+    getParam,
+    checkInject
+  } from '@/lib/tools';
+  import * as config from '@/lib/config'
+  export default {
+       data(){
+         return{
+           show:false,
+           commentType:0,
+           text:"",
+           comment:{},
+           imageList:[],
+           commentmsg:"",
+           showAddpic:true,
+           picclick:true,
+           shopId:"",
+           orgId:""
+         }
+       },
+    created(){
+      var _this = this;
+      this.shopId = localStorage.getItem('shopId')
+      this.orgId = localStorage.getItem('orgId')
+      window.localStorage.removeItem("isGotoComment");
+
+      getJsSign(function(sign) {
+        wxconfig(sign);
+        wxHideMenu()
+        wx.ready(function () {
+          wx.showMenuItems({
+            menuList: [
+              'menuItem:favorite',
+              'menuItem:share:email'
+            ] // 要显示的菜单项，所有menu项见附录3
+          });
+        })
+      })
+    },
+    methods:{
+      addPic(){
+        var _this = this
+        if(!_this.picclick){
+          return
+        }
+
+        if(_this.imageList.length >= 9){
+          _this.showAddpic = false
+          _this.show = true;
+          _this.commentmsg = "最多上传9张图片！"
+          setTimeout(function(){
+            _this.show = false
+          },2000);
+          return
+        }
+       wx.ready(function(){
+         wx.chooseImage({
+           count: 9 - _this.imageList.length,
+           sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+           sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+           success: function(res) {
+             _this.picclick = false;
+             var localIds = res.localIds; //把图片的路径保存在images[localId]中--图片本地的id信息，用于上传图片到微信浏览器时使用
+             _loading(localIds)
+           }
+         })
+       });
+        function _loading(ids){
+          var id = ids.shift();
+          if(id){
+            wx.uploadImage({
+              localId: id, // 需要上传的图片的本地ID，由chooseImage接口获得
+              isShowProgressTips: 1, // 默认为1，显示进度提示
+              success:function(res){
+                var serverId = res.serverId; // 返回图片的服务器端ID
+                if(res.serverId){
+                  $.ajax({
+                    url:"http://app11.s.weshaketv.com:9900/wss/api/imgUpload",
+                    dataType:"jsonp",
+                    data:{
+                      mediaId: serverId
+                    },
+                    success:function(data){
+                      _this.imageList.push(data.media)
+                      _this.show = true;
+                      _this.commentmsg = "图片上传成功！"
+                      setTimeout(function(){
+                        _this.show = false
+                      },2000);
+                      _loading(ids);
+                      if(_this.imageList.length >= 9) {
+                        _this.showAddpic = false
+                      }
+                    },
+                    error:function(){
+                      _this.show = true;
+                      _this.commentmsg = "图片上传失败！"
+                      setTimeout(function(){
+                        _this.show = false
+                      },2000);
+                      _this.picclick = true;
+                    }
+                  });
+                }else{
+                  _this.picclick = true;
+                }
+              }
+            })
+          }else{
+            _this.picclick = true;
+          }
+        }
+      },
+      delImage:function(index){
+        var _this = this
+        _this.imageList.shift(index);
+        if(_this.imageList.length < 9) {
+          _this.showAddpic = true
+        }
+      },
+      submitBtn(){
+        var _this = this
+        if(checkInject(_this.text)){
+          _this.show = true;
+          _this.commentmsg = "你输入的内容含有非法字符，请查验后重新输入"
+          setTimeout(function(){
+            _this.show = false
+          },2000);
+          return;
+        }
+        if(_this.imageList.length == 0){
+          _this.commentType = 2
+        }else {
+          _this.commentType = 3
+        }
+        var commentContentJsonStr = {};
+        commentContentJsonStr.text = _this.text;
+        commentContentJsonStr.imageList = _this.imageList;
+        if( commentContentJsonStr.text == ''){
+          _this.show = true;
+          _this.commentmsg = "说点什么吧！"
+          setTimeout(function(){
+            _this.show = false
+          },2000);
+          return
+        }
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/shop/getShopDetail",
+          dataType: "jsonp",
+          data: {
+            shopId:this.shopId
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              $.ajax({
+                type: "GET",
+                url: config.locationUrl + "/comment/saveComment",
+                dataType: "jsonp",
+                data: {
+                  orgId:_this.orgId,
+                  openid:userData.openid,
+                  commentType:_this.commentType,
+                  shopId:_this.shopId,
+                  commentContentJsonStr:JSON.stringify(commentContentJsonStr)
+                },
+                success: function(data) {
+                  if (data.ret == 0) {
+                    _this.$router.push({name:'Activity', params:{commentContentJsonStr:JSON.stringify(commentContentJsonStr)}})
+                  }else {
+                    console.log('/comment/saveComment:', 'ret != 0');
+                  }
+                },
+                error(res) {
+                  console.log('/comment/saveComment:', 'fail');
+                }
+              });
+            }else if(data.ret == -1){
+              _this.show = true
+              _this.commentmsg = "该门店不存在，无法评论"
+              setTimeout(function(){
+                _this.show = false
+              },2000)
+              setInterval(function(){
+                _this.$router.push({
+                  name: 'Shop',
+                })
+              },2000)
+            }
+            else {
+              console.log('shop/getShopDetail:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('shop/getShopDetail:', 'fail');
+          }
+        });
+      }
+    }
+  }
+</script>

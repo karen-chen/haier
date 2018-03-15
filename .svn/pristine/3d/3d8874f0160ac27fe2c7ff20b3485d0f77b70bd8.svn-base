@@ -1,0 +1,125 @@
+<template>
+  <div class="buysuccess">
+    <div class="right">
+      <img src="../../assets/czlImg/survey_tips.png">
+      <p>核销成功</p>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      cardOrderId: '',
+
+    }
+  },
+
+  created() {
+    //拒绝分享
+    document.title = "我的券包";
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+
+    //存储接口传参所需数据
+    if (this.$route.params.sid) {
+      localStorage.setItem('sid', this.$route.params.sid)
+    }
+    this.cardOrderId = localStorage.getItem('sid')
+    console.log(this.$route.params.sid);
+
+    //获取相关卡片详情
+    $.ajax({
+      url: config.locationUrl + "/order/getMyRecognizeCardList",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid,
+        type: 'invalid'
+      },
+      success: function(data) {
+        console.log(data);
+        if (data.ret === "0") {
+          if (data.list.length == 0) {
+            // console.log(111111);
+            self.nullBox = true;
+            self.messag = '您还没有退款券'
+          } else {
+            self.nullBox = false;
+          }
+          self.allVouchers = data.list;
+
+
+        } else {
+          //处理接口调用失败
+          self.error('getBaseConfigByType');
+        }
+      },
+      error(res) {
+        self.error('getBaseConfigByType');
+      }
+    });
+
+  },
+
+  methods: {
+
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.buysuccess {
+  width: 100%;
+  min-height: 100%;
+  background: #fff;
+  padding: pTR(185);
+  .right {
+    text-align: center;
+    img {
+      width: pTR(120);
+      height: pTR(120);
+      display: inline-block;
+    }
+    p {
+      color: #f52b3a;
+      font-size: pTR(36);
+      padding-top: pTR(80);
+    }
+  }
+  .successBtn {
+    position: fixed;
+    width: pTR(562);
+    height: pTR(77);
+    text-align: center;
+    border-radius: pTR(10);
+    background: #f52b3a;
+    color: #fff;
+    font-size: pTR(36);
+    line-height: pTR(77);
+    bottom: pTR(100);
+    left: 50%;
+    margin-left: pTR(-281);
+  }
+}
+
+</style>

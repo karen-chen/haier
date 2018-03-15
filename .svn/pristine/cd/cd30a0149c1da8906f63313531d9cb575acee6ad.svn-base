@@ -1,0 +1,37 @@
+<template>
+  <div class="screen_body">
+    <div class="erweima_pic">
+      <img src="../../assets/images/screen_code.jpg">
+    </div>
+    <div class="screen_content">
+      <h2>距离下一轮摇奖开始</h2>
+    </div>
+    <div class="screen_bottom">
+      <h2>下轮奖品</h2>
+      <div class="gift_list">
+        <ul>
+          <li>
+            <h3>团购会现金红包</h3>
+            <p>剩余<span>800</span>个</p>
+          </li>
+          <li>
+            <h3>海尔XB082-28D洗衣机</h3>
+            <p>剩余<span>800</span>个</p>
+          </li>
+          <li>
+            <h3>海尔X1280电冰箱</h3>
+            <p>剩余<span>800</span>个</p>
+          </li>
+        </ul>
+      </div>
+  </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_screen.scss';
+</style>
+<script>
+
+</script>

@@ -1,0 +1,518 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <div class="top">
+        <img class="personPic" :src="imageServerUrl + picUrl">
+        <p class="logo">{{title}}</p>
+        <h2 class="title">{{buyBtn}}</h2>
+        <div class="codetime">
+          有效日期{{startDate}} 至 {{endDate}}
+        </div>
+      </div>
+      <div class="listBar">
+        <div :class="[ num2 ? 'left' : 'on','left']" @click="hexiaocontent">核销</div>
+        <div @click="refundcontent" :class="[ num1 ? 'right' : 'on','right']">退款</div>
+      </div>
+      <ul>
+        <li class="hexiao" v-show="num1">
+          <div class="inputma" v-show="orderStatus == 2">
+            <input type="" name="" placeholder="请输入核销密码" v-model="code">
+          </div>
+          <div class="remark" v-show="orderStatus == 2">
+            <textarea v-model="textarea">备注(选填)</textarea>
+          </div>
+          <div @click="codeMatch" :class="[ allow ? '' : 'nouse','buyBtn']">{{btnmass}}</div>
+        </li>
+        <li class="refund" v-show="num2">
+          <div class="inputma" v-show="orderStatus == 2">
+            <input type="" name="" placeholder="请输入核销密码完成退券" v-model="code">
+          </div>
+          <div @click="refund" :class="[ allow ? '' : 'nouse','buyBtn']">{{btnmass}}</div>
+        </li>
+      </ul>
+    </div>
+    <!-- 核销成功 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      imageServerUrl: config.imageServerUrl,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      masseg: '',
+      code: '',
+      tips: false,
+      onoff: true,
+      orderStatus: 0,
+      allow: false,
+      btnmass: '',
+      btnmass1:'',
+      textarea: '备注（选填）',
+      num1: true,
+      num2: false
+    }
+  },
+
+  created() {
+    document.title = "店员核销页面";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+    var self = this;
+    if (typeof WeixinJSBridge === "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', self.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', self.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', self.onBridgeReady);
+      }
+    } else {
+      self.onBridgeReady();
+    }
+
+    //获取相关卡片详情
+    this.getMyRecognizeCardDetail();
+
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss');
+    },
+    codeMatch() {
+      var self = this;
+      if (self.onoff) {
+        self.getMyRecognizeCardDetail(function() {
+          if (self.orderStatus == 2) {
+            if (self.code == '') {
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.tipsShow('核销码不能为空');
+            } else {
+              if (self.textarea == '备注（选填）') {
+                self.textarea == ''
+              }
+              self.onoff = false;
+              //提交核销密码,进行核销
+              
+              $.ajax({
+                url: config.locationUrl + "/order/hexiao",
+                dataType: "jsonp",
+                data: {
+                  //核销员的openID
+                  openid: userData.openid,
+                  cardOrderId: userData.cardOrderId,
+                  code: self.code,
+                  remark: self.textarea
+                },
+                success: function(data) {
+                  console.log(data);
+                  setTimeout(() => {
+                    self.onoff = true;
+                  }, 2000);
+                  if (data.ret === "0") {
+                    self.$router.push({
+                      name: 'Prizesuccess'
+                    })
+                  }
+                  if (data.ret === '1') {
+                    self.tipsShow('订单号无效');
+                  }
+                  if (data.ret === '2') {
+                    self.tipsShow('密码错误');
+                  }
+                  if (data.ret === '3') {
+                    self.tipsShow('该卡券已过期');
+                  }
+                  if (data.ret === '4') {
+                    self.tipsShow('该卡券正在退款中');
+                  }
+                  if (data.ret === '-99') {
+                    self.tipsShow('参数异常');
+                  }
+
+                },
+                error(res) {
+                  self.onoff = true;
+                  self.error('getMyRecognizeCardDetail');
+                }
+              });
+
+            }
+
+          } else {
+            return
+          }
+        })
+      } else {
+        return
+      }
+
+    },
+
+    refund() {
+      var self = this;
+      if (self.onoff) {
+        self.getMyRecognizeCardDetail(function() {
+          if (self.orderStatus == 2) {
+            if (self.code == '') {
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.tipsShow('核销码不能为空');
+            } else {
+              self.onoff = false;
+              //提交核销密码,进行核销
+              $.ajax({
+                url: config.locationUrl + "/wx_pay/refund",
+                dataType: "jsonp",
+                data: {
+                  //核销员的openID
+                  openid: userData.openid,
+                  cardOrderId: userData.cardOrderId,
+                  code: self.code
+                },
+                success: function(data) {
+                  console.log(data);
+                  setTimeout(() => {
+                    self.onoff = true;
+                  }, 2000);
+                  if (data.ret === "0") {
+                    self.$router.push({
+                      name: 'Quansuccess'
+                    })
+                  }
+                  if (data.ret === '1') {
+                    self.tipsShow('订单不存在或者非法用户操作')
+                  }
+                  if (data.ret === '2') {
+                    self.tipsShow('向微信发起退款请求返回失败')
+                  }
+                  if (data.ret === '3') {
+                    self.tipsShow('订单状态错误')
+                  }
+                  if (data.ret === '-99') {
+                    self.tipsShow('参数异常')
+                  }
+
+                },
+                error(res) {
+                  self.onoff = true;
+                  self.error('getMyRecognizeCardDetail');
+                }
+              });
+
+            }
+
+          } else {
+            return
+          }
+        })
+      } else {
+        return
+      }
+
+    },
+
+    //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      this.tips = true;
+      this.masseg = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 2000);
+    },
+
+
+    //获取核销内容页详情
+    getMyRecognizeCardDetail(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/order/getMyRecognizeCardDetail",
+        dataType: "jsonp",
+        data: {
+          //顾客的openID
+          openid: userData.userId,
+          cardOrderId: userData.cardOrderId
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.picUrl = data.card.merchant.merchantLogo;
+            self.title = data.card.merchant.merchantName;
+            self.buyBtn = data.card.resourceName;
+            self.startDate = self.formatDate(data.order.startDate);
+            self.endDate = self.formatDate(data.order.endDate);
+            self.orderStatus = data.order.orderStatus;
+            if (self.orderStatus == 2) {
+              self.allow = true;
+              self.btnmass = '确定';
+            }
+            if (self.orderStatus == 3) {
+              self.allow = false;
+              self.btnmass = '已核销';
+            }
+            if (self.orderStatus == 4) {
+              self.allow = false;
+              self.btnmass = '失败订单';
+            }
+            if (self.orderStatus == 5) {
+              self.allow = false;
+              self.btnmass = '取消订单';
+            }
+            if (self.orderStatus == 6) {
+              self.allow = false;
+              self.btnmass = '退款进行中';
+            }
+            if (self.orderStatus == 7) {
+              self.allow = false;
+              self.btnmass = '退款订单';
+            }
+            if (self.orderStatus == 8) {
+              self.allow = false;
+              self.btnmass = '订单过期';
+            }
+            if (self.orderStatus == 9) {
+              self.allow = false;
+              self.btnmass = '卡券还未开始使用';
+            }
+            console.log(self.orderStatus);
+            cb && cb();
+          } else {
+            //处理接口调用失败
+            self.error('getMyRecognizeCardDetail');
+          }
+        },
+        error(res) {
+          self.error('getMyRecognizeCardDetail');
+        }
+      });
+    },
+    //微信调取组件
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+
+    hexiaocontent() {
+      this.num1 = true;
+      this.num2 = false;
+    },
+
+    refundcontent() {
+      this.num1 = false;
+      this.num2 = true;
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+html {
+  background: #f2f2f2;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  background: #f2f2f2;
+  .main {
+    .top {
+      padding-top: pTR(30);
+      text-align: center;
+      width: 100%;
+      height: pTR(368);
+      background: url(../../assets/czlImg/hexiaoBg.jpg) 0 0 no-repeat;
+      background-size: 100%;
+      .personPic {
+        width: pTR(120);
+        height: pTR(120);
+        display: block;
+        margin: 0 auto;
+        border-radius: 50%;
+      }
+      .logo {
+        font-size: pTR(28);
+        color: #fff;
+        padding-top: pTR(20);
+      }
+      .title {
+        padding: pTR(40) 0 0;
+        color: #fff;
+      }
+      .codetime {
+        height: pTR(100);
+        line-height: pTR(100);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: pTR(24);
+      }
+    }
+    .listBar {
+      width: 100%;
+      height: pTR(80);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 pTR(110);
+      color: #666666;
+      font-size: pTR(30);
+      .left {
+        width: pTR(160);
+        height: pTR(80);
+        line-height: pTR(80);
+        text-align: center;
+        position: relative;
+      }
+      .right {
+        width: pTR(160);
+        height: pTR(80);
+        line-height: pTR(80);
+        text-align: center;
+        position: relative;
+      }
+
+      .on:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+        background: #f47365;
+        height: pTR(5);
+        bottom: 0;
+      }
+      .on {
+        color: #f47365;
+      }
+    }
+
+    .hexiao {
+      .buyBtn {
+        width: pTR(687);
+        height: pTR(95);
+        line-height: pTR(70);
+        background: #f66051;
+        color: #fff;
+        font-size: pTR(30);
+        border-radius: pTR(5);
+        margin: pTR(40) auto pTR(85);
+        text-align: center;
+        line-height: pTR(95);
+        font-size: pTR(32);
+        border-radius: pTR(5);
+      }
+      .nouse {
+        background: #929292;
+      }
+      .inputma {
+        padding: pTR(20) 0;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        color: #666;
+        input {
+          width: 100%;
+          background: #fff;
+          font-size: pTR(30);
+          height: pTR(100);
+          line-height: pTR(100);
+          padding-left: pTR(40);
+        }
+      }
+      .remark {
+        width: 100%;
+        height: pTR(200);
+        padding: pTR(30);
+        background: #fff;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        textarea {
+          border: none;
+          width: 100%;
+          height: 100%;
+          color: #666666;
+          font-size: pTR(30);
+          line-height: pTR(40);
+        }
+      }
+    }
+    .refund {
+      .inputma {
+        padding: pTR(20) 0;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        input {
+          width: 100%;
+          background: #fff;
+          font-size: pTR(30);
+          height: pTR(100);
+          line-height: pTR(100);
+          padding-left: pTR(40);
+        }
+      }
+      .buyBtn {
+        width: pTR(687);
+        height: pTR(95);
+        line-height: pTR(70);
+        background: #f66051;
+        color: #fff;
+        font-size: pTR(30);
+        border-radius: pTR(5);
+        margin: pTR(40) auto pTR(85);
+        text-align: center;
+        line-height: pTR(95);
+        font-size: pTR(32);
+        border-radius: pTR(5);
+      }
+      .nouse {
+        background: #929292;
+      }
+    }
+  }
+}
+
+
+.masuccess {
+  position: fixed;
+  width: pTR(340);
+  height: pTR(88);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(88);
+  color: #fff;
+}
+
+</style>

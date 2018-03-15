@@ -1,0 +1,35 @@
+import * as config from './config';
+
+
+export let userData = {};
+
+//获取url param
+export const getParam = function(attr) {
+
+    let match = RegExp(`[?&]${attr}=([^&]*)`).exec(window.location.search)
+
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+}
+
+//判断页面是否授权
+export const wxChankeAuthorize = function() {
+
+    if (!getParam('openid') || !getParam('actSid') ) {
+        //window.location.href = `http://user.weshaketv.com/wss/platformMpOauth?app_code=${ config.appcode }&redirect_url=${ window.location.href }`;
+        console.log('openid不存在');
+        return;
+    } else {
+        userData.actSid = getParam("actSid"); 
+        userData.openid = getParam("openid");
+        userData.nickname = getParam("nickname");
+        userData.sex = getParam("sex");
+        userData.province = getParam("province");
+        userData.city = getParam("city");
+        userData.country = getParam("country");
+        userData.headimgurl = getParam("headimgurl");
+        userData.hash = getParam("hash");  //判断页面路由跳转;
+    }
+}
+
+
+

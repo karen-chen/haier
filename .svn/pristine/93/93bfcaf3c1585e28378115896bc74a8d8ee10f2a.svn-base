@@ -1,0 +1,55 @@
+/**
+ * Created by Administrator on 2017/9/19.
+ */
+import * as config from '@/lib/config'
+import * as tool from '@/lib/tools'
+
+
+//获取banner
+  export default{
+    getBanner(req,cb){
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "banner/getCityBannerList",
+        dataType: "jsonp",
+        data: {
+          city:req.city
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            cb && cb(data.list[0].imgUrl);
+          }else {
+            console.log('banner/getCityBannerList:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('banner/getCityBannerList:', 'fail');
+        }
+      });
+    },
+
+
+    //获取门店详情
+    getShopDetail(req,cb){
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "shop/getShopDetail",
+        dataType: "jsonp",
+        data: {
+          shopId:req.shopId
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            cb && cb(res.obj);
+          }else {
+            console.log('shop/getShopDetail:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('shop/getShopDetail:', 'fail');
+        }
+      });
+    },
+  }
+
+

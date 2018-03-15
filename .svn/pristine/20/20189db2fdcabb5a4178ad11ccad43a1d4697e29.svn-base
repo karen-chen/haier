@@ -1,0 +1,480 @@
+<template>
+  <div :class="['shake_body', isInShakingMode?'':'countdown_body']">
+    <div class="top el-row" v-show="!isInShakingMode">
+      <div class="text-center el-col el-col-4"><span>{{user_count}}</span><br>参与互动
+      </div>
+      <div class="el-col el-col-17 el-col-offset-3">
+        <div class="top_right">
+          <ul v-for="(userItem, index) in user_list" :key="userItem.openid">
+            <!--<li class="biandan">-->
+            <!--</li>-->
+            <li v-bind:class="{biandan: index==0}">
+              <img v-bind:src="userItem.head && userItem.head != '/0' ? userItem.head : default_icon" width="200" height="200">
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <h2 class="title_h2" v-show="!isInShakingMode"></h2>
+    <div class="count_main text-center" v-show="!isInShakingMode">
+      <h2 v-show="isShowCountbox">距离下一轮摇奖开始</h2>
+      <h3 v-show="!isShowCountbox">{{timer_status_msg}}</h3>
+      <div class="count_box" v-show="isShowCountbox">
+        <span>{{count_hour}}</span>时
+        <span>{{count_min}}</span>分
+        <span>{{count_second}}</span>秒
+      </div>
+    </div>
+    <div class="rule_btn" @click="showRuleDlg" v-show="!isInShakingMode"></div>
+    <div class="minegift_btn" @click="showQrcodeDlg" v-show="!isInShakingMode"></div>
+
+    <!--摇奖规则弹框-->
+    <div class="pop_mask" id="ruleBox" v-show="isShowRule">
+      <div class="pop_box rule_box">
+        <h3>活动规则</h3>
+        <div class="rule_list" v-html="act_rule"></div>
+        <div class="off_btn" @click="closeRule">&times;</div>
+      </div>
+    </div>
+
+
+    <div class="top el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-4"><span>{{user_count}}</span><br>参与互动
+      </div>
+      <div class="el-col el-col-16 el-col-offset-4">
+
+        <div class="marquee_main" v-for="prizeUser in prizeUserList" :key="prizeUser.sid">
+          <div class="marquee_list">
+            <div class="pic">
+              <img :src="prizeUser.head">
+            </div>
+            <p><span>{{prizeUser.nickname}}获得</span> <b></b> {{prizeUser.resourceName}}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-24">
+        <div class="title"></div>
+      </div>
+    </div>
+    <div class="el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-24">
+        摇奖正在进行，一起来摇吧~
+      </div>
+    </div>
+    <div class="el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-24">
+        <div class="shake_main"><span class="tada"></span></div>
+      </div>
+    </div>
+    <div class="el-row" v-show="false">
+      <div class="text-center el-col el-col-24">
+        <div class="gifts_title"></div>
+      </div>
+    </div>
+    <div class="gigts_list" v-show="false">
+      <div class="el-row">
+        <div class="el-col el-col-18">测试自定义code</div>
+        <div class="el-col el-col-5 el-col-offset-1">剩余<span>81</span>个</div>
+      </div>
+    </div>
+    <!--未中奖弹框-->
+    <div class="pop_mask" id="noWin" v-show="isShowNoPrize">
+      <div class="pop_box no_win">
+        <h3>未中奖</h3>
+        <p>活动最重要的是开心咯！</p>
+        <span></span>
+        <div class="btn" @click="closeNoPrizeDlg">再来一次</div>
+        <div class="off_btn" @click="closeNoPrizeDlg">&times;</div>
+      </div>
+    </div>
+    <!--关注公众号弹框-->
+    <div class="pop_mask" id="codeBox" v-show="isShowQrcode">
+      <div class="pop_box code_box">
+        <h3>请在“海尔电视”公众号<br>
+          菜单“我的券”中进行查看</h3>
+        <span><img src="../../assets/images/pop_code.jpg"></span>
+        <p>长按二维码，即可关注“海尔电视”公众号</p>
+        <div class="off_btn" @click="closeQrcodeDlg">&times;</div>
+      </div>
+    </div>
+    <!--中奖弹框-->
+    <div class="pop_mask" id="giftBox" v-show="isShowPrize">
+      <div class="pop_box gift_box">
+        <h3>恭喜你获得<span>{{prize_title}}</span>奖品</h3>
+        <p>奖品已自动放入“我的券”中</p>
+        <div class="btn" @click="showQrcodeDlg">查看奖品使用说明</div>
+        <div class="off_btn" @click="closePrizeDlg">&times;</div>
+      </div>
+    </div>
+
+
+  </div>
+
+
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_countdown.scss';
+  @import '../../assets/scss/pages/_shake.scss';
+  @import '../../assets/scss/pages/_pop.scss';
+</style>
+<script>
+
+  import * as config from '@/lib/config'
+  import * as shake from '@/assets/js/jquery.shake'
+  import {
+    userData,
+    getParam
+  } from '@/lib/tools';
+
+  export default {
+    data() {
+      return {
+        act_rule: "",
+        default_icon: config.default_icon,
+        count_hour: 0,
+        count_min: 0,
+        count_second: 59,
+        user_list: [],
+        user_count: 0,
+        prize_user_refresh_interval: 6000,
+        user_refresh_interval: 6000,
+        timer_refresh_interval: 13000,
+        actSid: "",
+        timerSid: "",
+        share_info: {},
+        isShowRule: false,
+        t_userList: null,
+        t_user: null,
+        t_countdown: null,
+        t_timer: null,
+        intDiff: 30000,
+        isShowCountbox: false,
+        isShowQrcode: false,
+        isShowNoPrize: false,
+        isShowPrize: false,
+        isShaking: false,
+        t_prizeUserList: null,
+        prizeUserList: [],
+        isInShakingMode: false,
+        prize_title: "",
+        //act_title:"",
+        timer_status_msg:""
+      }
+    },
+    created() {
+      this.actSid = getParam("actSid");
+
+      if(!this.actSid){
+        alert("Invalid parameter.");
+        return;
+      }
+
+      this.initPage();
+
+      this.refreshTimer();
+      this.t_timer = setInterval(this.refreshTimer, this.timer_refresh_interval);
+
+      this.addUser();
+      this.t_user = setInterval(this.addUser, this.user_refresh_interval);
+    },
+    methods: {
+      initPage() {
+        var _this = this;
+
+        //shake regist
+        var u = navigator.userAgent, app = navigator.appVersion;
+        var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+        var shakeSpeed = 8;
+        if (isiOS) {
+          shakeSpeed = 30;
+        }
+        $(document).shake({
+          shake_speed: shakeSpeed,
+          time_difference: 30,
+          shakeAfter: function () {
+            _this.doShake();
+          }
+        });
+
+
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/sys/getBaseConfigByType",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+            configType: 'shake_act_base_config'
+          },
+          success: function (data) {
+            console.log("after getBaseConfigByType");
+            console.log(data);
+            if (data.ret == 0) {
+              //refresh public share info, title, act rule
+              _this.act_rule = "<p>" + data.ruleTip.replace(/\n/g, "</p><p>") + "</p>";
+              document.title = data.title;
+              //_this.act_title = data.title;
+            } else {
+              console.log('getBaseConfigByType:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getBaseConfigByType:', 'fail');
+          }
+        });
+      },
+      addUser(cb) {
+        var _this = this;
+        ///lottery/addParticipant
+        if (_this.timerSid && userData.openid) {
+          $.ajax({
+            type: "GET",
+            url: config.locationUrl + "/lottery/addParticipant",
+            dataType: "jsonp",
+            data: {
+              timerSid: _this.timerSid,
+              openid: userData.openid
+            },
+            success: function (data) {
+              console.log("after addParticipant");
+              console.log(data);
+              if (data.ret == 0) {
+                _this.user_count = data.amount;
+              } else {
+                console.log('addParticipant:', 'ret != 0');
+              }
+            },
+            error(res) {
+              console.log('addParticipant:', 'fail');
+            }, complete() {
+              cb && cb();
+            }
+          });
+        }
+      },
+      refreshTimer() {
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/timer/getCurrTimer",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+          },
+          success: function (data) {
+            console.log("after getCurrTimer");
+            console.log(data);
+            if (data.ret == 0) {
+              if (data.timerSid ) {
+                _this.timerSid = data.timerSid;
+                if (data.status == 1) {
+                  _this.addUser();//new User in this new timer
+                  _this.toShake();
+                  return;
+                } else {
+                  _this.addUser();//new User in this new timer
+                }
+                _this.isInShakingMode = false;
+                if (data.status == 0) {
+                  // er...
+                  clearInterval(_this.t_countdown);
+                  _this.intDiff = data.leftInMs;
+                  _this.intDiff -= 1000;
+                  if(_this.intDiff<=0){
+                    setTimeout(function(){
+                      _this.toShake();
+                    }, _this.intDiff + 1000);
+                    return;
+                  }
+                  _this.count_hour= Math.floor(_this.intDiff / (60 * 60 * 1000)) % 24;
+                  _this.count_min= Math.floor(_this.intDiff / (60 * 1000)) % 60;
+                  _this.count_second= Math.floor(_this.intDiff / 1000) % 60;
+                    _this.t_countdown = setInterval(function(){
+                      _this.intDiff -= 1000;
+                      if(_this.intDiff<=0){
+                        clearInterval(_this.t_countdown);
+                        setTimeout(function(){
+                          _this.toShake();
+                        }, _this.intDiff + 1000);
+                        return;
+                      }
+                      _this.count_hour= Math.floor(_this.intDiff / (60 * 60 * 1000)) % 24;
+                      _this.count_min= Math.floor(_this.intDiff / (60 * 1000)) % 60;
+                      _this.count_second= Math.floor(_this.intDiff / 1000) % 60;
+                  }, 1000);
+                  _this.toCountdown();
+                  _this.isShowCountbox = true;
+                } else {
+                  _this.isShowCountbox = false;//shaking, not reachable
+                }
+              } else {
+                _this.timerSid = "";// any exception?
+              }
+            } else {
+              _this.timerSid = "";
+              console.log('getCurrTimer:', 'ret != 0');
+              _this.isShowCountbox = false;
+              _this.isInShakingMode = false;
+              _this.timer_status_msg  =data.ret==1?"当日无时段":data.ret==2?"无活动或活动无效":"摇奖已结束";
+            }
+          },
+          error(res) {
+            _this.timerSid = "";
+            console.log('getCurrTimer:', 'fail');
+          }
+        });
+      },
+      refreshUser() {
+        var _this = this;
+        if(!_this.timerSid){
+          return;
+        }
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/getParticipantInfo",
+          dataType: "jsonp",
+          data: {
+            timerSid: _this.timerSid
+          },
+          success: function (data) {
+            console.log("after getParticipantInfo");
+            console.log(data);
+            if (data.ret == 0) {
+//              _this.user_count = data.amount;
+              if (data.rows) {
+                //_this.user_list = _this.user_list.concat(data.rows);
+                _this.user_list = data.rows;
+              }
+            } else {
+              console.log('getParticipantInfo:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getParticipantInfo:', 'fail');
+          }
+        });
+      },
+      toShake() {
+        this.isInShakingMode = true;
+
+        clearInterval(this.t_userList);
+        clearInterval(this.t_countdown);
+        clearInterval(this.t_prizeUserList);
+
+        this.refreshPrizeUser();
+        this.t_prizeUserList = setInterval(this.refreshPrizeUser, this.prize_user_refresh_interval);
+      },
+      toCountdown() {
+        this.prizeUserList=[];//reset it
+        clearInterval(this.t_userList);
+        clearInterval(this.t_prizeUserList);
+
+        this.refreshUser();
+        this.t_userList = setInterval(this.refreshUser, this.user_refresh_interval);
+      }
+      , closeRule() {
+        this.isShowRule = false;
+      }
+      , showRuleDlg() {
+        this.isShowRule = true;
+      }
+      , showQrcodeDlg() {
+        this.isShowQrcode = true;
+        if(this.isShowPrize){
+          this.isShowPrize = false
+        }
+      },
+      closeQrcodeDlg() {
+        this.isShowQrcode = false;
+        if(this.isShaking){
+          this.isShaking = false
+        }
+      },
+      showNoPrizeDlg() {
+        this.isShowNoPrize = true
+      },
+      closeNoPrizeDlg() {
+        this.isShowNoPrize = false;
+        this.isShaking = false
+      },
+      showPrizeDlg() {
+        this.isShowPrize = true
+      },
+      closePrizeDlg() {
+        this.isShowPrize = false;
+        this.isShaking = false
+      },
+      refreshPrizeUser() {
+        // get latest 30 prizeusers
+        var _this = this;
+        console.log(_this.isInShakingMode + "-------isInShakingMode");
+        if (!_this.isInShakingMode) {
+          return;//only request in shaking mode
+        }
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/getPrizeUserList",
+          dataType: "jsonp",
+          data: {
+            timerSid: _this.timerSid
+          },
+          success: function (data) {
+            console.log("after getPrizeUserList");
+            if (data.ret == 0) {
+              //_this.user_count = data.amount;
+              if (data.rows) {
+//                _this.prizeUserList = _this.prizeUserList.concat(data.rows)
+                _this.prizeUserList = data.rows
+              }
+            }
+
+          },
+          error(res) {
+            console.log('lottery/getPrizeUserList:', 'fail');
+            _this.showNoPrizeDlg();
+          }
+        });
+      },
+      doShake() {
+        var _this = this;
+        if (!_this.timerSid) {
+          return;
+        }
+        console.log("in startDraw");
+        if (_this.isShaking || !_this.isInShakingMode) {
+          return;
+        }
+        _this.isShaking = true;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/shake",
+          dataType: "jsonp",
+          data: {
+            openid: userData.openid,
+            timerSid: _this.timerSid
+          },
+          success: function (data) {
+            _this.lottery_result = data;
+            console.log("after shake");
+            if (data.ret == 0 && data.timerPrize) {
+              // set prize title
+              _this.prize_title = data.timerPrize.resourceName;
+              _this.showPrizeDlg();
+            } else {
+              _this.showNoPrizeDlg();
+            }
+
+          },
+          error(res) {
+            console.log('lottery/shake:', 'fail');
+            _this.showNoPrizeDlg();
+          }
+        });
+      }
+    }
+
+  }
+</script>

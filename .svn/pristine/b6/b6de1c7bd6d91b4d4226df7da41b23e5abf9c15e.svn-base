@@ -1,0 +1,57 @@
+/**
+ * Created by Administrator on 2017/9/19.
+ */
+import api from '../api'
+import * as types from '../types'
+import * as config from '@/lib/config'
+
+//2 定义初始状态；
+const state={
+  imgUrl:'',
+  /*getShopList*/
+  rows:[],
+  obj:[],
+}
+
+//4 action
+const actions={
+  getBanner({commit, state}, req){
+    api.getBanner(req, (res)=>{
+      commit(types.SL_GET_BANNER, res);
+    });
+  },
+  getShopList({commit, state}, req){
+    api.getShopList(req, (res)=>{
+      commit(types.SL_GET_SHOP_LIST, res);
+    });
+  },
+  getShopDetail({commit, state}, req){
+    api.getShopDetail(req, (res)=>{
+      commit(types.SL_GET_SHOP_DETAIL, res);
+    });
+  }
+}
+
+
+const getters={}
+
+//3 mutations
+const  mutations={
+  [types.SL_GET_BANNER](state, res){
+    state.imgUrl = config.imageServerUrl + res;
+  },
+  [types.SL_GET_SHOP_LIST](state, res){
+    state.rows = res;
+  },
+  [types.SL_GET_SHOP_DETAIL](state, res){
+    state.obj = res;
+  }
+}
+
+
+export default{
+  state,
+  actions,
+  getters,
+  mutations
+}

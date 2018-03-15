@@ -1,0 +1,150 @@
+<template>
+  <div class="survey_body">
+    <div class="top">
+      {{question.title}}
+    </div>
+    <div class="title">
+      {{question.introduce}}
+    </div>
+    <div class="survey_main">
+      <div class="survey_list" v-for="(topic,index) in question.topicList" :key="topic.sid">
+        <h2>{{(index+1)}}）{{topic.title}}</h2>
+        <div class="question_list">
+          <ul>
+            <template v-for="(option, optionIndex) in topic.optionList">
+              <li @click="choose(topic, option, index, optionIndex)">
+                <span :class="{checked: option.isChoose}"></span>
+                {{option.title}}
+              </li>
+            </template>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="submit_btn" @click="submitBtn">提交</div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/survey.scss';
+</style>
+<script>
+  import {
+    mapState
+  } from 'vuex';
+  import * as config from '@/lib/config'
+  import {
+    userData
+  } from '@/lib/tools';
+  export default {
+    data: function () {
+      return {
+        option: [],
+        question: {}
+      }
+    },
+    created()
+    {
+      var _this = this;
+      //获取题目
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/questionnaire/getQuestionnaire",
+        dataType: "jsonp",
+        data: {
+          questionnaireId: '56daf8f67e5d472f8a5eb90fd22c2c2c',
+        },
+        success: function (data) {
+          if (data.ret == 0) {
+            _this.question = data.obj;
+            _this.question.topicList = _this.question.topicList || [];
+            _this.question.topicList.forEach(topic => {
+              topic.chooseCount = 0;
+            topic.optionList = topic.optionList || [];
+            topic.optionList.forEach(option => {
+              option.isChoose = false
+          })
+          })
+          } else {
+            console.log('questionnaire/getQuestionnaire:', 'ret != 0');
+          }
+
+        },
+        error(res) {
+          console.log('questionnaire/getQuestionnaire:', 'fail');
+        }
+      });
+    }
+    ,
+    methods: {
+      submitBtn()
+      {
+        /*问卷答题*/
+        var _this = this;
+
+        var result = [];
+        this.question.topicList.forEach(function(topic){
+          var resultTopic = {};
+          resultTopic.topicId = topic.sid;
+          resultTopic.option = [];
+          topic.optionList.forEach(function(option){
+            if(option.isChoose){
+              var resultOption = {};
+              resultOption.optionId = option.sid;
+              resultTopic.option.push(resultOption);
+            }
+          });
+          result.push(resultTopic);
+        });
+
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/questionnaire/saveQuestionnaireAnswer",
+          dataType: "jsonp",
+          data: {
+            questionnaireId: this.question.sid,
+            openid: userData.openid,
+            topicArr: JSON.stringify(result)
+          },
+          success: function (data) {
+            if (data.ret == 0) {
+              _this.option = data.option
+            } else {
+              console.log("/questionnaire/saveQuestionnaireAnswer:", "ret != 0")
+            }
+          },
+          error(res){
+            console.log("/questionnaire/saveQuestionnaireAnswer:", "fail")
+          }
+        });
+        this.$router.push({path: 'tips'})
+      }
+      ,
+      choose(topic, option, index, optionIndex)
+      {
+        if(topic.maxChoice == "1"){
+          topic.optionList.forEach(function(item){
+            item.isChoose = false;
+          });
+          topic.optionList[optionIndex].isChoose = true;
+
+          this.question.topicList[index].optionList.splice(0,topic.optionList);
+          return;
+        }
+
+        if (option.isChoose) {
+          topic.chooseCount -= 1;
+          option.isChoose = false
+        } else {
+          if (parseInt(topic.maxChoice) > topic.chooseCount) {
+            topic.chooseCount += 1;
+            option.isChoose = true
+          }
+        }
+        this.question.topicList[index].optionList.splice(optionIndex, 1, option);
+      },
+    }
+
+  }
+</script>

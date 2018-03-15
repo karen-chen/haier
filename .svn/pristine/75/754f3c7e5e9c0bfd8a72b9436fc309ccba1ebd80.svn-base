@@ -1,0 +1,171 @@
+<template>
+  <div class="comment_body">
+    <form id="commentForm">
+      <div class="el-row">
+        <div class="el-col">
+          <div class="el-textarea"><textarea v-model="text" placeholder="写几句评价吧" type="textarea"
+                                             rows="2" class="el-textarea__inner" style="height: 54px;"></textarea></div>
+        </div>
+      </div>
+      <div class="bor-b2 el-row">
+        <div class="el-col el-col-24">
+          <div class="comment_pic" v-for="(image,idx) in imageList">
+            <img :src="image">
+            <div class="del_btn" @click="delImage(idx)">×</div>
+          <!--  <div class="spinner" style="display: none;">
+&lt;!&ndash;              <div class="spinner_main">
+                <div class="spinner-container container1">
+                  <div class="circle1"></div>
+                  <div class="circle2"></div>
+                  <div class="circle3"></div>
+                  <div class="circle4"></div>
+                </div>
+                <div class="spinner-container container2">
+                  <div class="circle1"></div>
+                  <div class="circle2"></div>
+                  <div class="circle3"></div>
+                  <div class="circle4"></div>
+                </div>
+                <div class="spinner-container container3">
+                  <div class="circle1"></div>
+                  <div class="circle2"></div>
+                  <div class="circle3"></div>
+                  <div class="circle4"></div>
+                </div>
+              </div>&ndash;&gt;
+            </div>-->
+          </div>
+          <div class="add_pic el-input" @click="addPic">
+          </div>
+        </div>
+      </div>
+      <div class="el-row"><div class="center el-col el-col-24"><button @click="submitBtn" type="button" class="el-button submit_btn el-button--default"><!----><!----><span>确定</span></button></div></div>
+      <!--提示弹框-->
+      <div class="pop_mask" v-show="show"><div class="tips">评论不能为空</div></div>
+    </form>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_comment.scss';
+</style>
+<script>
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    chooseImage,
+    wxHideMenu,
+    wxChankeAuthorize
+  } from '@/lib/tools';
+  import * as config from '@/lib/config'
+  export default {
+       data(){
+         return{
+           show:false,
+           shopId:'',
+           commentType:0,
+           text:"",
+           comment:{},
+           imageList:[]
+         }
+       },
+    created(){
+      if(!wxChankeAuthorize()){
+        return;
+      }
+      var _this = this;
+      window.localStorage.removeItem("isGotoComment");
+
+      getJsSign(function(sign) {
+        wxconfig(sign);
+        wxHideMenu()
+        wx.ready(function () {
+          wx.showMenuItems({
+            menuList: [
+              'menuItem:favorite',
+              'menuItem:share:email',
+              'menuItem:share:qq', //分享到QQ
+              'menuItem:share:weiboApp', //分享到Weibo
+              'menuItem:share:QZone', //分享到QQ空间
+              "menuItem:share:timeline", //分享到朋友圈
+            ] // 要显示的菜单项，所有menu项见附录3
+          });
+        })
+      })
+      /*    _this.shopId = _this.$route.params.shoplist;*/
+      //存储接口传参所需数据
+      if (_this.$route.params.shoplist) {
+        localStorage.setItem('key', _this.$route.params.shoplist)
+      }
+      _this.shopId = localStorage.getItem('key')
+    },
+    methods:{
+      addPic(){
+        var _this = this
+        chooseImage(function(res){
+          $.ajax({
+            url:"http://app11.s.weshaketv.com:9900/wss/api/imgUpload",
+            dataType:"jsonp",
+            data:{
+              mediaId: res.serverId
+            },
+            success:function(data){
+              console.log(5555, data)
+              alert("chooseImage success: " + JSON.stringify(data))
+              _this.imageList.push(data.media)
+              console.log(_this.imageList)
+            }
+          })
+        })
+
+      },
+      delImage:function(index){
+        var _this = this
+        _this.imageList.shift(index);
+      },
+      submitBtn(){
+        var _this = this
+        if(_this.imageList.length == 0){
+          _this.commentType = 2
+        }else {
+          _this.commentType = 3
+        }
+        var commentContentJsonStr = {};
+        commentContentJsonStr.text = _this.text;
+        commentContentJsonStr.imageList = _this.imageList;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/comment/saveComment",
+          dataType: "jsonp",
+          data: {
+            openid:userData.openid,
+            commentType:this.commentType,
+            shopId:this.shopId,
+            commentContentJsonStr:JSON.stringify(commentContentJsonStr)
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              //_this.imageList = data.imageList
+              if(_this.text == ''){
+                _this.show = true;
+                setTimeout(function(){
+                  _this.show = false
+                },1000);
+                return
+              }
+              _this.$router.push({name:'Activity', params:{commentContentJsonStr:JSON.stringify(commentContentJsonStr)}})
+            }else {
+              console.log('/comment/saveComment:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/comment/saveComment:', 'fail');
+          }
+        });
+
+      }
+    }
+  }
+</script>

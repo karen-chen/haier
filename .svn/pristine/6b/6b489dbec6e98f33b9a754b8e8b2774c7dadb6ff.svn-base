@@ -1,0 +1,30 @@
+<template>
+	<div class="null">
+		<img class="pic" src="../../assets/czlImg/icon1.png">
+		<p>暂时没有认筹券可领取，晚点再来吧！</p>
+	</div>
+</template>
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss"  scoped>
+ @import '../../assets/scss/_mixins.scss';
+	.null{
+		width:100%;
+		height:100%;
+		background:#fff;
+		.pic{
+			width:pTR(198);
+			height:pTR(129);
+			margin:pTR(180) auto pTR(70); 
+		}
+		p{
+			color:#999999;
+			font-size:pTR(36);
+			text-align: center;
+		}
+	}
+</style>

@@ -1,0 +1,176 @@
+<template>
+  <div class="information_body" v-show="showBody">
+    <div class="el-row">
+      <div class="text-center size36 mt110 el-col el-col-24">
+        请输入您的资料完成绑定
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-24">
+        <div class="el-input"><!----><!----><input autocomplete="off" id="input1" placeholder="请输入姓名" v-model="name" type="text" rows="2" validateevent="true" class="el-input__inner"><!----><!---->
+          <div class="pop_tips" v-show="showTips">
+            请输入姓名
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-24">
+        <div class="el-input"><!----><!----><input autocomplete="off" id="input2" @blur="phoneValidate" placeholder="请输入手机号" v-model="phone" type="text" rows="2" validateevent="true" class="el-input__inner"><!----><!---->
+          <div class="pop_tips" v-show="showTips2">
+            请输入手机号
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-center el-row">
+      <button type="button" class="el-button el-button--default" @click="submitBtn"><!----><!----><span>确定</span></button>
+    </div>
+    <div class="pop_comment" v-show="showPop">
+      姓名错误
+      {{msg}}
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_information.scss';
+  .pop_comment{
+    background-color: rgba(0,0,0,.6);
+    max-width: 80%;
+  @include p(10,20);
+  @include radius(10);
+  @include size_color(35,#fff);
+    position: fixed;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    padding:pTR(20) pTR(30);
+  }
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import {
+    userData,
+    wxHideMenu,
+    getJsSign,
+    wxconfig,
+    checkInject,
+    checkTel
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return {
+        showBody:false,
+        showPop:false,
+        name:'',
+        phone:'',
+        msg:''
+      }
+    },
+
+    created(){
+      var _this = this
+      //console.log(userData.openid)
+      getJsSign(function(sign) {
+        wxconfig(sign);
+      })
+      wxHideMenu()
+      wx.ready(function(){
+        wx.showMenuItems({
+          menuList: [
+            'menuItem:favorite',
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+      })
+
+    $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/user/checkBind",
+        dataType: "jsonp",
+        data: {
+          openid:userData.openid
+        },
+        success: function(data) {
+         // console.log(data)
+          if (data.ret == 0) {
+            _this.$router.push({path:'coupon'})
+          }else{
+            _this.showBody = true
+          }
+        },
+        error(res) {
+          console.log('/user/checkBind:', 'fail');
+        }
+      });
+    },
+    computed:{
+      showTips:function(){
+        return this.name.length==0
+      },
+      showTips2:function(){
+        return this.phone.length==0
+      }
+    },
+    methods:{
+      phoneValidate(){
+        var _this = this
+        if (checkTel(this.phone)) {
+          return true;
+        } else {
+          this.showPop = true
+          this.msg = "手机号码有误，请重填"
+          setTimeout(function(){
+            _this.showPop = false
+          },2000)
+          return false;
+        }
+
+      },
+      submitBtn(){
+        var _this = this;
+        if(_this.showTips || _this.showTips2){
+          return
+        }
+        if(checkInject(_this.name)){
+          this.showPop = true
+          this.msg = "输入内容不能包含字符<>"
+          setTimeout(function(){
+            _this.showPop = false
+          },2000)
+          return
+        }
+        _this.newname = $.trim(_this.name)
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/user/bindSaleUser",
+          dataType: "jsonp",
+          data: {
+            openid:userData.openid,
+            phone:this.phone,
+            name:this.newname
+          },
+          success: function(data) {
+            //console.log(data)
+            if (data.ret == 0) {
+              _this.$router.push({path:'coupon'})
+            }else{
+              _this.showPop = true
+              setTimeout(function(){
+                _this.showPop = false
+              },2000)
+              _this.msg = data.msg
+            }
+          },
+          error(res) {
+            console.log('/user/bindSaleUser:', 'fail');
+          }
+        });
+      }
+    }
+  }
+
+</script>

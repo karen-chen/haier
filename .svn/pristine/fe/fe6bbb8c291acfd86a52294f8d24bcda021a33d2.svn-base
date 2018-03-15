@@ -1,0 +1,104 @@
+<template>
+<div class="activity_body">
+  <div class="activity_main">
+    <div class="row_mp43 el-row">
+      <div class="el-col el-col-3">
+        <div class="pic_logo"><img src="../../assets/images/card_logo_01.jpg"></div>
+      </div>
+      <div class="el-col el-col-21"><p>良品铺子（光谷一店）</p></div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_address.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>光谷佳园路中商平价超市一楼</span></div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_phone.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>15871442380</span></div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_time.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>营业时间：周一到周五，9:00-18:00</span></div>
+    </div>
+    <div class="el-row">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_pic.png"></div>
+      </div>
+      <div class="el-col el-col-22">
+        <div class="el-row">
+          <div class="el-col el-col-5">
+            <div class="shop_pic"><img src="../../assets/images/card_logo_01.jpg"></div>
+          </div>
+          <div class="el-col el-col-5">
+            <div class="shop_pic"><img src="../../assets/images/card_logo_01.jpg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="activity_main m20">
+    <div class="el-row">
+      <div class="el-col el-col-24"><h3>活动信息</h3> <span>现在参加认筹活动即可享受10元抵扣100元，
+    数量有限先到先得，活动时间：2017.7.26-
+    2017.8.1</span></div>
+    </div>
+  </div>
+  <div class="activity_main">
+    <div class="pt43 el-row">
+      <div class="el-col el-col-24"><h3>用户评论（<span>10086</span>）</h3>
+        <router-link to="/shop-list/comment" tag="a">
+          <div class="commentaries_icon"><span></span></div>
+        </router-link>
+      </div>
+    </div>
+    <div class="commentaries_list">
+      <div class="pb25 el-row">
+        <div class="el-col el-col-3">
+          <div class="comment_pic"><img src="../../assets/images/card_logo_01.jpg"></div>
+        </div>
+        <div class="el-col el-col-21">
+          <div class="mt20 el-row">
+            <div class="el-col el-col-14">
+              丫丫
+            </div>
+            <div class="text-right el-col el-col-10">2017-05-12 18:02</div>
+          </div>
+          <div class="pb25 el-row">
+            <div class="el-col el-col-24">
+              '这个电子认筹劵真好用，不怕搞丢了！简直太棒了太好用了。
+            </div>
+          </div>
+          <div class="pb0 el-row">
+            <div class="el-col el-col-6">
+              <div class="comment_picture"><img src="../../assets/images/card_logo_01.jpg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pop_mask" style="display: none;">
+    <div class="el-row">
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+    </div>
+  </div>
+</div>
+</div>
+</template>
+
+<script>
+
+</script>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_activity.scss';
+</style>
+

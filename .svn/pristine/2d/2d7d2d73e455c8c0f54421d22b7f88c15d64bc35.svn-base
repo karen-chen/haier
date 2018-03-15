@@ -1,0 +1,578 @@
+<template>
+  <div class="newpage">
+    <div class="detailBox">
+      <div class="detailTtitle">
+        <div class="left"></div>
+        <div class="right">活动详情 </div>
+        <div class="more">更多></div>
+      </div>
+      <div class="detailList">
+        <div class="detailItem">
+          <div class="detailtime">时间:</div>
+          <div class="timetext">2017年12月27日至31日</div>
+          <span class="icon1"></span>
+        </div>
+        <div class="detailItem">
+          <div class="detailtime">地点：</div>
+          <div class="timetext"> 成都市青羊区苏坡东路西单商场旁居然 之家(金沙店)1楼“海尔旺年会”</div>
+          <span class="icon2"></span>
+        </div>
+      </div>
+    </div>
+    <div class="soundBox">
+      <div class="soundtitle">
+        <div class="left"></div>
+        <div class="right">活动解说 </div>
+      </div>
+      <div class="soundList">
+        <div class="soundlogo"></div>
+        <div class="soundline"></div>
+        <div class="soundtxt">1'39"</div>
+        <div class="dott"></div>
+      </div>
+    </div>
+    <div class="quanBox">
+      <div class="quantitle">
+        <div class="left"></div>
+        <div class="right">活动礼券</div>
+      </div>
+      <ul class="quanList">
+        <li class="quanItem quan1">
+          <div class="quanName">
+            <img src="../../assets/czlImg/haierLogo.png">
+            <p>海尔</p>
+          </div>
+          <h2 class="quanTxt">海尔20元抵200元抵用券</h2>
+          <div class="quanMoney">
+            <div class="left">￥20.0</div>
+            <div class="right">购买</div>
+          </div>
+          <div class="quandetail">特权详情</div>
+        </li>
+        <li class="quanItem quan2">
+          <div class="quanName">
+            <img src="../../assets/czlImg/haierLogo.png">
+            <p>海尔</p>
+          </div>
+          <h2 class="quanTxt">海尔20元抵200元抵用券</h2>
+          <div class="quanMoney">
+            <div class="left">￥20.0</div>
+            <div class="right">购买</div>
+          </div>
+          <div class="quandetail">特权详情</div>
+        </li>
+      </ul>
+    </div>
+    <div class="shopBox">
+      <div class="shoptitle">
+        <div class="left"></div>
+        <div class="right">活动家电</div>
+      </div>
+      <swiper class="shopList" :options="swiperOption" ref="mySwiper">
+        <swiper-slide class="on">
+          <p>冰箱冰箱</p>
+        </swiper-slide>
+        <swiper-slide>
+          <p>洗衣机</p>
+        </swiper-slide>
+        <swiper-slide>
+          <p>洗衣机</p>
+        </swiper-slide>
+        <swiper-slide>
+          <p>洗衣机</p>
+        </swiper-slide>
+        <swiper-slide>
+          <p>洗衣机</p>
+        </swiper-slide>
+      </swiper>
+      <ul class="shopItemlist">
+        <li>
+          <img src="../../assets/czlImg/pic3.jpg">
+          <h3 class="shopname">8公斤智能水晶 匠心智造  双智能系统</h3>
+          <div class="shopMoney">
+            <div class="left">￥<span>4000</span></div>
+            <div class="right">活动价￥<span>3699</span></div>
+          </div>
+        </li>
+        <li>
+          <img src="../../assets/czlImg/pic3.jpg">
+          <h3 class="shopname">8公斤智能水晶 匠心智造  双智能系统</h3>
+          <div class="shopMoney">
+            <div class="left">￥<span>4000</span></div>
+            <div class="right">活动价￥<span>3699</span></div>
+          </div>
+        </li>
+        <li>
+          <img src="../../assets/czlImg/pic3.jpg">
+          <h3 class="shopname">8公斤智能水晶 匠心智造  双智能系统</h3>
+          <div class="shopMoney">
+            <div class="left">￥<span>4000</span></div>
+            <div class="right">活动价￥<span>3699</span></div>
+          </div>
+        </li>
+        <li>
+          <img src="../../assets/czlImg/pic3.jpg">
+          <h3 class="shopname">8公斤智能水晶 匠心智造  双智能系统</h3>
+          <div class="shopMoney">
+            <div class="left">￥<span>4000</span></div>
+            <div class="right">活动价￥<span>3699</span></div>
+          </div>
+        </li>
+      </ul>
+    </div>
+    <div class="addMore">
+      <div><span></span><i>点击加载更多</i></div>
+    </div>
+    <div class="footer">本活动最终解释权归海尔所有</div>
+  </div>
+</template>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script>
+import { swiper, swiperSlide } from 'vue-awesome-swiper'
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  wxShare,
+  wxHideMenu
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      swiperOption: { //以下配置不懂的，可以去swiper官网看api，链接http://www.swiper.com.cn/api/
+        // notNextTick是一个组件自有属性，如果notNextTick设置为true，组件则不会通过NextTick来实例化swiper，也就意味着你可以在第一时间获取到swiper对象，<br>　　　　　　　　假如你需要刚加载遍使用获取swiper对象来做什么事，那么这个属性一定要是true
+        notNextTick: true,
+        // swiper configs 所有的配置同swiper官方api配置
+        autoplay: 3000,
+        slidesPerView: 6,
+        grabCursor: true,
+        setWrapperSize: true,
+        autoHeight: true,
+        pagination: '.swiper-pagination',
+        paginationClickable: true,
+        prevButton: '.swiper-button-prev', //上一张
+        nextButton: '.swiper-button-next', //下一张
+        scrollbar: '.swiper-scrollbar', //滚动条
+        mousewheelControl: true,
+        observeParents: true,
+        // 如果自行设计了插件，那么插件的一些配置相关参数，也应该出现在这个对象中，如下debugger
+        debugger: true,
+
+      }
+    }
+  },
+  components: {
+    swiper,
+    swiperSlide
+  },
+  created() {
+
+  },
+  methods: {
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+@import '../../assets/scss/swiper.min.css';
+.newpage {
+  width: 100%;
+  min-height: 100%;
+  background: #f1f1f1 url(../../assets/czlImg/bgTitle.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+
+  overflow-y: scroll;
+  padding-top: pTR(548);
+  .detailBox {
+    background: #fff;
+    padding: 0 pTR(24) pTR(10);
+    border-radius: pTR(10);
+    margin: 0 pTR(28) pTR(23);
+    .detailTtitle {
+      height: pTR(100);
+      border-bottom: pTR(2) solid #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detail1.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+      .more {
+        position: absolute;
+        right: 0;
+        color: #999999;
+        font-size: pTR(24);
+      }
+    }
+    .detailList {
+      padding-left: pTR(70);
+      padding-top: pTR(36);
+      .detailItem {
+        width: 100%;
+        display: flex;
+        position: relative;
+        padding-bottom: pTR(36);
+        .detailtime {
+          font-size: pTR(30);
+          color: #333333;
+          line-height: pTR(44);
+          width: pTR(103);
+        }
+        .timetext {
+          box-flex: 1;
+          flex: 1;
+          color: #8a8a8a;
+          font-size: pTR(28);
+          line-height: pTR(44);
+          word-break: break-all;
+        }
+        .icon1 {
+          width: pTR(23);
+          height: pTR(23);
+          position: absolute;
+          background: #f1f1f1 url(../../assets/czlImg/detailTime.png) 0 0 no-repeat;
+          -webkit-background-size: 100%;
+          background-size: 100%;
+          left: pTR(-70);
+          top: pTR(5);
+        }
+        .icon2 {
+          width: pTR(20);
+          height: pTR(27);
+          position: absolute;
+          background: #f1f1f1 url(../../assets/czlImg/detailAdd.png) 0 0 no-repeat;
+          -webkit-background-size: 100%;
+          background-size: 100%;
+          left: pTR(-70);
+          top: pTR(5);
+        }
+      }
+    }
+  }
+  .soundBox {
+    background: #fff;
+    padding: 0 pTR(24) 0;
+    border-radius: pTR(10);
+    margin: 0 pTR(28) pTR(23);
+    .soundtitle {
+      height: pTR(100);
+      border-bottom: pTR(2) solid #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detailadv.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+    }
+    .soundList {
+      height: pTR(153);
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      .soundlogo {
+        width: pTR(74);
+        height: pTR(74);
+        background: url(../../assets/czlImg/haierLogo.png) 0 0 no-repeat;
+        background-size: 100%;
+        border-radius: 50%;
+        border: pTR(2) solid #f1f1f1;
+      }
+      .soundline {
+        width: pTR(390);
+        height: pTR(72);
+        background: url(../../assets/czlImg/message.png) 0 0 no-repeat;
+        background-size: 100%;
+        margin: 0 pTR(20);
+      }
+      .soundtxt {
+        color: #999999;
+        font-size: pTR(30);
+      }
+      .dott {
+        width: pTR(20);
+        height: pTR(20);
+        background: #ff3b2f;
+        border-radius: 50%;
+        position: absolute;
+        right: pTR(120);
+        top: pTR(20);
+      }
+    }
+  }
+  .quanBox {
+    background: #fff;
+    padding: 0 pTR(24) 0;
+    border-radius: pTR(10);
+    margin: 0 pTR(28) pTR(23);
+    .quantitle {
+      height: pTR(100);
+      border-bottom: pTR(2) solid #f1f1f1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detailQaun.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+    }
+    .quanList {
+      padding: pTR(35) 0 pTR(50);
+      .quanItem {
+        margin-bottom: pTR(28);
+        padding: pTR(5) pTR(18) pTR(10) pTR(24);
+        position: relative;
+        .quanName {
+          display: flex;
+          height: pTR(100);
+          align-items: center;
+          img {
+            width: pTR(74);
+            height: pTR(74);
+            border-radius: 50%;
+          }
+          p {
+            color: #fff;
+            font-size: pTR(32);
+            padding-left: pTR(20);
+          }
+        }
+        .quanTxt {
+          color: #fff;
+          font-size: pTR(36);
+          padding-left: pTR(20);
+          height: pTR(90);
+          padding-top: pTR(15);
+        }
+        .quanMoney {
+          padding: 0 pTR(15);
+          height: pTR(89);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          .left {
+            color: #fff;
+            font-size: pTR(28);
+          }
+          .right {
+            width: pTR(164);
+            height: pTR(52);
+            background: url(../../assets/czlImg/newbuyBtn.png) 0 0 no-repeat;
+            background-size: 100%;
+            text-align: center;
+            line-height: pTR(55);
+            color: #ca9826;
+            font-size: pTR(28);
+          }
+        }
+        .quandetail {
+          width: pTR(133);
+          height: pTR(37);
+          text-align: center;
+          line-height: pTR(37);
+          color: #fff;
+          font-size: pTR(24);
+          border-radius: pTR(50);
+          background: rgba(0, 0, 0, 0.1);
+          border: pTR(2) solid #fff;
+          position: absolute;
+          top: pTR(30);
+          right: pTR(30);
+        }
+      }
+      .quanItem:last-child {
+        margin-bottom: 0;
+      }
+      .quan1 {
+        width: 100%;
+        height: pTR(288);
+        background: url(../../assets/czlImg/detailQuan1.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .quan2 {
+        width: 100%;
+        height: pTR(288);
+        background: url(../../assets/czlImg/detailQuan2.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+    }
+  }
+  .shopBox {
+    width: 100%;
+
+    border-radius: pTR(10);
+    margin-bottom: pTR(23);
+    .shoptitle {
+      height: pTR(100);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #fff;
+      .left {
+        width: pTR(34);
+        height: pTR(34);
+        background: url(../../assets/czlImg/detail1.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .right {
+        color: #333333;
+        font-size: pTR(32);
+        margin-left: pTR(20);
+      }
+      .more {
+        position: absolute;
+        right: 0;
+        color: #999999;
+        font-size: pTR(24);
+      }
+    }
+    .shopList {
+      padding: 0 pTR(24) pTR(15);
+      background: #fff;
+      height: pTR(90);
+      display: flex;
+      swiper-slide {
+        height: pTR(90);
+        line-height: pTR(90);
+        color: #666666;
+        font-size: pTR(32);
+        p{
+          text-align:center;
+          display:inline-block;
+          padding:0 pTR(5);
+        }
+      }
+      .on {
+        p {
+          display:inline-block;
+          padding:0 pTR(5);
+          text-align:center;
+          color: #f12d2a;
+          border-bottom: pTR(3) solid #f12d2a;
+        }
+      }
+    }
+    .shopItemlist {
+      padding-top: pTR(23);
+      font-size: 0;
+      li {
+        width: 49%;
+        display: inline-block;
+        height: pTR(552);
+        background: #fff;
+        margin-right: 2%;
+        margin-bottom: pTR(18);
+        img {
+          width: 100%;
+          height: pTR(373);
+        }
+        h3 {
+          color: #333333;
+          font-size: pTR(28);
+          padding: pTR(5) pTR(30);
+          margin: pTR(22) 0;
+          line-height: pTR(40);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+        .shopMoney {
+          padding: 0 pTR(30);
+          display: flex;
+          justify-content: space-between;
+          height: pTR(40);
+          align-items: center;
+          .left {
+            color: #333333;
+            font-size: pTR(28);
+            text-decoration: line-through;
+          }
+          .right {
+            color: #ff2c22;
+            font-size: pTR(28);
+            span {
+              font-size: pTR(36);
+              display: inline-block;
+              font-weight: bold;
+            }
+          }
+        }
+      }
+      li:nth-child(2n) {
+        margin-right: 0;
+      }
+    }
+  }
+  .addMore {
+    padding: pTR(33) 0;
+    div {
+      width: pTR(264);
+      height: pTR(60);
+      line-height: pTR(60);
+      background: #fff;
+      border-radius: pTR(10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999999;
+      font-size: pTR(24);
+      margin: 0 auto;
+      span {
+        width: pTR(23);
+        height: pTR(27);
+        background: url(../../assets/czlImg/detailLoading.png) 0 0 no-repeat;
+        -webkit-background-size: 100%;
+        background-size: 100%;
+      }
+      i {
+        padding-left: pTR(10);
+      }
+    }
+  }
+  .footer {
+    height: pTR(90);
+    line-height: pTR(90);
+    text-align: center;
+    color: #9d9d9d;
+    font-size: pTR(22);
+    border-top: pTR(2) solid #e0e0e0;
+  }
+}
+
+</style>

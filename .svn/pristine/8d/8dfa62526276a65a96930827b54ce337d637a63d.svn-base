@@ -1,0 +1,117 @@
+
+<template>
+	<div class="membershipcard">
+		<div class="top"></div>
+		<div class="popBox">
+			<div class="title">
+				请填写你的信息，领取海尔会员卡
+			</div>
+			<div class="main">
+				<ul class="list">
+					<li class="item">
+						<span>姓&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;名：</span>
+						<input type="" name="" placeholder="请填写您的姓名">
+					</li>
+					<li class="item">
+						<span>电&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;话：</span>
+						<input type="" name="" placeholder="请填写您的电话号码">
+					</li>
+					<li class="item">
+						<span>所在地区：</span>
+						<input type="" name="" placeholder="请选择您的地区">
+						<i></i>
+					</li>
+					<li class="item">
+						<span>详细地址：</span>
+						<input type="" name="" placeholder="请填写您的地址，不少于8字">
+					</li>
+				</ul>
+				<div class="submitBtn">
+					领取会员卡
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss"  scoped>
+ @import '../../assets/scss/_mixins.scss';
+	.membershipcard{
+		width:100%;
+		min-height: 100%;
+		position: relative;
+
+		.top{
+			width:100%;
+			height:pTR(455);
+			background: #f52b3a;
+		}
+		.popBox{
+			position:fixed;
+			left:0;
+			top:0;
+			width:100%;
+			height:100%;
+			padding:0 pTR(32);
+			.title{
+				height:pTR(152);
+				line-height: pTR(152);
+				color:#fff;
+				font-size:pTR(36);
+				text-align: center;
+			}
+			.main{
+				width:100%;
+				height:100%;
+				background:#fff;
+				border-radius:pTR(10);
+				padding:0 pRT(60);
+				.list{
+					padding:pTR(50) pTR(60);
+					width:100%;
+					.item{
+						height:pTR(100);
+						display: flex;
+						align-items:center;
+						border-bottom:pTR(2) solid #e5e5e5;
+						padding-top:pTR(50);
+						span{
+							width:pTR(150);
+							height:pTR(50);
+							line-height:pTR(50);
+							color:#333333;
+							font-size:pTR(30);
+						}
+						input{
+							box-flex: 1;
+							flex: 1;
+							height:pTR(50);
+							line-height:pTR(50);
+							background:transparent;
+							padding-left:pTR(30);
+						}
+					}
+				}
+				.submitBtn{
+					width:pTR(562);
+					height:pTR(77);
+					line-height:pTR(77);
+					background:#f52b3a;
+					border-radius:pTR(10);
+					position:fixed;
+					bottom:pTR(100);
+					left:50%;
+					transform:translateX(-50%);
+					font-size:pTR(36);
+					color:#fff;
+					text-align: center;
+				}
+			}
+		}
+	}
+</style>

@@ -1,0 +1,286 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <img class="personPic" :src="imageServerUrl + picUrl">
+      <p class="logo">{{title}}</p>
+      <h2 class="title">{{buyBtn}}</h2>
+      <div :class="[ allow ? '' : 'nouse','buyBtn']" @click="userNow">
+        {{masseg}}
+      </div>
+      <div class="logoPic"></div>
+      <div class="tips">
+        <h2>有效日期</h2>
+        <p>{{startDate}} 至 {{endDate}}</p>
+      </div>
+      <div class="tips">
+        <h2>使用说明</h2>
+        <p>{{description}}</p>
+      </div>
+    </div>
+    <!-- 核销二维码 -->
+    <div class="popBox" v-show="ma">
+      <div class="ma">
+        <div class="maimg" id="qrcode"></div>
+        <p class="matext">请出示给店员使用</p>
+        <div class="mabtn" @click="mahidde"></div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  formatDate,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      cardOrderId: '',
+      imageServerUrl: config.imageServerUrl,
+      erweima: config.cdnUrl,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      masseg: '',
+      ma: false,
+      link: '',
+      allow: false,
+      orderStatus: 0,
+      localStorageList: {}
+    }
+  },
+
+  created() {
+
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+    //接口传参的数据需要存储在本地缓存
+    // console.log(this.$route.params.sid)
+    if (this.$route.params.sid) {
+      this.localStorageList.userLogId = this.$route.params.sid;
+      this.localStorageList.orderStatus = this.$route.params.orderStatus;
+      localStorage.setItem('userLog', JSON.stringify(this.localStorageList))
+    }
+    this.localStorageList = JSON.parse(localStorage.getItem('userLog'));
+
+    this.cardOrderId = this.localStorageList.userLogId;
+    this.orderStatus = this.localStorageList.orderStatus;
+    console.log(this.cardOrderId, this.orderStatus);
+
+
+    if (this.orderStatus == 1) {
+      this.allow = true;
+      this.masseg = "立即使用"
+    }
+    if (this.orderStatus == 2) {
+      this.masseg = "已经使用"
+    }
+    if (this.orderStatus == 3) {
+      this.masseg = "已过期"
+    }
+    //this.link=this.erweima+'/index.html?openid='+userData.openid+"&userLogId="+this.cardOrderId+'#/PrizeCode';
+    this.link = this.erweima + '/index.html?openid=oaGMVt6jFGzM_TZ4YBf3PBjMVyxQ' + "&userLogId=" + this.cardOrderId + '#/PrizeCode';
+    console.log(this.link);
+    // console.log(this.cardOrderId);
+    //详情接口/prize_log/getLogDetail
+    $.ajax({
+      url: config.locationUrl + "/prize_log/getLogDetail",
+      dataType: "jsonp",
+      data: {
+        // openid: userData.openid,
+        openid: 'oaGMVt6jFGzM_TZ4YBf3PBjMVyxQ',
+        userLogId: this.cardOrderId
+      },
+      success: function(data) {
+        console.log(data);
+        if (data.ret === "0") {
+          self.picUrl = data.card.merchant.merchantLogo;
+          self.title = data.card.merchant.merchantName;
+          self.buyBtn = data.card.resourceName;
+          self.startDate = data.card.configBean.startDate.value;
+          self.endDate = data.card.configBean.endDate.value;
+          self.description = data.card.configBean.description.value;
+        } else {
+          //处理接口调用失败
+          self.error('getMyRecognizeCardDetail');
+        }
+      },
+      error(res) {
+        self.error('getMyRecognizeCardDetail');
+      }
+    });
+
+
+
+
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    userNow() {
+      if (this.orderStatus == 1) {
+        this.ma = true;
+      }
+
+      var self = this;
+      $('#qrcode').html("");
+      $('#qrcode').qrcode({
+        width: 113,
+        height: 113,
+        text: self.link
+      });
+    },
+    mahidde() {
+      this.ma = false;
+    },
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f52b3a;
+  padding: pTR(80) pTR(20);
+  .main {
+    width: 100%;
+    background: #fff;
+    position: relative;
+    padding: pTR(66) pTR(28) pTR(100);
+    text-align: center;
+    .personPic {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      display: block;
+      left: 50%;
+      transform: translateX(-50%);
+      top: pTR(-50);
+    }
+    .logo {
+      font-size: pTR(28);
+      color: #666;
+    }
+    .title {
+      padding: pTR(40) 0 pTR(60);
+    }
+    .buyBtn {
+      width: pTR(320);
+      height: pTR(70);
+      line-height: pTR(70);
+      background: #f52b3a;
+      color: #fff;
+      font-size: pTR(30);
+      border-radius: pTR(5);
+      margin: 0 auto pTR(85);
+    }
+    .nouse {
+      background: #929292;
+    }
+    .logoPic {
+      width: 100%;
+      height: pTR(236);
+      background: url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin-bottom: pTR(10);
+    }
+
+    .tips {
+      text-align: left;
+      padding-top: pTR(33);
+      h2 {
+        font-size: pTR(28);
+        color: #333;
+        line-height: pTR(30);
+      }
+      p {
+        padding-top: pTR(10);
+        color: #999999;
+        font-size: pTR(28);
+        line-height: pTR(30);
+      }
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  .ma {
+    width: pTR(560);
+    height: pTR(415);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .maimg {
+      width: pTR(226);
+      height: pTR(226);
+      display: block;
+      margin: pTR(60) auto 0;
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .matext {
+      text-align: center;
+      padding-top: pTR(40);
+    }
+    .mabtn {
+      position: absolute;
+      width: pTR(50);
+      height: pTR(50);
+      background: url(../../assets/czlImg/closeBtn.png) center center no-repeat;
+      background-size: pTR(16) pTR(16);
+      right: 0;
+      top: 0;
+    }
+  }
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(288);
+  height: pTR(100);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(100);
+  color: #fff;
+}
+
+</style>

@@ -1,0 +1,554 @@
+<template>
+  <div class="livemian">
+    <div class="head">
+      <div class="left">
+        <i></i>你所在城市的会场直播
+      </div>
+      <div class="right" @click="cityChoose">
+        <i></i>{{location}}
+      </div>
+    </div>
+    <div v-for="item in navigationList">
+      <a class="liveitem" :href="item.liveLink">
+        <div class="left">
+          <img :src="imageServerUrl + item.coverUrl">
+          <div class="video">
+          </div>
+        </div>
+        <div class="right">
+          <h2 class="title">{{item.hallName}}</h2>
+          <p class="time">活动日期：{{item.startDate}}~{{item.endDate}}</p>
+          <p class="address"><i></i><span>{{item.hallAddress}}</span></p>
+        </div>
+      </a>
+    </div>
+    <div class="popBox" v-show="navigationNull">
+      <div class="buysuccess">
+        <div class="right">
+          <img src="../../assets/czlImg/cry.png">
+          <p>你所在的城市还没有任何会场直播信息</p>
+        </div>
+        <div class="address" @click="cityChoose">
+          <img src="../../assets/czlImg/address.png">
+          <span>{{location}}</span>
+        </div>
+      </div>
+    </div>
+    <div class="pop_mask" v-show="showAddress">
+      <div class="select_box">
+        <div class="choose">
+          <ul>
+            <li>
+              <span>省</span>
+              <select v-model="result.province" @change="areaChange('province')">
+                <option disabled value="">省</option>
+                <template v-for="obj in province">
+                  <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+                </template>
+              </select>
+            </li>
+            <li>
+              <span>市</span>
+              <select v-model="result.city" @change="areaChange('city')">
+                <option disabled value="">市</option>
+                <template v-for="obj in city">
+                  <option :value="JSON.stringify(obj)">{{obj.text}}</option>
+                </template>
+              </select>
+            </li>
+          </ul>
+        </div>
+        <div class="check_btn" @click="cityBtn">确定</div>
+      </div>
+    </div>
+  </div>
+</template>
+<script charset="utf-8" src="http://map.qq.com/api/js?v=2.exp"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+import * as config from '@/lib/config'
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import {
+  wxconfig,
+  userData,
+  getJsSign,
+  wxlocationFn,
+  EnumConfigType,
+  ShareInfo,
+  TMap
+} from '@/lib/tools';
+import AreaData from '@/lib/AreaData'
+
+export default {
+  data() {
+    return {
+      pageIndex: 0,
+      pageSize: 10,
+      //不知道要不要,先放着
+      actId: '',
+      navigationList: [],
+      location: '',
+      rowsIndex: 0,
+      navigationNull: false,
+      mylatitude: '',
+      mylongitude: '',
+      distance: true,
+      province: [],
+      result: {},
+      city: [],
+      showAddress: false,
+      imageServerUrl: config.imageServerUrl
+    }
+  },
+
+  created() {
+    // this.$router.push({
+    //     name: 'Navigationfaile'
+    //   })
+    var self = this;
+
+    //获取分享信息
+    this.getBaseConfig();
+
+    //获取城市信息
+    this.province = AreaData.provs_data;
+
+    //调取微信接口
+    getJsSign(function(sign) {
+      wxconfig(sign);
+      wx.ready(function() {
+
+        //获取位置
+        wx.getLocation({
+          type: 'wgs84', // 默认为wgs84的gps坐标，如果要返回直接给openLocation用的火星坐标，可传入'gcj02'
+          success: function(res) {
+            if (res.errMsg != 'getLocation:ok') {
+              self.showAddress = true;
+            } else {
+              self.mylatitude = res.latitude; // 纬度，浮点数，范围为90 ~ -90
+              self.longitude = res.longitude; // 经度，浮点数，范围为180 ~ -180。
+              self.init();
+            }
+            // console.log(latitude);
+          },
+          fail: function() {
+            self.showAddress = true;
+          },
+          cancel: function() {
+            self.showAddress = true;
+          }
+        });
+
+        //分享相关信息
+        wx.onMenuShareTimeline(config.wxShareData);
+        wx.onMenuShareAppMessage(config.wxShareData);
+        wx.onMenuShareQQ(config.wxShareData);
+        wx.onMenuShareWeibo(config.wxShareData);
+        wx.onMenuShareQZone(config.wxShareData);
+        wx.hideMenuItems({
+          menuList: [
+            'menuItem:favorite', //收藏
+            'menuItem:copyUrl', //复制链接
+            'menuItem:openWithQQBrowser', //在QQ浏览器中打开
+            'menuItem:share:email', //邮件
+             "menuItem:openWithSafari"
+          ] // 要隐藏的菜单项，只能隐藏“传播类”和“保护类”按钮
+        });
+
+      })
+    });
+
+  },
+
+
+  mounted: function() {
+
+    //下拉加载刷新
+    var self = this;
+
+    $(window).scroll(function() {
+
+      // console.log('正在滑动');
+      var scrollTop = $(this).scrollTop(); //滚动条距离顶部的高度
+      var scrollHeight = $(document).height(); //当前页面的总高度
+      var clientHeight = $(this).height(); //当前可视的页面高度
+      if (scrollTop + clientHeight >= scrollHeight) {
+        // console.log('滑动到底部');
+        // console.log(self.rowsIndex);
+        if (self.rowsIndex == 0) {
+          return;
+        }
+        // console.log(self.rowsIndex);
+        self.getnavigationList();
+      }
+    });
+
+
+  },
+
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    //获取地区的所有活动场所
+    getnavigationList() {
+      var self = this;
+
+      $.ajax({
+        url: config.locationUrl + "/hall/getHallList",
+        dataType: "jsonp",
+        data: {
+          city: this.location,
+          // city:'kkksdfj' ,
+          pageIndex: this.pageIndex,
+          pageSize: this.pageSize,
+          // latitude: this.mylatitude,
+          // longitude: this.longitude
+        },
+        success: function(data) {
+          // debugger;
+          console.log(data);
+          if (data.ret === "0") {
+
+            // debugger;
+            if (data.pageIndex == "0" && data.rows.length == '0') {
+              self.navigationNull = true;
+            } else {
+              self.navigationNull = false;
+              if (data.rows) {
+                self.rowsIndex = data.rows.length;
+                self.pageIndex = data.pageIndex;
+                // debugger;
+                self.navigationList = self.navigationList.concat(data.rows);
+              }
+            }
+            // console.log(self.navigationList);
+          } else {
+            //处理接口调用失败
+            self.error('getHallList');
+          }
+        },
+        error(res) {
+          self.error('getHallList');
+        }
+      });
+    },
+
+    navigationstrat(item) {
+
+      wx.openLocation({
+        latitude: item.latitude, // 纬度，浮点数，范围为90 ~ -90
+        longitude: item.longitude, // 经度，浮点数，范围为180 ~ -180。
+        name: item.hallName, // 位置名
+        address: item.hallAddress, // 地址详情说明
+        scale: 1, // 地图缩放级别,整形值,范围从1~28。默认为最大
+        infoUrl: '' // 在查看位置界面底部显示的超链接,可点击跳转
+      });
+    },
+
+    init() {
+      //调用城市服务信息
+      var self = this;
+      var citylocation = null;
+      TMap('BYFBZ-MHWRP-BMYDJ-LRPOB-XNUY3-HNBXH').then(qq => {
+        citylocation = new qq.maps.CityService({
+          complete: function(results) {
+            // console.log(JSON.stringify(results));
+            var detail = results.detail.detail.split(",");
+            self.location = detail[1];
+            console.log(self.location);
+            self.getnavigationList();
+          }
+        });
+        //根据经纬度获取当前城市
+        var latLng = new qq.maps.LatLng(self.mylatitude, self.longitude);
+        // var latLng = new qq.maps.LatLng(29.03158, 111.69854);
+        citylocation.searchCityByLatLng(latLng);
+      });
+    },
+
+    //手动选取城市
+    areaChange(type) {
+      switch (type) {
+        case 'province':
+          {
+
+            let province = JSON.parse(this.result.province).value
+            this.city = AreaData.citys_data[province]
+            break;
+          }
+        case 'city':
+          {
+            if (this.result.city) {
+              let city = JSON.parse(this.result.city).value
+              this.country = AreaData.dists_data[city]
+            }
+            break;
+          }
+      }
+    },
+
+
+    cityBtn() {
+      this.showAddress = false;
+
+      this.location = JSON.parse(this.result.city).text;
+      console.log(this.location);
+      this.getnavigationList();
+
+      // console.log(JSON.parse(this.result.province));
+    },
+    cityChoose() {
+      this.showAddress = true;
+    },
+    //获取相关分享信息
+    getBaseConfig() {
+
+      //分享链接
+      config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '#/navigationstrat';
+
+      //文章标题
+      document.title = '会场直播';
+
+      //分享标题
+      config.wxShareData.title = '会场直播';
+
+      //分享详情
+      config.wxShareData.desc = '会场直播';
+
+      //分享图片
+      this.shareImg = config.cdnUrl + '/static/share/share3.jpg';
+    }
+
+  }
+
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.livemian {
+  width: 100%;
+  min-height: 100%;
+  background: #fff;
+
+  .liveitem {
+    padding: pTR(37) 0;
+    margin: 0 pTR(30);
+    display: flex;
+    border-bottom: 1px solid #dcdcdc;
+    .left {
+      width: pTR(220);
+      height: pTR(150);
+      position: relative;
+
+      img {
+        width: 100%;
+        height: 100%;
+      }
+      .video {
+        width: pTR(60);
+        height: pTR(60);
+        background: url(../../assets/czlImg/video.png) 0 0 no-repeat;
+        background-size: 100%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+    }
+    .right {
+      box-flex: 1;
+      flex: 1;
+      padding-left: pTR(38);
+      .title {
+        font-size: pTR(30);
+        color: #353535;
+        line-height: pTR(44);
+        display: block;
+        white-space: nowrap;
+        width: pTR(400);
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .time {
+        font-size: pTR(24);
+        color: #999999;
+        line-height: pTR(36);
+        padding-bottom: pTR(10);
+      }
+      .address {
+        font-size: pTR(20);
+        color: #999999;
+        line-height: pTR(30);
+        display: flex;
+
+        i {
+          display: block;
+          width: pTR(33);
+          height: pTR(44);
+          background: url(../../assets/czlImg/address.png) 0 0 no-repeat;
+          background-size: 100%;
+        }
+        span {
+          padding-left: pTR(10);
+          box-flex: 1;
+          flex: 1;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+      }
+    }
+  }
+  .head {
+    background: #fbfbfb;
+    width: 100%;
+    padding: 0 pTR(32);
+    height: pTR(64);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .left {
+      position: relative;
+      color: #333;
+      font-size: pTR(24);
+      padding-left: pTR(15);
+      i {
+        position: absolute;
+        width: pTR(5);
+        height: pTR(28);
+        background: #f52b3a;
+        left: 0;
+        border: pTR(10);
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+    .right {
+      position: relative;
+      color: #999999;
+      font-size: pTR(24);
+      padding-left: pTR(44);
+      i {
+        position: absolute;
+        width: pTR(33);
+        height: pTR(44);
+        background: url(../../assets/czlImg/address.png) 0 0 no-repeat;
+        background-size: 100%;
+        left: 0;
+        border: pTR(10);
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+  }
+}
+
+.pop_mask {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, .6);
+  position: fixed;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  .select_box {
+    @include ele-box(500, 300);
+    background-color: #fff;
+    @include radius(10);
+    ul li {
+      @include m_b(20);
+      font-size: pTR(30);
+    }
+    .choose {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      @include m_t(50);
+      @include m_b(30);
+      select {
+        @include ele-box(260, 50);
+        @include lin_hei(50);
+        @include border(1, #eee);
+        background-color: #f4f4f4;
+        text-align: center;
+        @include m(0, 20);
+        @include p(0, 10);
+      }
+    }
+    .check_btn {
+      @include ele-box(300, 60);
+      background-color: #f52b39;
+      text-align: center;
+      @include size_color(30, #fff);
+      @include lin_hei(60);
+      @include radius(10);
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+}
+
+.buysuccess {
+  width: 100%;
+  min-height: 100%;
+  background: #fff;
+  padding: pTR(185) 0;
+  position: relative;
+
+  .right {
+    text-align: center;
+    img {
+      width: pTR(120);
+      height: pTR(120);
+      display: inline-block;
+    }
+    p {
+      color: #999;
+      font-size: pTR(36);
+      padding-top: pTR(80);
+    }
+  }
+  .address {
+    position: absolute;
+    right: pTR(20);
+    top: pTR(20);
+    img {
+      width: pTR(25);
+      display: inline-block;
+      vertical-align: middle;
+    }
+    span {
+      padding-left: pTR(5);
+      color: #333333;
+      font-size: pTR(24);
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+}
+
+</style>

@@ -1,0 +1,8 @@
+export const GET_USER_DATA='GET_USER_DATA';
+
+//buyCard/main
+export const BM_GET_BASE_CONFING_BY_TYPE = 'BM_GET_BASE_CONFING_BY_TYPE';  //获取buyCard/main页面配置信息；111
+
+
+/*//shop/banner
+export const SB_GET_BANNER = 'SB_GET_BANNER';  //获取buyCard/main页面配置信息；111*/

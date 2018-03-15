@@ -1,0 +1,930 @@
+<template>
+  <!-- <div :class="['shake_body', isInShakingMode?'':'countdown_body']"> -->
+  <div class="countdown_body">
+    <div class="top el-row" v-show="!isInShakingMode">
+      <div class="text-center el-col el-col-4" v-show="isShowCountbox"><span>{{user_count}}<b>人</b></span> 正在参与互动
+      </div>
+      <div class="el-col el-col-17 el-col-offset-3" v-show="isShowCountbox">
+        <div class="top_right">
+          <ul v-for="(userItem, index) in user_list" :key="userItem.openid">
+            <!--<li class="biandan">-->
+            <!--</li>-->
+            <li v-bind:class="{biandan: index==0}">
+              <img v-bind:src="userItem.head && userItem.head != '/0'? userItem.head : default_icon" width="200" height="200">
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- 头像滚动 -->
+    <div class="top el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-7"><span>{{user_count}}<b>人</b></span> 正在参与互动
+      </div>
+      <div class="el-col el-col-16 el-col-offset-1">
+        <div id="scroll" class="marquee_scroll">
+        </div>
+      </div>
+    </div>
+    <!-- <h2 class="title_h2" v-show="!isInShakingMode"></h2> -->
+    <!--<h2 class="title_h2"></h2>-->
+    <div class="shake_mainbj">
+      <div :class="[ !isInShakingMode ? 'shakeHand' : 'tada','shakeHand']"></div>
+    </div>
+    <!-- <div class="tada shakeHand"></div> -->
+    <div class="count_main text-center">
+      <!-- <div class="count_main text-center" v-show="!isInShakingMode"> -->
+      <!-- <h2 v-show="isShowCountbox">距离下一轮摇奖开始</h2> -->
+      <h2 v-show="isShowCountbox && !isInShakingMode">距离摇奖开始还有</h2>
+      <h2 v-show="isInShakingMode">摇奖正在进行中</h2>
+      <h2 v-show="!isShowCountbox && !isInShakingMode">摇奖已结束</h2>
+      <h3 v-show="!isShowCountbox && !isInShakingMode">{{timer_status_msg}}</h3>
+      <!-- <h3>{{timer_status_msg}}</h3> -->
+      <div class="count_box" v-show="isShowCountbox && !isInShakingMode">
+        <!-- <div class="count_box"> -->
+        <span>{{count_day}}</span>天
+        <span>{{count_hour}}</span>时
+        <span>{{count_min}}</span>分
+        <span>{{count_second}}</span>秒
+      </div>
+    </div>
+    <div class="rule_btn" @click="showRuleDlg"></div>
+    <div class="minegift_btn"><span @click="showQrcodeDlg"></span></div>
+    <!--摇奖规则弹框-->
+    <!--     <div class="pop_mask" id="ruleBox" v-show="isShowRule">
+      <div class="pop_box rule_box">
+        <h3>活动规则</h3>
+        <div class="rule_list" v-html="act_rule"></div>
+        <div class="off_btn" @click="closeRule">&times;</div>
+      </div>
+    </div> -->
+    <!-- 使用说明弹框 -->
+    <div class="popBox" v-show="isShowRule" id="ruleBox">
+      <div class="instructions">
+        <div class="instrucPic"></div>
+        <div class="instrucTitle">活动规则</div>
+        <div class="instrucBox" v-html="act_rule"></div>
+        <div class="instrucBtn" @click="closeRule">我知道了</div>
+      </div>
+    </div>
+    <div class="el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-24">
+        <div class="title"></div>
+      </div>
+    </div>
+    <div class="el-row" v-show="isInShakingMode">
+      <div class="text-center el-col el-col-24">
+        <div class="shake_main"><span class="tada"></span></div>
+      </div>
+    </div>
+    <div class="el-row" v-show="false">
+      <div class="text-center el-col el-col-24">
+        <div class="gifts_title"></div>
+      </div>
+    </div>
+    <div class="gigts_list" v-show="false">
+      <div class="el-row">
+        <div class="el-col el-col-18">测试自定义code</div>
+        <div class="el-col el-col-5 el-col-offset-1">剩余<span>81</span>个</div>
+      </div>
+    </div>
+    <!--未中奖弹框-->
+    <div class="pop_mask" id="noWin" v-show="isShowNoPrize">
+      <div class="pop_box no_win">
+        <h3>未中奖</h3>
+        <p>活动最重要的是开心咯！</p>
+        <span></span>
+        <div class="btn" @click="closeNoPrizeDlg">再来一次</div>
+        <div class="off_btn" @click="closeNoPrizeDlg">&times;</div>
+      </div>
+    </div>
+    <!--关注公众号弹框-->
+    <div class="pop_mask" id="codeBox" v-show="isShowQrcode">
+      <div class="pop_box code_box">
+        <p>长按识别二维码</p>
+        <h3>关注海尔电视公众号</h3>
+        <p>关注后即可摇奖</p>
+        <span><img src="../../assets/images/pop_code.jpg"></span>
+      </div>
+    </div>
+    <!--中奖弹框-->
+    <div class="pop_mask" id="giftBox" v-show="isShowPrize">
+      <div class="pop_box gift_box">
+        <h3>恭喜你获得<span>{{prize_title}}</span></h3>
+        <p>奖品已自动放入“我的券包”中</p>
+        <div class="btn" @click="showQrcodeDlg">查看我的奖品</div>
+        <div class="off_btn" @click="closePrizeDlg">&times;</div>
+      </div>
+    </div>
+    <audio id="voice_ding" src="static/voice/ding.mp3" style="display: none"></audio>
+    <audio id="voice_kaka" src="static/voice/kaka.mp3" style="display: none"></audio>
+    <!--广告弹框-->
+    <!-- <div class="pop_mask" id="Advertising"> -->
+    <div class="pop_mask" v-show="showAd" id="Advertising">
+      <div class="pop_box advertising_box">
+        <p><i>{{ad_show_count_down}}</i>秒后将揭晓奖品</p>
+        <div class="imgAudio" v-show="imgAudio">
+          <img :src="ad_img">
+          <div :class="[isActive ? '' : 'voicestop', 'voicePlay']" v-show="voiceBtn" @click="stopauto"></div>
+          <audio :src="voiceSource" id="audio"></audio>
+        </div>
+        <div class="imgvideo" v-show="imgvideo">
+          <video id="video" webkit-playsinline="true" x-webkit-airplay="true" playsinline="true" x5-video-player-type="h5" x5-video-player-fullscreen="true" controls :src="videoSource" autoplay></video>
+        </div>
+        <div class="off_btn" @click="closeAdd">&times;</div>
+      </div>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+@import '../../assets/scss/_mixins.scss';
+@import '../../assets/scss/pages/_index.scss';
+@import '../../assets/scss/pages/_countdown.scss';
+@import '../../assets/scss/pages/_shake.scss';
+@import '../../assets/scss/pages/_pop.scss';
+
+.marquee_scroll {
+  @include h(120);
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee_scroll h3 span {
+  display: -webkit-box;
+  vertical-align: middle;
+  @include m-r(20);
+  @include lin-hei(120);
+  &.barrage_box {}
+  &.barrage_nickname {
+    @include m-r(10);
+  }
+}
+
+.marquee_scroll h3 span.pic {
+  width: pTR(50);
+  height: pTR(50);
+  border-radius: 50%;
+  margin-top: pTR(30);
+  @include m-r(20);
+}
+
+.shake_mainbj {
+  @include bg(url("../../assets/images/countdown_bj.jpg"));
+  background-position: 0 pTR(-120);
+  background-size: pTR(750) pTR(1226);
+  width: pTR(750);
+  height: pTR(1086);
+  position: absolute;
+  top: pTR(110);
+  left: 0;
+}
+
+.shakeHand {
+  position: absolute;
+  width: pTR(323);
+  height: pTR(390);
+  background: url(../../assets/images/shake_hands.png) 0 0 no-repeat;
+  background-size: 100%;
+  left: 50%;
+  margin-left: pTR(-161);
+  top: pTR(240);
+}
+
+.marquee_scroll h3 {
+  font-size: 3em;
+
+  margin: 0;
+
+  display: inline-block;
+}
+
+.barrage_box i {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.barrage_box .nametext {
+  vertical-align: top;
+  @include m-r(20);
+}
+
+.el-col-7 {
+  width: 30%;
+}
+
+.el-col-4 {
+  width: 30%;
+}
+
+.el-col-offset-1 {
+  margin-left: pTR(10);
+}
+
+.el-col-4,
+.el-col-7 {
+  color: #fff;
+  font-size: pTR(24);
+  span {
+    display: block;
+    font-size: pTR(48);
+    color: #f7ff05;
+    padding: pTR(10) 0 pTR(5);
+    b {
+      font-weight: normal;
+      font-size: pTR(24);
+      color: #fff;
+    }
+  }
+}
+
+.countdown_body .top {
+  height: pTR(120);
+  position: relative;
+  z-index: 99;
+}
+
+.countdown_body .top_right {
+  height: pTR(120);
+  line-height: pTR(120);
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 999;
+  .instructions {
+    width: pTR(532);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: pTR(160) pTR(40) pTR(55);
+    .instrucPic {
+      position: absolute;
+      width: pTR(238);
+      height: pTR(247);
+      background: url(../../assets/czlImg/instructions.png) center center no-repeat;
+      background-size: 100%;
+      top: pTR(-115);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .instrucTitle {
+      text-align: center;
+      color: #333333;
+      font-size: pTR(36);
+      font-weight: bold;
+      padding-bottom: pTR(50);
+    }
+    .instrucBox {
+      max-height: pTR(300);
+      overflow: scroll;
+      color: #999;
+      font-size: pTR(26);
+      line-height: pTR(42.5);
+      text-align: justify;
+    }
+    .instrucBtn {
+      width: pTR(278);
+      height: pTR(78);
+      background: #f41f37;
+      color: #fff;
+      font-size: pTR(36);
+      text-align: center;
+      line-height: pTR(78);
+      border-radius: pTR(10);
+      margin: pTR(55) auto 0;
+    }
+  }
+}
+
+</style>
+<script>
+import './scroll.js';
+
+import * as config from '@/lib/config'
+import * as shake from '@/assets/js/jquery.shake'
+import {
+  userData,
+  getParam,
+  getJsSign,
+  wxconfig,
+  splitLink
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      act_rule: "",
+      default_icon: config.default_icon,
+      count_hour: 0,
+      count_day: 0,
+      count_min: 0,
+      count_second: 59,
+      user_list: [],
+      user_count: 0,
+      user_refresh_interval: 6000,
+      timer_refresh_interval: 13000,
+      actSid: "",
+      timerSid: "",
+      share_info: {},
+      isShowRule: false,
+      t_icon: null,
+      t_addUser: null,
+      t_countdown: null,
+      t_timer: null,
+      intDiff: 30000,
+      isShowCountbox: false,
+      isShowQrcode: false,
+      isShowNoPrize: false,
+      isShowPrize: false,
+      isShaking: false,
+      isInShakingMode: false,
+      prize_title: "",
+      timer_status_msg: "",
+      timer_status_msg1: "",
+      user_roll_arr: [],
+      adList: [],
+      isActive: true,
+      voiceBtn: false,
+      voiceSource: '',
+      videoSource: '',
+      imgAudio: false,
+      imgvideo: false,
+      ad_show_count_down: 5,
+      ad_img: "",
+      showAd: false,
+      pageHash: '',
+
+    }
+  },
+  created() {
+    var _this = this;
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    });
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    this.actSid = getParam("actSid");
+
+    if (!this.actSid) {
+      alert("Invalid parameter.");
+      return;
+    }
+    _this.guanZhu();
+    _this.getAdList();
+    this.initPage();
+
+    //PV UV统计
+    _this.pageHash = window.location.hash.substr(2);
+    $.ajax({
+      url: config.locationUrl + "/visitor_log/addVisitorLog",
+      dataType: "jsonp",
+      data: {
+        actSid: userData.actSid,
+        saleOpenid: userData.saleOpenid,
+        openid: userData.openid,
+        sourcePage: _this.pageHash,
+        actionType: 1
+      },
+      success: function(data) {
+
+      }
+    });
+
+
+    this.refreshTimer();
+    this.t_timer = setInterval(this.refreshTimer, this.timer_refresh_interval);
+
+    setTimeout(this.addUser, 1000);
+    this.t_addUser = setInterval(this.addUser, this.user_refresh_interval);
+
+    setTimeout(this.refreshUserIcon, 1000);
+    this.t_icon = setInterval(this.refreshUserIcon, this.user_refresh_interval);
+
+    //初始化
+    setTimeout(_this.getD, 2000);
+
+    //接口数据滚动完了
+    scroll.callback = function() {
+      console.log("scroll callback-----------------");
+      _this.getD();
+    }
+  },
+  methods: {
+    getD() {
+      if (this.isInShakingMode) {
+        console.log("getD.........2")
+        this.getPrizeUserList((res) => {
+          //数据不存在返回rows null,递归调用
+          if (res.rows) {
+            scroll.send(res.rows);
+          } else {
+            setTimeout(this.getD, 5000);
+          }
+        });
+      } else {
+        console.log("getD.........1")
+        scroll.stop();
+        setTimeout(this.getD, 5000);
+      }
+    },
+    //是否关注公众号
+    guanZhu() {
+      if (userData.subscribe == 0) {
+        this.isShowQrcode = true;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/user/saveFocusInfo",
+          dataType: "jsonp",
+          data: {
+            actId: this.actSid,
+            openid: userData.openid,
+            type: 1
+          },
+          success: function(data) {
+            if (data.ret == 0) {}
+          }
+        });
+      }
+    },
+
+    initPage() {
+      let _this = this;
+
+
+      //shake regist
+      let u = navigator.userAgent,
+        app = navigator.appVersion;
+      let isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+      let shakeSpeed = 8;
+      if (isiOS) {
+        shakeSpeed = 30;
+      }
+      $(document).shake({
+        shake_speed: shakeSpeed,
+        time_difference: 30,
+        shakeAfter: function() {
+          _this.doShake();
+        }
+      });
+
+      $.ajax({
+        url: config.locationUrl + "/sys/getBaseConfigByType",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid,
+          configType: 'shake_act_base_config'
+        },
+        success: function(data) {
+          console.log("after getBaseConfigByType");
+          console.log(data);
+          if (data.ret == 0) {
+            //refresh public share info, title, act rule
+            let ruleTip = "<p>" + data.ruleTip.replace(/\n/g, "</p><p>") + "</p>";
+            _this.act_rule = ruleTip.replace(/\s/g, "&nbsp;");
+          } else {
+            console.log('getBaseConfigByType:', 'ret != 0');
+          }
+          //_this.act_title = data.title;
+          document.title = data.title || "";
+        },
+        error(res) {
+          console.log('getBaseConfigByType:', 'fail');
+        }
+      });
+    },
+
+
+    addUser(cb) {
+      let _this = this;
+      ///lottery/addParticipant
+      if (_this.timerSid && userData.openid) {
+        $.ajax({
+          url: config.locationUrl + "/lottery/addParticipant",
+          dataType: "jsonp",
+          data: {
+            timerSid: _this.timerSid,
+            openid: userData.openid
+          },
+          success: function(data) {
+            console.log("after addParticipant" + new Date());
+            if (data.ret == 0) {
+              _this.user_count = data.amount;
+            } else {
+              console.log('addParticipant:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('addParticipant:', 'fail');
+          },
+          complete() {
+            cb && cb();
+          }
+        });
+      }
+    },
+
+
+
+    refreshTimer() {
+      let _this = this;
+      $.ajax({
+        url: config.locationUrl + "/timer/getCurrTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid,
+        },
+        success: function(data) {
+          console.log("after getCurrTimer");
+          console.log(data);
+          if (data.ret == 0) {
+            if (data.timerSid) {
+              _this.timerSid = data.timerSid;
+              if (data.status == 1) {
+                _this.toShake();
+                return;
+              }
+              if (data.status == 0) {
+                // er...
+                clearInterval(_this.t_countdown);
+                _this.intDiff = data.leftInMs;
+                _this.intDiff -= 1000;
+                if (_this.intDiff <= 0) {
+                  setTimeout(function() {
+                    _this.toShake();
+                  }, _this.intDiff + 1000);
+                  return;
+                }
+                _this.count_hour = Math.floor(_this.intDiff / (60 * 60 * 1000)) % 24;
+                _this.count_min = Math.floor(_this.intDiff / (60 * 1000)) % 60;
+                _this.count_second = Math.floor(_this.intDiff / 1000) % 60;
+                _this.t_countdown = setInterval(function() {
+                  _this.intDiff -= 1000;
+                  if (_this.intDiff <= 0) {
+                    clearInterval(_this.t_countdown);
+                    setTimeout(function() {
+                      _this.toShake();
+                    }, _this.intDiff + 1000);
+                    return;
+                  }
+                  _this.count_hour = Math.floor(_this.intDiff / (60 * 60 * 1000)) % 24;
+                  _this.count_min = Math.floor(_this.intDiff / (60 * 1000)) % 60;
+                  _this.count_second = Math.floor(_this.intDiff / 1000) % 60;
+                }, 1000);
+                _this.toCountdown();
+                _this.isShowCountbox = true;
+              } else {
+                _this.isShowCountbox = false; //shaking, not reachable
+              }
+            } else {
+              _this.timerSid = ""; // any exception?
+            }
+          } else {
+            _this.timerSid = "";
+            console.log('getCurrTimer:', 'ret != 0');
+            _this.isShowCountbox = false;
+            _this.isInShakingMode = false;
+            _this.timer_status_msg = data.ret == 2 ? "暂无可用活动" : "谢谢参与";
+          }
+        },
+        error(res) {
+          _this.timerSid = "";
+          console.log('getCurrTimer:', 'fail');
+        }
+      });
+    },
+    refreshUserIcon() {
+      let _this = this;
+      if (!_this.timerSid || _this.isInShakingMode) {
+        return;
+      }
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/lottery/getParticipantInfo",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid
+        },
+        success: function(data) {
+          console.log("after getParticipantInfo" + new Date());
+          if (data.ret == 0) {
+            if (data.rows) {
+
+              let valid_row_count = 0;
+              for (let i = data.rows.length - 1; i >= 0; i--) {
+                let content = data.rows[i];
+                if ($.inArray(content.openid, _this.user_roll_arr) >= 0) {
+                  //exist
+                } else {
+                  valid_row_count++;
+                  _this.user_roll_arr.unshift(content.openid);
+                  setTimeout(function() {
+                    let _length = _this.user_list.unshift(content);
+                    if (_length > 30) {
+                      _this.user_list.pop();
+                      _this.user_roll_arr.pop();
+                    }
+                  }, 500 * valid_row_count);
+                }
+              }
+            }
+          } else {
+            console.log('getParticipantInfo:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('getParticipantInfo:', 'fail');
+        }
+      });
+    },
+    toShake() {
+      this.user_roll_arr = [];
+      this.user_list = [];
+      if (!this.isInShakingMode) {
+        this.isInShakingMode = true;
+        this.closeRule();
+        document.getElementById("voice_ding").play();
+      }
+      clearInterval(this.t_countdown);
+    },
+    toCountdown() {
+      if (this.isInShakingMode) {
+        this.isInShakingMode = false;
+      }
+    },
+    closeRule() {
+      this.isShowRule = false;
+    },
+    showRuleDlg() {
+      this.isShowRule = true;
+    },
+    showQrcodeDlg() {
+      //201711161430 Hilly
+      this.$router.push({
+        name: 'Prizelist'
+      })
+      if (this.isShowPrize) {
+        this.isShowPrize = false
+      }
+    },
+    closeQrcodeDlg() {
+      if (this.isShaking) {
+        this.isShaking = false
+      }
+    },
+    showNoPrizeDlg() {
+      this.isShowNoPrize = true
+    },
+    closeNoPrizeDlg() {
+      this.isShowNoPrize = false;
+      this.isShaking = false
+    },
+    showPrizeDlg() {
+      this.isShowPrize = true
+    },
+    closePrizeDlg() {
+      this.isShowPrize = false;
+      this.isShaking = false
+    },
+    doShake() {
+      let _this = this;
+      if (!_this.timerSid || userData.subscribe == 0) {
+        return;
+      }
+
+      console.log("in startDraw");
+      if (_this.isShaking || !_this.isInShakingMode) {
+        return;
+      }
+
+      document.getElementById("voice_kaka").play();
+      _this.isShaking = true;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/lottery/shake",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          timerSid: _this.timerSid
+        },
+        success: function(data) {
+          _this.lottery_result = data;
+          console.log("after shake");
+          if (data.ret == 0 && data.timerPrize) {
+            // set prize title
+            _this.prize_title = data.timerPrize.resourceName;
+
+            $.ajax({
+              url: config.locationUrl + "/visitor_log/addVisitorLog",
+              dataType: "jsonp",
+              data: {
+                actSid: userData.actSid,
+                saleOpenid: userData.saleOpenid,
+                openid: userData.openid,
+                sourcePage: _this.pageHash,
+                actionType: 2
+              },
+              success: function(data) {
+
+              }
+            });
+
+            //---------------------------------------------------------------------
+            if (_this.adList && _this.adList.length > 0) {
+              console.log("in ad");
+              //广告视频音频自动播放
+              var adItem = _this.adList[random(0, _this.adList.length)];
+              console.log('aaaaaaaaann', adItem);
+              if (adItem.groupType == 1) {
+                _this.imgAudio = true;
+                _this.imgvideo = false;
+                _this.voiceBtn = false;
+                _this.ad_img = config.imageServerUrl + adItem.itemList[0].linkUrl;
+                _this.ad_show_count_down = adItem.duration;
+                console.log(111111111, _this.ad_img);
+              }
+              if (adItem.groupType == 2) {
+                // this.voiceSource
+                _this.isActive = true;
+                _this.imgAudio = true;
+                _this.imgvideo = false;
+                _this.voiceBtn = true;
+                adItem.itemList.forEach(el => {
+                  if (el.targetType == 'img') {
+                    _this.ad_img = config.imageServerUrl + el.linkUrl
+                  }
+                  if (el.targetType == 'audio') {
+                    _this.voiceSource = config.imageServerUrl + el.linkUrl
+                  }
+                })
+                _this.ad_show_count_down = adItem.duration;
+                setTimeout(_this.audioplay, 1000);
+              }
+              if (adItem.groupType == 3) {
+                _this.imgAudio = false;
+                _this.imgvideo = true;
+                _this.voiceBtn = false;
+
+                adItem.itemList.forEach(el => {
+                  if (el.targetType == 'video') {
+                    _this.videoSource = el.linkUrl
+                  }
+
+                })
+                _this.ad_show_count_down = adItem.duration;
+                console.log(1111111111111, parseInt(adItem.duration) * 1000)
+
+              }
+
+              _this.showAd = true;
+              /*         //update HTML5 video current play time
+                       $('#video').on('timeupdate', function() {
+                         console.log(5555555,$('#video').currentTime)
+                         var currentPos = $('#video').currentTime; //Get currenttime
+                         if(currentPos == _this.ad_show_count_down){
+                           console.log(666666)
+                           _this.showAd = false;
+                           _this.isShowPrize = true;
+                         }
+
+                       });*/
+              _this.timerAd = setTimeout(function() {
+                _this.audiostop();
+                _this.videostop();
+                _this.showPrizeDlg();
+                video.play();
+                _this.showAd = false;
+                _this.isShowPrize = true;
+              }, parseInt(adItem.duration) * 1000);
+
+              _this.timerAdCountDown = setInterval(function() {
+                _this.ad_show_count_down--;
+                if (_this.ad_show_count_down == 0) {
+                  clearInterval(_this.timerAdCountDown);
+                  clearTimeout(_this.timerAd);
+                  _this.audiostop();
+                  _this.videostop();
+                  _this.showPrizeDlg();
+                  _this.showAd = false;
+                  _this.isShowPrize = true;
+                }
+              }, 1000);
+
+            } else {
+              _this.showPrizeDlg();
+            }
+            //-------------------------------------------------------------------
+            // _this.showPrizeDlg();
+          } else {
+            _this.showNoPrizeDlg();
+          }
+
+        },
+        error(res) {
+          console.log('lottery/shake:', 'fail');
+          _this.showNoPrizeDlg();
+        }
+      });
+    },
+
+
+
+    getPrizeUserList(cb) {
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/lottery/getPrizeUserList",
+        dataType: "jsonp",
+        data: {
+          timerSid: this.timerSid
+        },
+        success: function(data) {
+          console.log(132, data);
+
+          cb && cb(data)
+        },
+        error(res) {
+          console.log('lottery/getPrizeUserList:', 'fail');
+        }
+      });
+    },
+    //广告
+    getAdList() {
+      let _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/banner/getAdvertisingList",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid
+        },
+        success: function(data) {
+          console.log("after getAdList");
+          console.log(555555555555, data.list);
+          if (data.ret == 0 && data.list) {
+            _this.adList = data.list;
+            console.log(_this.adList)
+          }
+        },
+        error(res) {
+          console.log('getAdvertisingList:', 'fail');
+        }
+      });
+    },
+    audioplay() {
+      var audio = document.querySelector('#audio');
+      audio.play();
+      this.isActive = true;
+    },
+    audiopause() {
+      var audio = document.querySelector('#audio');
+      audio.pause();
+      this.isActive = false;
+
+    },
+    audiostop() {
+      var audio = document.querySelector('#audio');
+      audio.pause();
+      audio.currentTime = 0.0;
+      this.isActive = false;
+    },
+    videostop() {
+      var video = document.querySelector('#video');
+      video.pause();
+      video.currentTime = 0.0;
+    },
+    stopauto() {
+      if (this.isActive) {
+        this.audiopause();
+      } else {
+        this.audioplay();
+      }
+
+    },
+    closeAdd() {
+      clearInterval(this.timerAdCountDown);
+      clearTimeout(this.timerAd);
+      this.showAd = false;
+      this.showPrizeDlg();
+      this.audiostop();
+      this.videostop();
+    }
+
+
+  }
+
+}
+
+function random(min, max) {
+  return Math.floor(min + Math.random() * (max - min));
+}
+
+</script>

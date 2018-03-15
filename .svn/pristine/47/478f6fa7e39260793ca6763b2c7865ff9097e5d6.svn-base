@@ -1,0 +1,691 @@
+<template>
+  <div class="quanlist">
+    <div class="top">
+      <div class="nameBox">
+        <img class="pic" :src="userPic">
+        <div class="detail">
+          <div class="name">{{userName}}</div>
+          <div class="num">当前共获得{{totalNum}}张认筹券</div>
+        </div>
+      </div>
+      <div class="chooseItem">
+        <div :class="[num1 ? 'on' : '', 'item']" @click="allQuan">
+          全部券
+        </div>
+        <div :class="[num2 ? 'on' :'' , 'item']" @click="refundQuan">
+          已退款
+        </div>
+      </div>
+    </div>
+    <ul class="bottom">
+      <li class="all">
+        <div class="quanitem" v-for="item in allVouchers">
+          <a class="item1" @click="detailBtn(item)" :href="item.detailLink">
+            <!-- 表示认筹券的四种状态state1 state2 state3 state4-->
+            <!-- 已经过期 -->
+            <div v-show="item.orderStatus==8" class="state1"></div>
+            <!-- 退款中 -->
+            <div v-show="item.orderStatus==6" class="state2"></div>
+            <!-- 已经退款 -->
+            <div v-show="item.orderStatus==7" class="state3"></div>
+            <!-- 已经使用 -->
+            <div v-show="item.orderStatus==3" class="state4"></div>
+            <div class="logobox">
+              <img class="logo" :src="imageServerUrl+item.logoUrl">
+            </div>
+            <div class="mainBox">
+              <h2>{{item.title}}</h2>
+              <!-- <p>满200减50抵用券</p> -->
+              <p>有效期 {{item.startDate}}至{{item.endDate}}</p>
+            </div>
+          </a>
+          <div class="item2">
+            <p v-show="item.orderStatus==2 && item.refundFlag==1 && item.price !=0" @click="refundBtn(item)"><i></i><span>退券</span></p>
+            <p v-show="item.orderStatus==7"><span>已于{{item.consumeTime}}号完成退款</span></p>
+            <p v-show="item.orderStatus==8 && item.price !=0 && item.refundFlag==1"><span>预计2个工作日内系统会发起退款，敬请留意！</span></p>
+          </div>
+        </div>
+      </li>
+      <li class="null" v-show="nullBox">
+        <div class="nullImg"></div>
+        <p class="nulltext">{{messag}}</p>
+      </li>
+    </ul>
+    <!-- 是否推掉认筹券 -->
+    <div class="popBox" v-show="Resure">
+      <div class="RefundBox">
+        <div class="text">
+          你确定要退掉这张认筹券吗？
+        </div>
+        <div class="butList">
+          <div class="btn1" @click="cancelBtn">
+            取消
+          </div>
+          <div class="btn2" @click="sureRefund">
+            确定
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 退款申请 -->
+    <div class="popBox" v-show="dataTime">
+      <div class="tipsBox">
+        <p class="tipstext">
+          退款申请成功！
+        </p>
+        <p class="tipsday">预计5个工作日内完成退款</p>
+        <div class="tipsBtn" @click="tipsBtn">
+        </div>
+      </div>
+    </div>
+    <!-- 核销成功 -->
+    <div class="masuccess" v-show="tips">{{errorMessage}}</div>
+  </div>
+</template>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script src="//code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import * as config from '@/lib/config'
+import {
+    formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  splitLink
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      userName: '',
+      userPic: '',
+      allVouchers: [],
+      refundTicket: [],
+      num1: true,
+      num2: false,
+      startDate: '',
+      endDate: '',
+      totalNum: 0,
+      imageServerUrl: config.imageServerUrl,
+      nullBox: false,
+      messag: '',
+      Resure: false,
+      dataTime: false,
+      errorMessage: '',
+      tips: false,
+      cardOrderId: '',
+      detailLink: '',
+      onoff: true
+    }
+  },
+
+  created() {
+    var self = this;
+    document.title = "我的认筹劵";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+
+    //存储数据
+    if (typeof WeixinJSBridge === "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', self.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', self.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', self.onBridgeReady);
+      }
+    } else {
+      self.onBridgeReady();
+    }
+
+    self.getQuanList();
+
+    //如果没有头像显示默认头像
+    self.userName = userData.nickname;
+    if (userData.headimgurl != '/0') {
+      self.userPic = userData.headimgurl;
+    } else {
+      self.userPic = config.default_icon;
+
+    }
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    allQuan() {
+      ///order/getMyRecognizeCardList
+      this.getQuanList();
+      this.num2 = false;
+      this.num1 = true;
+    },
+    getQuanList(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/order/getMyRecognizeCardList",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          type: 'all'
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            if (data.list.length == 0) {
+              self.nullBox = true;
+              self.messag = '你还没有购买过认筹券';
+            } else {
+              self.nullBox = false;
+            }
+
+            data.list.forEach(function(obj, index) {
+
+              // data.list[index].startDate = new Date(obj.startDate).toLocaleDateString();
+              data.list[index].startDate =self.formatDate(obj.startDate,'yyyy-MM-dd');
+              data.list[index].endDate =self.formatDate(obj.endDate,'yyyy-MM-dd');
+              // data.list[index].endDate = new Date(obj.endDate).toLocaleDateString();
+              obj.detailLink = splitLink() + '&cardOrderId=' + obj.sid + '#/offsetquan';
+              obj.indexId = index;
+            })
+            self.allVouchers = data.list;
+            self.totalNum = data.list.length;
+            cb && cb();
+          } else {
+            //处理接口调用失败
+            self.error('getBaseConfigByType');
+          }
+
+        },
+        error(res) {
+          self.error('getBaseConfigByType');
+        }
+      });
+    },
+
+    //点击已退款选项,出现已退款的所有券
+    refundQuan() {
+      var self = this;
+      this.num1 = false;
+      this.num2 = true;
+      $.ajax({
+        url: config.locationUrl + "/order/getMyRecognizeCardList",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          type: 'invalid'
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            if (data.list.length == 0) {
+              // console.log(111111);
+              self.nullBox = true;
+              self.messag = '您还没有退过任何认筹券'
+            } else {
+              self.nullBox = false;
+            }
+            data.list.forEach(function(obj, index) {
+
+              // data.list[index].startDate = new Date(obj.startDate).toLocaleDateString();
+              // data.list[index].endDate = new Date(obj.endDate).toLocaleDateString();
+              data.list[index].startDate =self.formatDate(obj.startDate,'yyyy-MM-dd');
+              data.list[index].endDate =self.formatDate(obj.endDate,'yyyy-MM-dd');
+              // data.list[index].consumeTime = new Date(obj.consumeTime).toLocaleDateString();
+              data.list[index].consumeTime =self.formatDate(obj.consumeTime,'yyyy-MM-dd');
+              console.log(obj.consumeTime);
+            })
+
+            self.allVouchers = data.list;
+
+
+          } else {
+            //处理接口调用失败
+            self.error('getBaseConfigByType');
+          }
+        },
+        error(res) {
+          self.error('getBaseConfigByType');
+        }
+      });
+
+
+    },
+
+    //点击券,跳转详细信息
+    detailBtn(item) {
+      if (item.orderStatus == 7) {
+        return false
+      }
+    },
+    //申请退款弹框
+    refundBtn(item) {
+      //  console.log(item.indexId);
+      // console.log(item.sid);
+      var self = this;
+      var itemSid = item.sid;
+      var orderStatus = 0;
+      if (self.onoff) {
+        self.onoff = false;
+        self.getQuanList(function() {
+          self.allVouchers.forEach(function(obj, index) {
+            if (obj.sid == itemSid) {
+              orderStatus = obj.orderStatus;
+              // console.log(orderStatus);
+            }
+          })
+
+          if (orderStatus == 2) {
+            self.Resure = true;
+            self.cardOrderId = item.sid
+          }
+          if (orderStatus == 8) {
+            self.tipsShow('订单过期');
+          }
+        })
+      }
+    },
+    //取消申请退款弹框
+    cancelBtn() {
+      this.onoff = true;
+      this.Resure = false;
+    },
+
+    //确认申请退款,调取接口
+    sureRefund() {
+      var self = this;
+      self.Resure = false;
+      setTimeout(() => {
+        self.onoff = true;
+      }, 5000)
+      $.ajax({
+        url: config.locationUrl + "/wx_pay/refund",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          cardOrderId: self.cardOrderId
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.dataTime = true;
+            self.getQuanList();
+
+          }
+          if (data.ret === "1") {
+            self.tipsShow('订单不存在或者非法用户操作')
+          }
+          if (data.ret === "2") {
+            self.tipsShow('向微信发起退款请求返回失败')
+          }
+          if (data.ret === "3") {
+            self.tipsShow('订单状态错误')
+
+          }
+          if (data.ret === "-99") {
+            self.tipsShow('参数异常')
+          }
+        },
+        error(res) {
+          self.error('getBaseConfigByType');
+        }
+      });
+      console.log(userData.openid, self.cardOrderId);
+    },
+
+    //微信调取组件
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+
+    //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      this.tips = true;
+      this.errorMessage = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 2000);
+    },
+
+    tipsBtn() {
+      this.dataTime = false;
+    },
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd');
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.quanlist {
+  width: 100%;
+  min-height: 100%;
+  background: #f2f2f2;
+  .top {
+    width: 100%;
+    background: #fff;
+    height: pTR(250);
+    display: flex;
+    flex-direction: column;
+
+    .nameBox {
+      box-flex: 1;
+      flex: 1;
+      padding: pTR(30);
+      display: flex;
+      align-items: center;
+      border-bottom: #eeeeee solid 1px;
+      .pic {
+        width: pTR(122);
+        height: pTR(122);
+        border-radius: 50%;
+        background: #fff;
+      }
+      .detail {
+        box-flex: 1;
+        padding-left: pTR(30);
+        .name {
+          color: #333333;
+          font-size: pTR(36);
+          padding: pTR(5) 0 pTR(25);
+          width: pTR(300);
+          display: block;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .num {
+          color: #999999;
+          font-size: pTR(30);
+        }
+      }
+    }
+    .chooseItem {
+      height: pTR(80);
+      padding: 0 pTR(30);
+      display: flex;
+      justify-content: space-around;
+      .item {
+        width: pTR(150);
+        height: 100%;
+        font-size: pTR(30);
+        color: #666;
+        line-height: pTR(80);
+        text-align: center;
+      }
+      .on {
+        color: #f52b3a;
+        position: relative;
+      }
+      .on:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: pTR(3);
+        background: #f52b3a;
+      }
+    }
+  }
+  .bottom {
+    padding: pTR(20) pTR(30);
+    .quanitem {
+      width: 100%;
+      height: pTR(331);
+      background: url(../../assets/czlImg/verLine.png) 0 0 no-repeat;
+      background-size: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: pTR(15) 0 pTR(30);
+      .item1 {
+        width: 100%;
+        height: pTR(210);
+        display: flex;
+        align-items: center;
+        position: relative;
+        .logobox {
+          width: pTR(166);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          .logo {
+            width: pTR(102);
+            height: pTR(102);
+            border-radius: 50%;
+          }
+        }
+        .mainBox {
+          max-width: pTR(500);
+          z-index: 99;
+          h2 {
+            font-size: pTR(38);
+            color: #fff;
+            margin-bottom: pTR(20);
+            padding-top: pTR(5);
+            word-break: break-all;
+            overflow: hidden;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          p {
+            font-size: pTR(26);
+            color: #fff;
+            margin-bottom: pTR(15);
+            padding-left: pTR(20);
+            position: relative;
+          }
+          p:after {
+            content: '';
+            position: absolute;
+            width: pTR(6);
+            height: pTR(6);
+            background: #fff;
+            border-radius: 50%;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+          }
+          p:last-child {
+            padding-bottom: 0;
+          }
+        }
+        .state1 {
+          position: absolute;
+          width: pTR(169);
+          height: pTR(169);
+          background: url(../../assets/czlImg/expired.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state2 {
+          position: absolute;
+          width: pTR(169);
+          height: pTR(169);
+          background: url(../../assets/czlImg/refund.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state3 {
+          position: absolute;
+          width: pTR(169);
+          height: pTR(169);
+          background: url(../../assets/czlImg/refunded.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state4 {
+          position: absolute;
+          width: pTR(169);
+          height: pTR(169);
+          background: url(../../assets/czlImg/used.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+      }
+      .item2 {
+        box-flex: 1;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        p {
+          padding-left: pTR(40);
+          color: #999999;
+          font-size: pTR(24);
+          i {
+            vertical-align: middle;
+            margin-right: pTR(10);
+            display: inline-block;
+            width: pTR(32);
+            height: pTR(32);
+            background: url(../../assets/czlImg/return.png) 0 0 no-repeat;
+            background-size: 100%;
+          }
+          span {
+            display: inline-block;
+            vertical-align: middle;
+          }
+        }
+      }
+    }
+    .nullImg {
+      width: pTR(198);
+      height: pTR(129);
+      background: url(../../assets/czlImg/icon1.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: pTR(170) auto pTR(77);
+      display: block;
+    }
+    .nulltext {
+      color: #999;
+      font-size: pTR(36);
+      text-align: center;
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 999;
+  .RefundBox {
+    width: pTR(560);
+    height: pTR(356);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .text {
+      padding: pTR(80) 0 pTR(89);
+      text-align: center;
+      color: #757575;
+      font-size: pTR(36);
+    }
+    .butList {
+      display: flex;
+      justify-content: space-between;
+      .btn1 {
+        width: pTR(245);
+        height: pTR(88);
+        border-radius: pTR(10);
+        background: #929292;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(88);
+        color: #fff;
+      }
+      .btn2 {
+        width: pTR(245);
+        height: pTR(88);
+        border-radius: pTR(10);
+        background: #f52b3a;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(88);
+        color: #fff;
+      }
+    }
+  }
+  .tipsBox {
+    width: pTR(560);
+    height: pTR(356);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    text-align: center;
+    .tipstext {
+      padding: pTR(114) 0 pTR(50);
+      color: #757575;
+      font-size: pTR(36);
+    }
+
+    .tipsday {
+      color: #999999;
+      font-size: pTR(30);
+    }
+    .tipsBtn {
+      position: absolute;
+      width: pTR(50);
+      height: pTR(50);
+      background: url(../../assets/czlImg/closeBtn.png) center center no-repeat;
+      background-size: pTR(16) pTR(16);
+      right: 0;
+      top: 0;
+    }
+  }
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(450);
+  height: pTR(100);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(100);
+  color: #fff;
+  z-index: 9999;
+}
+
+</style>

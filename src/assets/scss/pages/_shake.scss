@@ -1,0 +1,350 @@
+html,body{overflow: hidden}
+.text-center{
+  text-align: center;
+}
+.shake_body{
+  background-color: #fefbeb;
+  @include size_color(28,#ceab71);
+  height: 100%;
+  .top{
+    width: 100%;
+    @include bg(url("../../assets/images/shake_top.jpg"));
+    @include size_color(21,#fff);
+    @include h(120);;
+    span{
+      @include size_color(24,#fff);
+    }
+  }
+  .broadcast_row2{
+    @include h(75);
+    @include lin_hei(75);
+    .broadcast2{
+      overflow: hidden;
+      ul li{
+        display: inline-block;
+        @include size_color(28,#fff);
+        @include m-r(50);
+        span{
+          @include ele-box(50,50);
+          border-radius: 50%;
+          display: inline-block;
+          @include m-r(20);
+          img{border-radius: 50%;}
+        }
+        b{
+          @include m-l(10);
+        }
+      }
+    }
+  }
+  .title{
+    @include ele-box(346,90);
+    @include bg(url("../../assets/images/shake_title.png"));
+    display: inline-block;
+    @include m-t(220);
+    @include m_b(35);
+  }
+  .shake_main{
+    @include ele-box(323,357);
+    @include bg(url("../../assets/images/shake_bj.png"));
+    display: inline-block;
+    @include m_b(90);
+    @include m_t(70);
+    position: relative;
+    span{
+      @include ele-box(248,280);
+      @include bg(url("../../assets/images/shake_hands.png"));
+      position: absolute;
+      @include bottom(60);
+      @include left(153);
+    }
+  }
+  .gifts_title{
+    @include ele-box(551,34);
+    @include bg(url("../../assets/images/gifts_title.png"));
+    display: inline-block;
+    @include m_b(55);
+  }
+  .gigts_list{
+    max-height:pTR(300);
+    overflow-y: auto;
+    @include p(0,27);
+    @include size_color(28,#ceab71);
+    .el-row{
+      @include m_b(20);
+    }
+    .el-col-5{
+      text-align: right;
+    }
+  }
+  .marquee_main{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 72%;
+    position: absolute;
+    right: 0;
+    overflow: hidden;
+    .marquee_list{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      animation: moveLeft 6s infinite;
+      white-space : nowrap;
+      @include m-r(20);
+      .pic{
+        @include ele-box(45,45);
+        border-radius: 50%;
+        img{border-radius: 50%;}
+      }
+      p{
+        span{
+          display: inline-block;
+          @include p(0,10);
+        }
+      }
+    }
+  }
+}
+.tada{
+  -webkit-animation-name:tada;
+  -webkit-animation-duration:1s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-delay: 0s;/*动画延迟时间*/
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-direction: normal ;
+
+}
+@-webkit-keyframes tada {
+  0% {
+
+  }
+
+  10%, 20% {
+    -webkit-transform:  rotate3d(0, 0, 1, -3deg);
+    transform:  rotate3d(0, 0, 1, -3deg);
+  }
+
+  30%, 50%, 70%, 90% {
+    -webkit-transform:  rotate3d(0, 0, 1, 3deg);
+    transform:  rotate3d(0, 0, 1, 3deg);
+  }
+
+  40%, 60%, 80% {
+    -webkit-transform:  rotate3d(0, 0, 1, -3deg);
+    transform:  rotate3d(0, 0, 1, -3deg);
+  }
+
+  100% {
+
+  }
+}
+
+@keyframes tada {
+  0% {
+
+  }
+
+  10%, 20% {
+    -webkit-transform:  rotate3d(0, 0, 1, -10deg);
+    transform:  rotate3d(0, 0, 1, -10deg);
+  }
+
+  30%, 50%, 70%, 90% {
+    -webkit-transform:  rotate3d(0, 0, 1, 10deg);
+    transform:  rotate3d(0, 0, 1, 10deg);
+  }
+
+  40%, 60%, 80% {
+    -webkit-transform:  rotate3d(0, 0, 1, -10deg);
+    transform:  rotate3d(0, 0, 1, -10deg);
+  }
+
+  100% {
+
+  }
+}
+@-webkit-keyframes moveLeft {
+  from{left: 100%}
+to{left: -100%}
+}
+.el-col-16{
+  overflow: hidden;
+}
+
+.barrage_main {
+  width: 100%;
+  @include h(70);
+  @include lin_hei(70);
+  overflow: hidden;
+}
+
+.barrage_item {
+  position: absolute;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  animation: moveLeft 8s linear forwards;
+}
+
+.pic {
+  @include ele-box(35, 35);
+  border-radius: 50%;
+  @include m_r(10);
+}
+
+.pic img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.barrage_box {
+  @include size_color(25, #fff);
+  display: flex;
+  flex-direction: row;
+}
+
+.barrage_nickname {
+
+  @include m_r(10);
+}
+
+/**定义从右边向左边的移动的动画**/
+@keyframes moveLeft {
+  from {
+    left: 100%;
+  }
+
+  to {
+    left:-100%;
+  }
+}
+  .advertising_box {
+    @include w(642);
+    height: auto;
+    position: relative;
+    p {
+      @include lin_hei(50);
+      @include size_color(36,
+      #fff);
+      position: absolute;
+      text-align: center;
+      width: 100%;
+      top: pTR(-80);
+      i {
+        @include size_color(60,
+        #ffd715);
+        margin-right: pTR(20);
+      }
+    }
+    .voicePlay {
+      position: absolute;
+      right: 0;
+      top: 0;
+      @include ele-box(100,
+      100);
+      background: url("../../assets/images/voicePlay.png") center center no-repeat;
+      background-size: pTR(64) pTR(64);
+    }
+    .voicestop {
+      position: absolute;
+      ;
+      right: 0;
+      top: 0;
+      @include ele-box(100,
+      100);
+      background: url("../../assets/images/voicestop.png") center center no-repeat;
+      background-size: pTR(64) pTR(64);
+    }
+    .imgvideo{
+      width:100%;
+      height:pTR(400);
+      video{
+        width:100%;
+        height:100%;
+
+      }
+    }
+  }
+
+
+.hongbaoBox{
+  width:pTR(450);
+  height:pTR(580);
+   @include bg(url("../../assets/images/shake_result.png"));
+  .personPic{
+    padding-top:pTR(130);
+    img{
+      width:pTR(150);
+      height:pTR(150);
+      background:#fff;
+      border-radius: 50%;
+      margin:0 auto;
+    }
+  }
+  .shopName{
+    padding:pTR(40) pTR(30) 0;
+    font-size:pTR(32);
+    color:#fff;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+  }
+  .getmoney{
+    padding:pTR(40) pTR(30) 0;
+    font-size:pTR(32);
+    color:#f2d668;
+        overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+  }
+  .getBtn{
+    margin:pTR(30) auto 0 ;
+    width:pTR(300);
+    height:pTR(70);
+    text-align:center;
+    background:#f2da69;
+    border-radius: pTR(40);
+    line-height:pTR(70);
+    font-size:pTR(32);
+    color:#b2241d;
+  }
+
+}
+
+.hongbaoBox1{
+  width:pTR(450);
+  height:pTR(564);
+   @include bg(url("../../assets/images/red_pocket.png"));
+  .getmoney{
+    padding-top:pTR(70);
+    font-size:pTR(32);
+    color:#e13d33;
+    font-size:pTR(18);
+    span{
+      font-size:pTR(80);
+      display: inline-block;
+    }
+  }
+  .moneytips{
+    padding:pTR(50) pTR(50) pTR(150);
+    font-size:pTR(22);
+    line-height:pTR(40);
+
+  }
+  .getBtn{
+    margin:pTR(30) auto 0 ;
+    width:pTR(300);
+    height:pTR(70);
+    text-align:center;
+    background:#f2da69;
+    border-radius: pTR(40);
+    line-height:pTR(70);
+    font-size:pTR(32);
+    color:#b2241d;
+  }
+
+}

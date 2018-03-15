@@ -1,0 +1,17 @@
+
+
+//陈紫菱
+
+//buyCard/main
+export const BM_GET_BASE_CONFING_BY_TYPE = 'BM_GET_BASE_CONFING_BY_TYPE';  //获取buyCard/main页面配置信息；1
+
+
+
+
+
+
+
+
+//陈红
+//shop-list/shop
+export const SB_GET_BANNER = 'SB_GET_BANNER';  //banner

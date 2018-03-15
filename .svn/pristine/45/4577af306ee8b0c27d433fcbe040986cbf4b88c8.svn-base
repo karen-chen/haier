@@ -1,0 +1,92 @@
+/* public css */
+.survey_body{
+  background-color: #f4f4f4;
+  @include size_color(30,#333);
+  height: 100%;
+  .top{
+    background-color: #f52b3a;
+    @include h(90);
+    @include size_color(36,#fff);
+    @include lin_hei(90);
+    text-align: center;
+  }
+  .title{
+    @include m(0,32);
+    @include p(60,0);
+    @include border_b(2,#efefef);
+    @include size_color(30,#999);
+  }
+  .survey_main{
+    @include m_t(60);
+    @include m_r(32);
+    @include m_l(32);
+    .survey_list{
+      @include m_b(60);
+      @include size_color(28,#333);
+      .question_list{
+        @include m_t(30);
+        background-color: #fff;
+        @include border(2,#f4f3f3);
+        @include radius(10);
+        ul li{
+          @include lin_hei(40);
+          @include p(20,20);
+          @include border_b(2,#fbfbfb);
+          span{
+            @include ele-box(30,30);
+            @include border(2,#f3f3f3);
+            border-radius: 50%;
+            vertical-align:top;
+            display: inline-block;
+            background-color: #f4f4f4;
+            &.checked{
+              background-color: #f52b3a;
+            }
+          }
+          p{
+            display: inline-block;
+            width: pTR(600);
+            word-break:break-all;
+            word-wrap:break-word;
+          }
+          &:last-child{
+            border-bottom: none;
+          }
+        }
+      }
+      h2{
+        @include size_color(28,#333);
+        word-break: break-all;
+        word-wrap: break-word;
+      }
+    }
+  }
+  .submit_btn{
+    @include m_b(60);
+    @include m_r(93);
+    @include m_l(93);
+    background-color: #f52b3a;
+    @include h(77);
+    @include size_color(36,#fff);
+    @include lin_hei(77);
+    text-align: center;
+    @include radius(10);
+  }
+  .tips_main{
+    text-align: center;
+    @include p_t(183);
+    span{
+      display: inline-block;
+      @include m_b(85);
+      @include ele-box(120,120);
+      @include bg(url("../../assets/images/survey_tips.png"));
+    }
+    p{
+      @include size_color(36,#f52b3a);
+    }
+  }
+}
+.survey_tips_body{
+  background-color: #fff;
+  height: 100%;
+}

@@ -1,0 +1,30 @@
+.text-center{
+  text-align: center;
+}
+.purchasing_body{
+  height: 100%;
+  .el-row{
+    @include m(0,65);
+  }
+  .mt247{
+    @include m_t(247);
+  }
+  .el-input input{
+    background-color: #d2d2d2;
+    @include border(2,#eee);
+    @include size_color(36,#666);
+    @include h(80);
+    @include lin_hei(80);
+    &::-webkit-input-placeholder { color:#666; }
+    &:focus::-webkit-input-placeholder { color:#333; }
+  }
+  .el-button{
+    @include m_t(200);
+    display: inline-block;
+    @include ele-box(320,70);
+    background-color: #f52b3a;
+    @include size_color(36,#fff);
+    @include radius(10);
+    border: none;
+  }
+}

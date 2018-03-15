@@ -1,0 +1,28 @@
+// test config start --------------------------------
+export const locationUrl = 'http://192.168.10.213:9028';
+export const url = 'http://192.168.10.213:9028';
+export const imageServerUrl ='http://tmp.s.weshaketv.com/1234567/haier/';
+export const cdnUrl ='http://1251097942.cdn.myqcloud.com/1251097942/haier/test';
+export const appid = 'wxecaeb7ccc34a75eb';
+// test config end ----------------------------------
+
+// online config start ------------------------------
+// export const locationUrl = 'http://app63.s.weshaketv.com:9062/haier_api';
+// export const url = 'http://app63.s.weshaketv.com:9062/haier_api';
+// export const imageServerUrl ='http://cdn.s.weshaketv.com/haier/';
+// export const cdnUrl ='http://1251097942.cdn.myqcloud.com/1251097942/haier/product';
+// export const appid = 'wx29cd2d8b59f3f707';
+// online config end ------------------------------
+
+// other config
+export const default_icon = "http://1251097942.cdn.myqcloud.com/1251097942/mc3-1/haier20170927/images/default_icon_20170927.png";
+
+
+//微信分享
+export const wxShareData = {
+  title: "",
+  link: "",
+  imgUrl: "",
+  desc: ""
+};
+

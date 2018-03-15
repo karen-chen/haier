@@ -1,0 +1,200 @@
+<template>
+  <div class="comment_body">
+    <form id="commentForm">
+      <div class="el-row">
+        <div class="el-col">
+          <div class="el-textarea"><textarea v-model="text" placeholder="写几句评价吧" type="textarea"
+                                             rows="2" maxlength="100" class="el-textarea__inner" style="height: 100px;"></textarea></div>
+        </div>
+      </div>
+      <div class="bor-b2 el-row">
+        <div class="el-col el-col-24">
+          <div class="comment_pic" v-for="(image,idx) in imageList">
+            <span><img :src="image"></span>
+            <div class="del_btn" @click="delImage(idx)">&times;</div>
+          </div>
+          <div class="add_pic el-input" @click="addPic" v-show="showAddpic">
+          </div>
+        </div>
+      </div>
+      <div class="el-row"><div class="center el-col el-col-24"><button @click="submitBtn" type="button" class="el-button submit_btn el-button--default"><!----><!----><span>确定</span></button></div></div>
+      <!--提示弹框-->
+      <div class="pop_mask" v-show="show"><div class="tips">{{commentmsg}}</div></div>
+    </form>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_comment.scss';
+</style>
+<script>
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    chooseImage,
+    wxHideMenu,
+    getParam
+  } from '@/lib/tools';
+  import * as config from '@/lib/config'
+  export default {
+       data(){
+         return{
+           show:false,
+           commentType:0,
+           text:"",
+           comment:{},
+           imageList:[],
+           commentmsg:"",
+           showAddpic:true,
+           picclick:true,
+           shopId:"",
+           orgId:""
+         }
+       },
+    created(){
+      var _this = this;
+      this.shopId = localStorage.getItem('shopId')
+      this.orgId = localStorage.getItem('orgId')
+      window.localStorage.removeItem("isGotoComment");
+
+      getJsSign(function(sign) {
+        wxconfig(sign);
+        wxHideMenu()
+        wx.ready(function () {
+          wx.showMenuItems({
+            menuList: [
+              'menuItem:favorite',
+              'menuItem:share:email',
+  /*            'menuItem:share:qq', //分享到QQ
+              'menuItem:share:weiboApp', //分享到Weibo
+              'menuItem:share:QZone', //分享到QQ空间
+              "menuItem:share:timeline", //分享到朋友圈*/
+            ] // 要显示的菜单项，所有menu项见附录3
+          });
+        })
+      })
+    },
+    methods:{
+      addPic(){
+        var _this = this
+        if(!_this.picclick){
+          return
+        }
+        _this.picclick = false
+
+        if(_this.imageList.length >= 9){
+          _this.showAddpic = false
+          _this.show = true;
+          _this.commentmsg = "最多上传9张图片！"
+          setTimeout(function(){
+            _this.show = false
+          },2000);
+          return
+        }
+       wx.ready(function(){
+         wx.chooseImage({
+           count: 9 - _this.imageList.length,
+           sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
+           sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
+           success: function(res) {
+             var localIds = res.localIds; //把图片的路径保存在images[localId]中--图片本地的id信息，用于上传图片到微信浏览器时使用
+             _loading(localIds)
+           }
+         })
+       });
+        function _loading(ids){
+          var id = ids.shift();
+          if(id){
+            wx.uploadImage({
+              localId: id, // 需要上传的图片的本地ID，由chooseImage接口获得
+              isShowProgressTips: 1, // 默认为1，显示进度提示
+              success:function(res){
+                var serverId = res.serverId; // 返回图片的服务器端ID
+                $.ajax({
+                  url:"http://app11.s.weshaketv.com:9900/wss/api/imgUpload",
+                  dataType:"jsonp",
+                  data:{
+                    mediaId: serverId
+                  },
+                  success:function(data){
+                    _this.imageList.push(data.media)
+                    _this.show = true;
+                    _this.commentmsg = "图片上传成功！"
+                    setTimeout(function(){
+                      _this.show = false
+                    },2000);
+                    _loading(ids);
+                    if(_this.imageList.length >= 9) {
+                      _this.showAddpic = false
+                    }
+                  },
+                  error:function(){
+                    _this.show = true;
+                    _this.commentmsg = "图片上传失败！"
+                    setTimeout(function(){
+                      _this.show = false
+                    },2000);
+                  }
+                });
+              }
+            })
+          }else{
+            _this.picclick = true;
+          }
+        }
+      },
+      delImage:function(index){
+        var _this = this
+        _this.imageList.shift(index);
+        if(_this.imageList.length < 9) {
+          _this.showAddpic = true
+        }
+      },
+      submitBtn(){
+        var _this = this
+        if(_this.imageList.length == 0){
+          _this.commentType = 2
+        }else {
+          _this.commentType = 3
+        }
+        var commentContentJsonStr = {};
+        commentContentJsonStr.text = _this.text;
+        commentContentJsonStr.imageList = _this.imageList;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/comment/saveComment",
+          dataType: "jsonp",
+          data: {
+            orgId:_this.orgId,
+            openid:userData.openid,
+            commentType:this.commentType,
+            shopId:_this.shopId,
+            commentContentJsonStr:JSON.stringify(commentContentJsonStr)
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              //_this.imageList = data.imageList
+              if(_this.text == ''){
+                _this.show = true;
+                _this.commentmsg = "说点什么吧！"
+                setTimeout(function(){
+                  _this.show = false
+                },1000);
+                return
+              }
+              _this.$router.push({name:'Activity', params:{commentContentJsonStr:JSON.stringify(commentContentJsonStr)}})
+            }else {
+              console.log('/comment/saveComment:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/comment/saveComment:', 'fail');
+          }
+        });
+
+      }
+    }
+  }
+</script>

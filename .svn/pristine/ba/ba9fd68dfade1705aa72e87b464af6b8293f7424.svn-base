@@ -1,0 +1,109 @@
+<template>
+  <div class="coupon_body">
+    <div class="el-row">
+      <div class="size36 text-center mt110 el-col el-col-24">
+        选择认筹活动，生成售券二维码
+      </div>
+    </div>
+    <div class="el-row" v-for="(activity,index) in list" @click="chooseBtn(index)">
+      <div class="icon el-col el-col-2" :class="{active: choose_index==index}"></div>
+      <div class="el-col el-col-22"><h4>{{activity.actName}}</h4>
+        <p>活动日期：{{activity.startDate}} - {{activity.endDate}}</p></div>
+    </div>
+    <div class="text-center el-row">
+      <button type="button" class="el-button el-button--default" @click="codeBtn"><!----><!----><span>开始生成售劵二维码</span></button>
+    </div>
+    <div class="pop_mask" v-show="showPop">
+      请选择认筹活动
+    </div>
+  </div>
+
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_coupon.scss';
+  .pop_mask{
+    background-color: rgba(0,0,0,.6);
+    max-width: 80%;
+  @include p(10,20);
+  @include radius(10);
+  @include size_color(26,#fff);
+    position: fixed;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import {
+    userData,
+    formatDate
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return {
+        list:[],
+        choose_index:-1,
+        showPop:false
+      }
+    },
+    created(){
+       var _this = this
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/user/getActList",
+        dataType: "jsonp",
+        data: {
+          openid:userData.openid
+        },
+        success: function(data) {
+          console.log(data.list.length)
+          if (data.ret == 0) {
+            if(data.list.length <= 0){
+              _this.$router.push({path:'uncoupon'})
+            }else {
+              _this.list = data.list
+              console.log(_this.list)
+              _this.list.forEach(function(item){
+                console.log(_this.list.startDate)
+                item.startDate = formatDate(new Date(item.startDate),'yyyy-MM-dd')
+                item.endDate = formatDate(new Date(item.endDate),'yyyy-MM-dd')
+               // console.log(list.startDate)
+              })
+            }
+          }else{
+            console.log('/user/getActList:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('/user/getActList:', 'fail');
+        }
+      });
+    },
+    methods:{
+      chooseBtn(index){
+       this.choose_index = index;
+      },
+      codeBtn(){
+        var _this = this
+        if(this.choose_index>=0){
+          this.$router.push(
+            {
+              name:'Code',
+              params:{
+                activity:this.list[this.choose_index].sid
+              }
+            })
+        }
+       this.showPop = true
+        setTimeout(function(){
+          _this.showPop = false
+        },2000)
+      }
+    }
+  }
+</script>

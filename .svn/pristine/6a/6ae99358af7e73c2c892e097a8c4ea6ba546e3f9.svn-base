@@ -1,0 +1,423 @@
+<template>
+  <div class="content">
+    <div class="main">
+        <img class="personPic" :src="imageServerUrl + picUrl">
+        <p class="logo">{{title}}</p>
+        <h2 class="title">{{buyBtn}}</h2>
+        <div class="logoPic"></div>
+        <div class="tips">
+          <h2>有效日期:</h2>
+          <p>{{startDate}} 至 {{endDate}}</p>
+        </div>
+        <div :class="[ allow ? '' : 'nouse','buyBtn']" @click="userNow">
+          {{masseg}}
+        </div>
+        <div class="tips1"  @click="instrucShow">
+          <h2>使用说明</h2>
+          <i></i>
+          <!-- <div v-html="description"></div> -->
+        </div>
+    </div>
+        <!-- 使用说明弹框 -->
+    <div class="popBox" v-show="instructions">
+      <div class="instructions">
+        <div class="instrucPic"></div>
+        <div class="instrucTitle">使用说明</div>
+        <div class="instrucBox" v-html="description"></div>
+        <div class="instrucBtn" @click="instrucClose">我知道了</div>
+      </div>
+    </div>
+    <!-- 核销二维码 -->
+    <div class="popBox" v-show="ma">
+      <div class="ma">
+        <div class="maimg" id="qrcode"></div>
+        <p class="matext">请将二维码<br>出示给工作人员核销</p>
+        <div class="mabtn" @click="mahidde"></div>
+      </div>
+    </div>
+    <!-- 提示弹框 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  formatDate,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      cardOrderId: '',
+      imageServerUrl: config.imageServerUrl,
+      erweima: config.cdnUrl,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      masseg: '',
+      ma: false,
+      link: '',
+      allow: false,
+      orderStatus: 0,
+      localStorageList: {},
+      tips: false,
+      instructions:false
+    }
+  },
+
+  created() {
+    document.title = "卡劵详情";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+    //接口传参的数据需要存储在本地缓存
+    // console.log(this.$route.params.sid)
+    if (this.$route.params.sid) {
+      this.localStorageList.userLogId = this.$route.params.sid;
+      this.localStorageList.orderStatus = this.$route.params.orderStatus;
+      localStorage.setItem('userLog', JSON.stringify(this.localStorageList))
+    }
+    this.localStorageList = JSON.parse(localStorage.getItem('userLog'));
+    console.log(this.localStorageList)
+
+    this.cardOrderId = this.localStorageList.userLogId;
+    // this.orderStatus = this.localStorageList.orderStatus;
+    console.log(this.cardOrderId, this.orderStatus);
+    this.getLogDetail();
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    userNow() {
+      var self = this;
+      if (!self.allow) {
+        return;
+      }
+      self.getLogDetail(function() {
+        if (self.orderStatus == 1) {
+          self.ma = true;
+        }
+        $('#qrcode').html("");
+        $('#qrcode').qrcode({
+          width: 178,
+          height: 178,
+          text: self.link
+        });
+      })
+    },
+    mahidde() {
+      this.ma = false;
+    },
+
+
+    getLogDetail(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/prize_log/getLogDetail",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          userLogId: this.cardOrderId
+        },
+        success: function(data) {
+
+          if (data.ret === "0") {
+            self.picUrl = data.data.merchantLogo;
+            self.title = data.data.merchantName;
+            self.buyBtn = data.card.resourceName;
+            self.startDate = data.card.configBean.startDate.value;
+            self.endDate = data.card.configBean.endDate.value;
+            self.description = "<p class='listb'>" + data.card.configBean.description.value.replace(/\n/g, "</p><p>") + "</p>";
+            self.orderStatus = data.data.flagStatus;
+            console.log(data);
+            // console.log(data.data.flagStatus);
+            // self.masseg = "立即使用";
+            if (self.orderStatus == 1) {
+              self.allow = true;
+              self.masseg = "立即使用";
+
+            }
+            if (self.orderStatus == 2) {
+              self.allow = false;
+              self.masseg = "已使用";
+              cb && self.tipsShow('已使用');
+            }
+            if (self.orderStatus == 3) {
+              self.allow = false;
+              self.masseg = "已过期";
+              cb && self.tipsShow('已过期');
+            }
+            if (self.orderStatus == 4) {
+              self.allow = false;
+              self.masseg = "未到使用时间";
+              cb && self.tipsShow('未到使用时间');
+            }
+            self.link = self.erweima + '/index.html?&userId=' + userData.openid + "&userLogId=" + self.cardOrderId + '#/prizeCode';
+            console.log(self.link);
+            cb && cb();
+          } else {
+            //处理接口调用失败
+            self.error('getMyRecognizeCardDetail');
+          }
+        },
+        error(res) {
+          self.error('getMyRecognizeCardDetail');
+        }
+      });
+
+    },
+
+        //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      this.tips = true;
+      this.masseg = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 2000);
+    },
+        instrucShow(){
+      this.instructions=true;
+    },
+    instrucClose(){
+      this.instructions=false;
+    }
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f52b3a;
+  padding: pTR(80) pTR(20);
+  display: flex;
+  .main {
+    background: #fff;
+    position: relative;
+    padding: pTR(66) pTR(30) 0;
+    width: pTR(710);
+    height: pTR(826);
+    background: url(../../assets/czlImg/detailBg.jpg) 0 0 no-repeat;
+    background-size: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+
+    .personPic {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      display: block;
+      left: 50%;
+      transform: translateX(-50%);
+      top: pTR(-50);
+      border-radius: 50%;
+    }
+    .logo {
+      font-size: pTR(26);
+      color: #999;
+    }
+    .title {
+      padding: pTR(27) 0 pTR(60);
+      font-size: pTR(36);
+      color: #333;
+    }
+    .buyBtn {
+      width: pTR(320);
+      height: pTR(70);
+      line-height: pTR(70);
+      background: #f52b3a;
+      color: #fff;
+      font-size: pTR(30);
+      border-radius: pTR(5);
+      margin: pTR(20) auto pTR(50);
+    }
+    .nouse {
+      background: #929292;
+    }
+    .logoPic {
+      width: 100%;
+      height: pTR(235);
+      background: url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+      -webkit-background-size: 100%;
+      background-size: 100%;
+      margin-bottom: pTR(10);
+    }
+
+    .tips {
+      display: flex;
+      height: pTR(100);
+      align-items: center;
+      h2 {
+        font-size: pTR(26);
+        color: #666666;
+      }
+      p {
+        -webkit-box-flex: 1;
+        box-flex: 1;
+        flex: 1;
+        color: #666666;
+        font-size: pTR(26);
+        word-break: break-all;
+        text-align:left;
+      }
+      div {
+        padding-top: pTR(10);
+        color: #666666;
+        font-size: pTR(28);
+        line-height: pTR(30);
+        word-break: break-all;
+      }
+    }
+    .tips1 {
+      display: flex;
+      height: pTR(130);
+      align-items: center;
+      justify-content:space-between;
+      h2 {
+        font-size: pTR(32);
+        color: #333;
+      }
+      i{
+        display:block;
+        width:pTR(15);
+        height:pTR(29);
+        background: url(../../assets/czlImg/arrow.png) center center no-repeat;
+        background-size: 100%;
+      }
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  .ma {
+    width: pTR(560);
+    height: pTR(565);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .maimg {
+      width: 178px;
+      height: 178px;
+      display: block;
+      margin: pTR(60) auto 0;
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .matext {
+      font-size: pTR(32);
+      color: #333;
+      text-align: center;
+      padding-top: pTR(20);
+      line-height:pTR(50);
+    }
+    .mabtn {
+      position: absolute;
+      width: pTR(54);
+      height: pTR(54);
+      background: url(../../assets/czlImg/maclose.png) center center no-repeat;
+      background-size: 100%;
+      left: 50%;
+      bottom: pTR(-80);
+      transform:translateX(-50%);
+    }
+  }
+    .instructions {
+    width: pTR(532);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: pTR(160) pTR(40) pTR(55);
+    .instrucPic {
+      position: absolute;
+      width: pTR(238);
+      height: pTR(247);
+      background: url(../../assets/czlImg/instructions.png) center center no-repeat;
+      background-size: 100%;
+      top: pTR(-115);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .instrucTitle {
+      text-align: center;
+      color: #333333;
+      font-size: pTR(36);
+      font-weight: bold;
+      padding-bottom: pTR(50);
+    }
+    .instrucBox {
+      max-height: pTR(300);
+      overflow: scroll;
+      color: #999;
+      font-size: pTR(26);
+      line-height:pTR(42.5);
+      text-align:justify;
+    }
+    .instrucBtn {
+      width: pTR(278);
+      height: pTR(78);
+      background: #f41f37;
+      color: #fff;
+      font-size: pTR(36);
+      text-align: center;
+      line-height: pTR(78);
+      border-radius: pTR(10);
+      margin: pTR(55) auto 0;
+    }
+  }
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(340);
+  height: pTR(88);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(88);
+  color: #fff;
+}
+
+</style>

@@ -1,0 +1,65 @@
+
+.text-center{
+  text-align: center;
+}
+.size36{
+  @include size_color(36,#333);
+}
+.mt110{
+  @include m_t(110);
+}
+.el-button{
+  margin-right: auto;
+  margin-left: auto;
+}
+.el-button span{
+  display: block;
+  @include m_t(30);
+  @include ele-box(562,77);
+  background-color: #f52b3a;
+  @include size_color(36,#fff);
+  @include radius(10);
+  border: none;
+ @include lin_hei(77);
+}
+.coupon_body{
+  height: 100%;
+  .el-row{
+    @include m_b(43);
+    @include m_r(32);
+    @include m_l(32);
+  }
+  .icon{
+    @include h(40);
+    @include bg(url("../../assets/images/icon_coupon.png"));
+    @include bg-position(0);
+    background-size: pTR(40) pTR(40);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: grayscale(100%);
+    &.active{
+      -webkit-filter: grayscale(0%);
+      -moz-filter: grayscale(0%);
+      -ms-filter: grayscale(0%);
+      -o-filter: grayscale(0%);
+      filter: grayscale(0%);
+    }
+  }
+  .el-col-22{
+    h4{
+      @include size_color(30,#666);
+      @include p_b(10);
+      word-break:break-all;
+      word-wrap:break-word;
+    }
+    p{
+      @include size_color(24,#999);
+    }
+  }
+  .autoh{
+    @include h(700);
+    overflow-y: auto;
+  }
+}

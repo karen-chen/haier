@@ -1,0 +1,92 @@
+<template>
+	<div class="content">
+		<div class="main">
+				<img class="personPic" src="../../assets/czlImg/personPic.png">
+				<p class="logo">海尔集团</p>
+				<h2 class="title">团购会奖品券</h2>
+				<div class="codetime">
+					有效日期2016-7-19 至 2016-7-20
+				</div>
+				<div class="inputma">
+					<input type="" name="" placeholder="请输入核销密码">
+				</div>
+				<div class="buyBtn">确定</div>
+				
+				
+
+		</div>
+	</div>
+</template>
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss"  scoped>
+ @import '../../assets/scss/_mixins.scss';
+	.content{
+		width:100%;
+		min-height: 100%;
+		background: #f52b3a;
+		position:relative;
+		.main{
+			
+			background:#fff;
+			position: relative;
+			padding:pTR(66) 0 pTR(100);
+			text-align:center;
+			position:absolute;
+			top:pTR(80);
+			bottom:pTR(80);
+			left:pTR(20);
+			right:pTR(20);
+			.personPic{
+				position: absolute;
+				width:pTR(100);
+				height:pTR(100);
+				display: block;
+				left:50%;
+				transform:translateX(-50%);
+				top:pTR(-50);
+				
+			}
+			.logo{
+				font-size:pTR(28);
+				color:#666;
+			}
+			.title{
+				padding:pTR(40) 0 0;
+			}
+			.codetime{
+				height:pTR(100);
+				line-height:pTR(100);
+				border-bottom:1px dotted rgba(151,151,151,0.5);
+				color:#999;
+				font-size:pTR(24);
+			}
+			.buyBtn{
+				width:pTR(320);
+				height:pTR(70);
+				line-height:pTR(70);
+				background:#f52b3a;
+				color:#fff;
+				font-size:pTR(30);
+				border-radius: pTR(5);
+				margin:0 auto pTR(85);
+			}
+			.inputma{
+				padding:pTR(40) pTR(90) pTR(60);
+
+				input{
+					width:100%;
+					background:#d6d6d6;
+					height:pTR(70);
+					line-height:pTR(70);
+					padding-left:pTR(40);
+				}
+			}
+			
+		}
+	}
+</style>

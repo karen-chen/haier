@@ -1,0 +1,408 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <div class="mainTop"></div>
+      <img class="personPic" :src="imageServerUrl + picUrl">
+      <p class="logo">{{title}}</p>
+      <h2 class="title">{{buyBtn}}</h2>
+      <div class="logoPic"></div>
+      <div class="tips">
+        <h2>有效日期:</h2>
+        <p>{{startDate}} 至 {{endDate}}</p>
+      </div>
+      <div :class="[ allow ? '' : 'nouse','buyBtn']" @click="userNow">
+        {{masseg}}
+      </div>
+      <div class="mainBottom"></div>
+      <div class="tips">
+        <h2>使用说明</h2>
+        <div v-html="description"></div>
+      </div>
+    </div>
+    <!-- 核销二维码 -->
+    <div class="popBox" v-show="ma">
+      <!-- <div class="popBox"> -->
+      <div class="ma">
+        <div class="maimg" id="qrcode"></div>
+        <p class="matext">请将二维码<br>出示给工作人员核销</p>
+        <div class="mabtn" @click="mahidde"></div>
+      </div>
+    </div>
+    <!-- 提示弹框 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+    <!-- 卡券找不到了 -->
+    <div class="popBox1" v-show="nofang">
+      <div class="nofang">啊呀,该卡券找不到了,请返回重试</div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      cardOrderId: '',
+      imageServerUrl: config.imageServerUrl,
+      erweima: config.cdnUrl,
+      money: 0,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      description: '',
+      masseg: '',
+      ma: false,
+      link: '',
+      allow: false,
+      orderStatus: 0,
+      localStorageList: {},
+      tips: '',
+      nofang: false
+    }
+  },
+
+  created() {
+    console.log(userData.cardOrderId);
+    document.title = "卡券详情";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      // alert(1111);
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+    //接口传参的数据需要存储在本地缓存
+    this.getMyRecognizeCard();
+    // console.log(111, this.cardOrderId)
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss');
+    },
+    userNow() {
+      var self = this;
+      if (!self.allow) {
+        return;
+      }
+      self.getMyRecognizeCard(function() {
+        if (self.orderStatus == 2) {
+          self.ma = true;
+          $('#qrcode').html("");
+          $('#qrcode').qrcode({
+            width: 178,
+            height: 178,
+            text: self.link
+          });
+        } else {
+          return
+        }
+
+
+      })
+    },
+    mahidde() {
+      this.ma = false;
+      this.getMyRecognizeCard();
+    },
+    //获取券详细信息
+    getMyRecognizeCard(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/order/getMyRecognizeCardDetail",
+        dataType: "jsonp",
+        data: {
+          openid: userData.openid,
+          cardOrderId: userData.cardOrderId
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.picUrl = data.order.logoUrl;
+
+            //商户名称
+            self.title = data.order.merchantName;
+            //券的名称
+            self.buyBtn = data.order.title;
+            self.startDate = self.formatDate(data.order.startDate);
+            self.endDate = self.formatDate(data.order.endDate);
+            self.description = "<p class='listb'>" + data.card.configBean.description.value.replace(/\n/g, "</p><p>") + "</p>";
+            self.orderStatus = data.order.orderStatus;
+
+            console.log(self.canRefund);
+            if (self.orderStatus == 2) {
+              self.allow = true;
+              self.masseg = "立即使用"
+            }
+            if (self.orderStatus == 3) {
+              self.allow = false;
+              self.masseg = "已使用";
+              console.log(111111111);
+              cb && self.tipsShow('已使用');
+            }
+            if (self.orderStatus == 4) {
+              self.allow = false;
+              self.masseg = "订单失败";
+              cb && self.tipsShow('订单失败');
+            }
+            if (self.orderStatus == 5) {
+              self.allow = false;
+              self.masseg = "订单已取消";
+              cb && self.tipsShow('订单已取消');
+            }
+            if (self.orderStatus == 6) {
+              self.allow = false;
+              self.masseg = "退款中";
+              cb && self.tipsShow('退款中');
+            }
+            if (self.orderStatus == 7) {
+              self.allow = false;
+              self.masseg = "已退款";
+              cb && self.tipsShow('已退款');
+            }
+            if (self.orderStatus == 8) {
+              self.allow = false;
+              self.masseg = "已过期";
+              cb && self.tipsShow('已过期');
+            }
+            if (self.orderStatus == 9) {
+              self.allow = false;
+              self.masseg = "未到使用时间";
+              cb && self.tipsShow('未到使用时间');
+            }
+            self.link = self.erweima + '/index.html?&userId=' + userData.openid + "&cardOrderId=" + userData.cardOrderId + '#/verificationcode';
+            console.log(self.link);
+            cb && cb();
+
+          }
+          if (data.ret === "-1") {
+            self.nofang = true;
+            setTimeout(() => {
+              self.$router.push({
+                name: 'Quanlist'
+              })
+            }, 2000);
+          } else {
+            //处理接口调用失败
+            self.error('getMyRecognizeCardDetail');
+          }
+        },
+        error(res) {
+          self.error('getMyRecognizeCardDetail');
+        }
+      });
+
+    },
+    tipsShow(meg) {
+      var self = this;
+      this.tips = true;
+      this.masseg = meg;
+      console.log(2222222222222);
+      setTimeout(() => {
+        self.tips = false;
+      }, 2000);
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f52b3a;
+  padding: pTR(80) pTR(20);
+  display: flex;
+  .main {
+    background: #fff;
+    position: relative;
+    padding: pTR(66) pTR(30) 0;
+    width:pTR(710);
+    height:pTR(826);
+    background: url(../../assets/czlImg/detailBg.jpg) 0 0 no-repeat;
+    background-size:100%;
+    text-align: center;
+    display:flex;
+    flex-direction:column;
+    .mainTop{
+      -webkit-box-flex: 1;
+      box-flex: 1;
+      flex: 1;
+    }
+    .mainBottom{
+      width:100%;
+      height:pTR(300);
+    }
+    .personPic {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      display: block;
+      left: 50%;
+      transform: translateX(-50%);
+      top: pTR(-50);
+      border-radius: 50%;
+    }
+    .logo {
+      font-size: pTR(26);
+      color: #999;
+    }
+    .title {
+      padding: pTR(27) 0 pTR(60);
+      font-size:pTR(36);
+      color:#333;
+    }
+    .buyBtn {
+      width: pTR(320);
+      height: pTR(70);
+      line-height: pTR(70);
+      background: #f52b3a;
+      color: #fff;
+      font-size: pTR(30);
+      border-radius: pTR(5);
+      margin: pTR(20) auto pTR(85);
+    }
+    .nouse {
+      background: #929292;
+    }
+    .logoPic {
+      width: 100%;
+      height: pTR(210);
+      background: url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+      -webkit-background-size:100%;
+      background-size: 100%;
+      margin-bottom: pTR(10);
+    }
+
+    .tips {
+      margin-top: pTR(30);
+      display:flex;
+      height:pTR(100);
+      align-items:center;
+      h2 {
+        font-size: pTR(26);
+        color: #666666;
+        width:pTR(120);
+      }
+      p {
+        -webkit-box-flex: 1;
+        box-flex: 1;
+        flex: 1;
+        color: #666666;
+        font-size: pTR(26);
+        word-break: break-all;
+      }
+      div {
+        padding-top: pTR(10);
+        color: #666666;
+        font-size: pTR(28);
+        line-height: pTR(30);
+        word-break: break-all;
+      }
+    }
+  }
+}
+
+.listb {
+  padding-bottom: pTR(20);
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  .ma {
+    width: pTR(560);
+    height: pTR(565);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .maimg {
+      width: 178px;
+      height: 178px;
+      display: block;
+      margin: pTR(60) auto 0;
+      canvas {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .matext {
+      font-size: pTR(32);
+      color: #333;
+      text-align: center;
+      padding-top: pTR(20);
+      line-height:pTR(50);
+    }
+    .mabtn {
+      position: absolute;
+      width: pTR(54);
+      height: pTR(54);
+      background: url(../../assets/czlImg/maclose.png) center center no-repeat;
+      background-size: 100%;
+      left: 50%;
+      bottom: pTR(-80);
+      transform: translateX(-50%);
+    }
+  }
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(350);
+  height: pTR(80);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(80);
+  color: #fff;
+}
+
+.popBox1 {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background: #fff;
+}
+
+.nofang {
+  font-size: pTR(35);
+  text-align: center;
+  padding-top: pTR(100);
+  color: #999;
+}
+
+</style>

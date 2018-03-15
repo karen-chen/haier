@@ -1,0 +1,226 @@
+<template>
+  <div class="draw_body">
+    <div class="draw_main">
+      <section class="lottery">
+        <div class="lottery-box" id="lottery">
+          <div>
+            <span class="btn-start" @click="startDraw"></span>
+            <!--<span class="btn-cold">-->
+            <!--<i>请您等待</i>-->
+            <!--02:58-->
+            <!--</span>-->
+          </div>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-0',unit_index % 12==0?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-1',unit_index % 12==1?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-2',unit_index % 12==2?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-3',unit_index % 12==3?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-4',unit_index % 12==4?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-5',unit_index % 12==5?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-6',unit_index % 12==6?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-7',unit_index % 12==7?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-8',unit_index % 12==8?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-9',unit_index % 12==9?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-10',unit_index % 12==10?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-11',unit_index % 12==11?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+        </div>
+      </section>
+    </div>
+    <div class="gift_btn" @click="showDlgGzh"></div>
+    <div class="rules_main">
+      <h2>活动规则</h2>
+      <P>1. 活动时间2017年1月28日7：00-2017年2
+        月3日 23:59;</P>
+      <p>2.在本活动过程中若通过不正当手段获得奖
+        品，获得的奖品将会作废处理；</p>
+      <p>3.本活动最终申诉日期为2017年2月3日，逾
+        期不再受理</p>
+      <p>4.本活动最终解释权在法律规定的范围内归
+        湖北经济频道所有</p>
+      <p>5.在法律允许的范围内，微摇对以下情形导
+        致的服务中断或受阻不承担责任：（1）受
+        到计算机病毒、木马或其他恶意程序、黑客
+        攻击的破坏（2）用户或微摇的系统、硬件
+        和通信线路出现故障（3）用户操作不当（4）
+        用户通过非微摇授权的方式使用本服务（5）
+        其他微摇无法控制或合理预见的情形。</p>
+    </div>
+    <!--关注公众号弹框-->
+    <div class="pop_mask" v-show="showGzh" id="codeBox" >
+      <div class="pop_box code_box">
+        <h3>请在“海尔电视”公众号<br>
+          菜单“我的券”中进行查看</h3>
+        <span><img src="../../assets/images/pop_code.jpg"></span>
+        <p>长按二维码，即可关注“海尔电视”公众号</p>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+    <!--没中奖弹框-->
+    <div class="pop_mask" v-show="showNoPrize" id="noWin" >
+      <div class="pop_box not_win">
+        <span></span>
+        <p>你与大奖擦肩而过！</p>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+    <!--广告弹框-->
+    <div class="pop_mask" v-show="showAd" id="Advertising" >
+      <div class="pop_box advertising_box">
+        <p>恭喜你获得{{prize_title}}奖品，5秒后即可领取</p>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+    <!--领取成功弹框-->
+    <div class="pop_mask" v-show="showPrize" id="pickUp" >
+      <div class="pop_box pickup_box">
+        <p><span>{{prize_title}}</span>奖品领取成功</p>
+        <div class="btn pick_btn" @click="showDlgGzh">查看奖品使用说明</div>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/page.css';
+  @import '../../assets/scss/pages/_draw.scss';
+  @import '../../assets/scss/pages/_pop.scss';
+</style>
+<script>
+
+  import * as config from '@/lib/config'
+  import {
+    userData,
+    getParam
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return{
+        showAd: false,
+        showPrize:false,
+        showNoPrize:false,
+        showGzh:false,
+        prize_title:'',
+        timer_sid:'',
+        unit_index:0,
+        roll_speed:40,
+        max_step: 60,
+        lottery_result:{}
+      }
+    },
+    created(){
+        var actSid = getParam("actSid");
+        var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/timer/getCurrTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: actSid,
+        },
+        success: function(data) {
+          console.log("after getCurrTimer");
+          console.log(data);
+          if (data.ret == 0) {
+            if(data.timerSid){
+              _this.timerSid = data.timerSid;
+            }
+
+          }else {
+            console.log('getCurrTimer:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('getCurrTimer:', 'fail');
+        }
+      });
+    },
+    methods:{
+      startDraw(){
+        console.log("in startDraw");
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/shake",
+          dataType: "jsonp",
+          data: {
+            openid: userData.openid,
+            timerSid: _this.timerSid
+          },
+          success: function(data) {
+            _this.lottery_result = data;
+            console.log("after shake");
+            //  start roll
+            _this.roll();
+          },
+          error(res) {
+            _this.showDlgNoPrize();
+            console.log('lottery/shake:', 'fail');
+          }
+        });
+      },
+      showDlgGzh(){
+        this.showGzh = true;
+        this.showPrize = false;
+      },
+      showDlgNoPrize(){
+        this.showNoPrize = true;
+      },
+      closeAllpop(){
+        this.showNoPrize = false;
+        this.showAd = false;
+        this.showGzh = false;
+        this.showPrize = false;
+      },
+
+      roll(){
+        this.roll_speed+=20;
+        this.unit_index++;
+        if(this.unit_index== this.max_step){
+          this.parsePrizeResult();
+          return;
+        }
+        setTimeout(this.roll, this.roll_speed)
+      },
+      parsePrizeResult(){
+        var _this = this;
+        var data = this.lottery_result;
+        var isLucky = false;
+        if (data.ret == 0) {
+          console.log(data);
+          if(data.timerPrize){
+            _this.prize_title = data.timerPrize.resourceName;
+            _this.showAd = true;
+            isLucky = true;
+            setTimeout(function(){
+              _this.showPrize = true;
+              _this.showAd = false;
+            }, 5000)
+          }else{
+            _this.showDlgNoPrize();
+          }
+        }else {
+          _this.showDlgNoPrize();
+        }
+        this.adjustUnitIndex(isLucky);
+      },
+      adjustUnitIndex(isLucky){
+        if(isLucky){
+          if(this.unit_index % 3==0){
+            this.unit_index++;
+          }
+        }else{
+          if(this.unit_index % 3==0){
+            this.unit_index+=(3-this.unit_index);
+          }
+        }
+      }
+    }
+  }
+
+</script>

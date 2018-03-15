@@ -1,0 +1,70 @@
+.login_body{
+  width: 100%;
+  height: 100%;
+  @include bg(url("../../assets/images/login_bj.jpg"));
+  .login_logo{
+    @include w(314);
+    margin: 0 auto;
+    img{
+      @include p_t(120);
+      @include p_b(50);
+    }
+  }
+  .login_main{
+    @include m(0,42);
+    @include p(70,100);
+    background-color: #fff;
+    @include radius(10);
+    h2{
+      @include size_color(36,#5e5e5e);
+      text-align: center;
+      @include p_b(40);
+    }
+    .input_list{
+      @include h(70);
+      @include border_b(2,#e4e4e4);
+      @include m_b(35);
+      @include p(0,20);
+      span{
+        display: inline-block;
+        @include ele-box(32,34);
+        vertical-align: text-bottom;
+        &.name{
+          @include bg(url("../../assets/images/login_name.png"));
+        }
+        &.key{
+          @include bg(url("../../assets/images/login_key.png"));
+        }
+      }
+      input{
+        @include ele-box(386,68);
+        @include lin_hei(70);
+        font-size: pTR(30);
+        display: inline-block;
+        @include p(0,35);
+      }
+    }
+    .login_btn{
+      @include ele-box(336,87);
+      @include radius(87);
+      @include size_color(32,#fff);
+      background-color: #13b81a;
+      @include m_t(62);
+      @include m_b(10);
+      margin-left: auto;
+      margin-right: auto;
+      @include lin_hei(87);
+      text-align: center;
+    }
+  }
+  .popTips{
+    background-color: rgba(0,0,0,.6);
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+    @include size_color(24,#fff);
+    @include p(16,30);
+    @include radius(10);
+  }
+}

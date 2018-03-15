@@ -1,0 +1,70 @@
+var locationUrl='http://192.168.10.213:9028';
+
+$(function() {
+    var getParam = function(attr, str) {
+
+      var str = str || window.location.search;
+      var match = RegExp('[?&]' + attr + '=([^&]*)').exec(str)
+
+      return match && decodeURIComponent(match[1].replace(/\+/g, ' '))
+    }
+
+    // 调用后台登录接口,以便记录用户信息
+    var openid = getParam("openid");
+    var nickname = getParam("nickname");
+    var sex = getParam("sex");
+    var province = getParam("province");
+    var city = getParam("city");
+    var country = getParam("country");
+  var subscribe = getParam("subscribe");
+  var headimgurl = getParam("headimgurl");
+  var params ="";
+  if(openid && openid!="null" && nickname && nickname !="null"){
+    params = 'openid='+openid+'&nickname='+nickname+'&sex='+sex+'&province='+province+'&city='+city+'&country='+country+'&headimgurl='+headimgurl + "&subscribe=" + subscribe;
+  }
+
+    $.ajax({
+      url: locationUrl + "/user/login",
+      dataType: "jsonp",
+      data: {
+        openid: openid,
+        nickname: nickname,
+        sex: sex,
+        province: province,
+        city: city,
+        country: country,
+        head: headimgurl
+      },
+      success: function(data) {
+        // console.log(data);
+        if (data.ret === "0") {
+          // 跳转拿到业务页面
+          var backUrl = getParam("backUrl");
+          //console.log("1"+backUrl);
+          // 给backUrl 拼接用户参数后跳转.注意判断#位置
+          var start = '';
+          var end = '';
+          if (backUrl.indexOf("#") > 0) {
+            start = backUrl.substring(0, backUrl.indexOf("#"));
+            end = backUrl.substring(backUrl.indexOf("#"));
+            params += end;
+          } else {
+            start = backUrl;
+          }
+          if (start.indexOf("?") > 0) {
+            start += "&" + params;
+          } else {
+            start += "?" + params;
+          }
+          //console.log("2"+start)
+
+          window.location.href = start;
+        } else {
+
+        }
+      },
+      error(res) {
+
+      }
+    });
+});

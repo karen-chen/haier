@@ -1,0 +1,122 @@
+<template>
+  <div class="code_body">
+    <div class="text-center el-row">
+      <div class="text-center size36 mtb el-col el-col-24">
+        你的售券二维码
+      </div>
+    </div>
+    <div class="text-center el-row">
+      <div class="code_pic" id="qrcode"></div>
+    </div>
+    <div class="text-center size30 el-row">
+      长按二维码保存
+    </div>
+    <div class="text-center size24 el-row">
+      售券链接：<span>{{link}}</span>
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_code.scss';
+  canvas{
+    width: 100%;
+    height: 100%;
+  }
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import '@/assets/js/jquery.qrcode.min'
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    wxHideMenu
+  } from '@/lib/tools';
+  export default {
+    data:function(){
+      return{
+        actSid:'',
+        link:''
+      }
+    },
+
+    created(){
+      var _this = this;
+      getJsSign(function(sign) {
+        wxconfig(sign);
+      })
+      wxHideMenu()
+      wx.ready(function(){
+        wx.showMenuItems({
+          menuList: [
+            'menuItem:favorite',
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+      })
+      _this.actSid = _this.$route.params.activity;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/user/getActSaleInfo",
+        dataType: "jsonp",
+        data: {
+          openid:userData.openid,
+          actSid:this.actSid
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            _this.link = data.data.saleLink;
+            $('#qrcode').qrcode({text: _this.link});
+            console.log(444, _this.link)
+            var mycanvas = document.getElementsByTagName('canvas')[0];
+            var img = _this.convertCanvasToImage(mycanvas);
+           mycanvas.style = "display:none"
+            $('.code_pic').append(img);
+
+          }else if(data.ret == 1){
+            _this.showPop = true
+            _this.msg = "该活动已删除，无法生成售券二维码"
+            setTimeout(function(){
+              _this.showPop = false
+            },2000)
+          }else if(data.ret == 2){
+            _this.showPop = true
+            _this.msg = "该活动已结束，无法生成售券二维码"
+            setTimeout(function(){
+              _this.showPop = false
+            },2000)
+          }else if(data.ret == 3){
+            _this.showPop = true
+            _this.msg = "无法生成售券二维码，请重新绑定"
+            setTimeout(function(){
+              _this.showPop = false
+            },2000)
+          }
+          else if(data.ret == 4){
+            _this.showPop = true
+            _this.msg = "无法售卖该活动的认筹券"
+            setTimeout(function(){
+              _this.showPop = false
+            },2000)
+          } else {
+            console.log('/user/getActSaleInfo:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('/user/getActSaleInfo:', 'fail');
+        }
+      });
+
+    },
+    methods:{
+      convertCanvasToImage:function(canvas) {
+      var image = new Image();
+        console.dir(canvas)
+
+      image.src =canvas.toDataURL("image/png");
+      return image;
+  }
+  }
+  }
+</script>

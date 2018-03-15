@@ -1,0 +1,94 @@
+
+
+.countdown_body{
+  @include bg(url("../../assets/images/countdown_bj.jpg"));
+  position: relative;
+  height: 100%;
+  .top{
+    background: none;
+    @include p_t(6);
+  }
+  .top_right{
+    @include h(76);
+    @include lin_hei(76);
+    width: 70%;
+    position: absolute;
+    right: 0;
+    display: flex;
+    flex-direction: row;
+    ul li{
+      display: inline-block;
+      @include ele-box(50,50);
+      @include m(0,10);
+      @include p(13,0);
+      border-radius: 50%;
+      img{
+        border-radius: 50%;
+      }
+    }
+  }
+  .rule_btn{
+    @include ele-box(106,40);
+    @include bg(url("../../assets/images/rule_btn.png"));
+    position: absolute;
+    @include top(100);
+    @include right(6);
+  }
+  .minegift_btn{
+    @include ele-box(569,133);
+    @include bg(url("../../assets/images/mine_gift1.png"));
+    position: absolute;
+    @include bottom(80);
+    left:50%;
+    transform: translate(-50%,0);
+  }
+  .title_h2{
+    @include size_color(60,#fff);
+    text-align: center;
+    max-width: 73%;
+    @include m_t(230);
+    margin-right: auto;
+    margin-left: auto;
+    @include lin_hei(60);
+    word-wrap: break-word;
+    word-break: break-all;
+  }
+  .count_main{
+    @include ele-box(619,304);
+    @include bg(url("../../assets/images/time_bj.png"));
+    position: absolute;
+    @include top(600);
+    left:50%;
+    transform: translate(-50%,0);
+    h2{
+      @include p_t(94);
+      @include size_color(30,#333);
+    }
+    h3{
+      @include p_t(150);
+      @include size_color(40,#333);
+    }
+    .count_box{
+      @include size_color(28,#333);
+      @include m_t(20);
+      span{
+        display: inline-block;
+        @include ele-box(70,80);
+        @include lin_hei(80);
+        @include size_color(48,#fff);
+        @include bg(url("../../assets/images/count_span.png"));
+        @include m_r(10);
+      }
+    }
+  }
+}
+.biandan{animation: fadeIn 1s 1}
+
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0; /*初始状态 透明度为0*/
+  }
+  100% {
+    opacity: 1; /*结尾状态 透明度为1*/
+  }
+}

@@ -1,0 +1,458 @@
+<template>
+<div class="activity_body">
+  <div class="commentaries_icon" @click="commentariesBtn(obj)"><span></span></div>
+  <div class="activity_main m20" v-show="showMain">
+    <div class="el-row">
+      <div class="el-col el-col-3">
+        <div class="pic_logo"><img :src="imageServerUrl+logo"></div>
+      </div>
+      <div class="el-col el-col-21"><p>{{obj.name}}</p></div>
+    </div>
+    <div class="el-row p0" v-show="obj.showAddress">
+      <div class="el-col el-col-2" @click="navigationBtn(obj)">
+        <div class="pic_icon"><img src="../../assets/images/icon_address.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>{{obj.address}}</span></div>
+    </div>
+    <a :href="tel" class="el-row p0" v-show="obj.showPhone">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_phone.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>{{obj.phone}}</span></div>
+    </a>
+    <div class="el-row p0" v-show="obj.showTime">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_time.png"></div>
+      </div>
+      <div class="el-col el-col-22"><span>营业时间：{{obj.openTime}}</span></div>
+    </div>
+    <div class="el-row p0" v-show="obj.showPic">
+      <div class="el-col el-col-2">
+        <div class="pic_icon"><img src="../../assets/images/icon_pic.png"></div>
+      </div>
+      <div class="el-col el-col-22">
+        <div class="el-row p0">
+          <div class="el-col el-col-5" v-for="pic in obj.bannerItemList" @click="openpic(pic,obj.bannerItemList)">
+            <div class="shop_pic"><img :src="imageServerUrl + pic.imgUrl"></div>
+          </div>
+         <!-- <div class="el-col el-col-5">
+            <div class="shop_pic"><img src="../../assets/images/card_logo_01.jpg"></div>
+          </div>-->
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="activity_main m20" v-show="obj.showDescription">
+    <div class="el-row">
+      <div class="el-col el-col-24"><h3>活动信息</h3> <span>{{obj.description}}</span></div>
+    </div>
+  </div>
+  <div class="activity_main" v-show="showMain">
+    <div class="pt43 el-row">
+      <div class="el-col el-col-24"><h3>用户评论（<b>{{total}}</b>）</h3>
+      </div>
+    </div>
+    <div class="commentaries_list" v-for="item in rows">
+      <div class="pb25 el-row">
+        <div class="el-col el-col-3">
+          <div class="comment_pic"><img :src="item.icon"></div>
+        </div>
+        <div class="el-col el-col-21">
+          <div class="mt20 el-row">
+            <div class="el-col el-col-14 word_hide">
+             {{item.nickname}}
+            </div>
+            <div class="text-right el-col el-col-10">{{item.dateAudit}}</div>
+          </div>
+          <div class="pbb25 el-row">
+            <div class="el-col el-col-24 text-word">
+              {{item.commentContent}}
+            </div>
+          </div>
+          <div class="pb0 el-row">
+            <div class="el-col">
+              <div class="comment_picture" v-for="img in item.imgList" @click="openImage(img,item.imgList)"><img :src="img.imgPath"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="pop_mask" style="display: none;">
+    <div class="el-row">
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+      <div class="el-col el-col-12"><img src="../../assets/images/card_logo_01.jpg"></div>
+    </div>
+  </div>
+  <div class="not_find" v-show="showSeach">
+    <span></span>
+    <p>该门店不存在</p>
+  </div>
+  <div class="pop_comment" v-show="showPop">
+    {{msg}}
+  </div>
+</div>
+</div>
+</template>
+
+<script>
+  import {
+    userData,
+    formatDate,
+    wxHideMenu,
+    wxShare,
+    getJsSign,
+    wxconfig,
+    getParam
+  } from '@/lib/tools';
+  import * as config from '@/lib/config'
+
+  export default {
+    data:function(){
+      return{
+        imageServerUrl: config.imageServerUrl,
+        shopId:'',
+        obj:[],
+        total:'',
+        rows:[],
+        size:10,
+        page:-1,
+        imgList:[],
+        logo:'',
+        isCommentLoading:false,
+        isGotoComent: false,
+        link:"",
+        showSeach:false,
+        orgId:"",
+        showPop:false,
+        msg:"",
+        tel:' ',
+        showMain:true,
+        code:''
+      }
+    },
+    mounted:function(){
+      var self=this;
+
+      $(window).scroll(function(){
+        var scrollTop = $(this).scrollTop();    //滚动条距离顶部的高度
+        var scrollHeight = $(document).height();   //当前页面的总高度
+        var clientHeight = $(this).height();    //当前可视的页面高度
+        if(scrollTop + clientHeight >= scrollHeight){
+          if(self.page < 0){
+            return
+          }else {
+            self.getCommentList();
+          }
+        }
+      })
+    },
+  created(){
+    var _this = this;
+
+    if(_this.$route.params.commentContentJsonStr){
+      var _item = {};
+      if(!userData.headimgurl || userData.headimgurl == "/0"){
+        _item.icon = config.default_icon
+      }else {
+        _item.icon=userData.headimgurl;
+      }
+      _item.nickname=userData.nickname
+      _item.dateAudit=formatDate(new Date(),'yyyy/MM/dd hh:mm:ss')
+      _item.commentContent=JSON.parse(_this.$route.params.commentContentJsonStr).text;
+      var tempImgList=JSON.parse(_this.$route.params.commentContentJsonStr).imageList;
+      if(tempImgList&& tempImgList.length>0){
+        _item.imgList=[];
+        for(var i =0;i<tempImgList.length;i++){
+          _item.imgList.push({"imgPath":tempImgList[i]})
+        }
+      }
+      _this.rows.push(_item);
+    }
+    getJsSign(function(sign) {
+      wxconfig(sign);
+      wxHideMenu()
+      wx.ready(function () {
+        wx.showMenuItems({
+          menuList: [
+            "menuItem:share:appMessage",//发送给朋友
+            'menuItem:favorite',
+            'menuItem:share:email',
+            'menuItem:share:qq', //分享到QQ
+            'menuItem:share:weiboApp', //分享到Weibo
+            'menuItem:share:QZone', //分享到QQ空间
+            "menuItem:share:timeline", //分享到朋友圈
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+      })
+    })
+    this.code = localStorage.getItem('shopcode')
+    console.log(1111,this.code)
+/*    _this.shopId = _this.$route.params.shoplist;*/
+    //存储接口传参所需数据
+    if (this.$route.params.shoplist) {
+      localStorage.setItem('shopId', this.$route.params.shoplist)
+    }else if(getParam("shopId")){
+      //this.shopId = getParam("shopId")
+      localStorage.setItem('shopId', getParam("shopId"))
+    }
+    this.shopId = localStorage.getItem('shopId')
+    var shareId = this.shopId
+    /*商铺详情*/
+    this.getShopDetail()
+    /*评论总数*/
+    this.getCommentTotal()
+    /*评论列表*/
+    this.getCommentList()
+    window.addEventListener("popstate", function(e) {
+        //alert("我监听到了浏览器的返回按钮事件啦");
+      // 根据自己的需求实现自己的功能
+      if(location.hash == "#/shop-list/comment"){
+        if(window.localStorage.getItem("isGotoComment")=="yes"){
+
+        }else{
+          _this.$router.push({name:'Shop'})
+        }
+      }
+
+    }, false);
+  },
+    methods:{
+      getCommentTotal(){
+        var _this = this
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/comment/getCommentTotal",
+          dataType: "jsonp",
+          data: {
+            shopId:this.code
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              _this.total=data.total;
+            }else {
+              console.log('/comment/getCommentTotal:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/comment/getCommentTotal:', 'fail');
+          }
+        });
+      },
+
+      getShopDetail(){
+        var _this = this
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/shop/getShopDetail",
+          dataType: "jsonp",
+          data: {
+            shopId:this.shopId
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              _this.obj=data.obj;
+              _this.code = data.obj.code;
+              localStorage.setItem('shopcode',_this.code)
+              _this.logo = data.obj.merchant.merchantLogo
+              _this.orgId = _this.obj.merchant.organizationId
+              if(_this.obj.address == ""){
+                _this.obj.showAddress = false
+              }else {
+                _this.obj.showAddress = true
+              }
+              if(_this.obj.phone  == ""){
+                _this.obj.showPhone   = false
+              }else {
+                _this.obj.showPhone   = true
+                _this.tel = "tel:" + _this.obj.phone
+              }
+              if(_this.obj.openTime  == ""){
+                _this.obj.showTime  = false
+              }else {
+                _this.obj.showTime  = true
+              }
+              if(_this.obj.description   == ""){
+                _this.obj.showDescription = false
+              }else {
+                _this.obj.showDescription = true
+              }
+              if(_this.obj.bannerItemList  == [] || _this.obj.bannerItemList.length<=0){
+                _this.obj.showPic = false
+              }else {
+                _this.obj.showPic = true
+              }
+              localStorage.setItem('orgId',_this.orgId)
+              document.title = _this.obj.name
+              config.wxShareData.title = _this.obj.name
+              config.wxShareData.desc = _this.obj.name
+              config.wxShareData.imgUrl = _this.imageServerUrl + _this.logo;
+              config.wxShareData.link = config.cdnUrl + '/index.html?shopId=' + _this.shopId + '#/shopdatail';
+              wxShare()
+            }else if(data.ret == -1){
+              _this.showSeach = true
+              _this.showMain = false
+              _this.obj.showDescription = false
+      /*        setInterval(function(){
+                _this.$router.push({
+                  name: 'Shop',
+                })
+              },5000)*/
+            }
+            else {
+              console.log('shop/getShopDetail:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('shop/getShopDetail:', 'fail');
+          }
+        });
+      },
+      getCommentList(){
+        var _this = this;
+        if(_this.isCommentLoading){
+          return;
+        }
+        console.log({
+          shopId:this.shopId,
+          size:this.size,
+          pn:_this.page
+        });
+        _this.isCommentLoading = true;
+        $.ajax({
+          type:"GET",
+          url:config.locationUrl + "/comment/getCommentList",
+          dataType:"jsonp",
+          data:{
+            shopId:this.code,
+            size:this.size,
+            pn:_this.page
+          },
+          success:function(data){
+            if(data.ret == 0){
+              _this.page = data.data.page - 1;
+
+              if(data.data.rows && data.data.rows.length>0){
+                data.data.rows.forEach(function(row){
+                  if(!row.icon || row.icon=="/0"){
+                    row.icon = config.default_icon
+                  }
+                  //debugger
+                  row.dateAudit = formatDate(new Date(row.dateAudit),'yyyy/MM/dd hh:mm:ss')
+                  _this.rows.push(row);
+                  if( row.commentType == 3){
+                    $.ajax({
+                      type: "GET",
+                      url: config.locationUrl + "/comment/getCommentRelation",
+                      dataType: "jsonp",
+                      data: {
+                        commentId:row.sid
+                      },
+                      success: function(dataImg) {
+                        if (dataImg.ret == 0) {
+                          _this.rows.forEach(function(rowimg,index){
+                            if(row.sid == rowimg.sid){
+                              rowimg.imgList=[];
+                              rowimg.imgList=dataImg.relationList[0].imgList;
+                              //_this.rows.push(rowimg)
+                              _this.rows.splice(index,1, rowimg);
+                            }
+                          })
+                        }else {
+                          console.log('/comment/getCommentRelation:', 'ret != 0');
+                        }
+
+                      },
+                      error(res) {
+                        console.log('/comment/getCommentRelation:', 'fail');
+                      }
+                    });
+                  }
+
+                })
+              }
+            }else {
+              console.log('/comment/getCommentList:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/comment/getCommentList:', 'fail');
+          },
+          complete(){
+            _this.isCommentLoading = false;
+          }
+        })
+      },
+      commentariesBtn(obj){
+        var _this = this
+        window.localStorage.setItem("isGotoComment", 'yes')
+        _this.getShopDetail()
+        if(obj.sid){
+          _this.$router.push({
+            name: 'Comment',
+            params:{
+              code:_this.code,
+            }
+          })
+        }
+      },
+      openImage(img,_imgList){
+        var _urls = [];
+        _imgList.forEach(function(_img){
+          _urls.push(_img.imgPath)
+        })
+        wx.ready(function(){
+          wx.previewImage({
+            current: img.imgPath, // 当前显示图片的http链接
+            urls: _urls // 需要预览的图片http链接列表
+          });
+        })
+      },
+      openpic(pic,_bannerItemList){
+        var _this = this
+        var _urls = [];
+        _bannerItemList.forEach(function(_pic){
+          var piclist = _this.imageServerUrl+_pic.imgUrl
+          _urls.push(piclist)
+        })
+        wx.ready(function(){
+          wx.previewImage({
+            current: _this.imageServerUrl+pic.imgUrl, // 当前显示图片的http链接
+            urls: _urls // 需要预览的图片http链接列表
+          });
+        })
+      },
+      navigationBtn(obj){
+        //console.log(item)
+        wx.ready(function(){
+          wx.openLocation({
+            latitude: Number(obj.latitude), // 纬度，浮点数，范围为90 ~ -90
+            longitude: Number(obj.longitude), // 经度，浮点数，范围为180 ~ -180。
+            name: obj.name, // 位置名
+            address: obj.address, // 地址详情说明
+            scale: 15, // 地图缩放级别,整形值,范围从1~28。默认为最大
+            infoUrl: '' // 在查看位置界面底部显示的超链接,可点击跳转
+          });
+        })
+      }
+    }
+  }
+</script>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_activity.scss';
+  .pop_comment{
+    background-color: rgba(0,0,0,.6);
+    max-width: 80%;
+  @include p(10,20);
+  @include radius(10);
+  @include size_color(26,#fff);
+    position: fixed;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+</style>
+

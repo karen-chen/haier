@@ -1,0 +1,9 @@
+import card from './getCard';
+import confess from './getConfess';
+import live from './getLive'
+import navigation from './getNavigation'
+import gprize from './getprize'
+
+const api = Object.assign({}, card, confess, live, navigation, gprize);
+
+export default api;

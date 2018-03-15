@@ -1,0 +1,227 @@
+.text-center{
+  text-align: center;
+}
+.shake_body{
+  background-color: #fefbeb;
+  @include size_color(28,#ceab71);
+  height: 100%;
+  .top{
+    width: 100%;
+    @include bg(url("../../assets/images/shake_top.jpg"));
+    @include size_color(21,#fff);
+    @include h(74);;
+    span{
+      @include size_color(24,#fff);
+    }
+  }
+  .broadcast_row2{
+    @include h(75);
+    @include lin_hei(75);
+    .broadcast2{
+      overflow: hidden;
+      ul li{
+        display: inline-block;
+        @include size_color(28,#fff);
+        @include m-r(50);
+        span{
+          @include ele-box(50,50);
+          border-radius: 50%;
+          display: inline-block;
+          @include m-r(20);
+          img{border-radius: 50%;}
+        }
+        b{
+          @include m-l(10);
+        }
+      }
+    }
+  }
+  .title{
+    @include ele-box(480,87);
+    @include bg(url("../../assets/images/shake_title.png"));
+    display: inline-block;
+    @include m-t(73);
+    @include m_b(35);
+  }
+  .shake_main{
+    @include ele-box(528,393);
+    @include bg(url("../../assets/images/shake_bj.png"));
+    display: inline-block;
+    @include m_b(90);
+    @include m_t(70);
+    position: relative;
+    span{
+      @include ele-box(248,280);
+      @include bg(url("../../assets/images/shake_hands.png"));
+      position: absolute;
+      @include bottom(60);
+      @include left(153);
+    }
+  }
+  .gifts_title{
+    @include ele-box(551,34);
+    @include bg(url("../../assets/images/gifts_title.png"));
+    display: inline-block;
+    @include m_b(55);
+  }
+  .gigts_list{
+    max-height:pTR(300);
+    overflow-y: auto;
+    @include p(0,27);
+    @include size_color(28,#ceab71);
+    .el-row{
+      @include m_b(20);
+    }
+    .el-col-5{
+      text-align: right;
+    }
+  }
+  .marquee_main{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 72%;
+    position: absolute;
+    right: 0;
+    overflow: hidden;
+    .marquee_list{
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      animation: moveLeft 6s infinite;
+      white-space : nowrap;
+      @include m-r(20);
+      .pic{
+        @include ele-box(45,45);
+        border-radius: 50%;
+        img{border-radius: 50%;}
+      }
+      p{
+        span{
+          display: inline-block;
+          @include p(0,10);
+        }
+      }
+    }
+  }
+}
+.tada{
+  -webkit-animation-name:tada;
+  -webkit-animation-duration:1s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-delay: 0s;/*动画延迟时间*/
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-direction: normal ;
+
+}
+@-webkit-keyframes tada {
+  0% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  10%, 20% {
+    -webkit-transform: scale3d(.9, .9, .9) rotate3d(0, 0, 1, -3deg);
+    transform: scale3d(.9, .9, .9) rotate3d(0, 0, 1, -3deg);
+  }
+
+  30%, 50%, 70%, 90% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+    transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+  }
+
+  40%, 60%, 80% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+    transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+  }
+
+  100% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes tada {
+  0% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+
+  10%, 20% {
+    -webkit-transform: scale3d(.9, .9, .9) rotate3d(0, 0, 1, -3deg);
+    transform: scale3d(.9, .9, .9) rotate3d(0, 0, 1, -3deg);
+  }
+
+  30%, 50%, 70%, 90% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+    transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, 3deg);
+  }
+
+  40%, 60%, 80% {
+    -webkit-transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+    transform: scale3d(1.1, 1.1, 1.1) rotate3d(0, 0, 1, -3deg);
+  }
+
+  100% {
+    -webkit-transform: scale3d(1, 1, 1);
+    transform: scale3d(1, 1, 1);
+  }
+}
+@-webkit-keyframes moveLeft {
+  from{left: 100%}
+to{left: -100%}
+}
+
+.barrage_main {
+  width: 100%;
+  @include h(60);
+  background-color: #d81922;
+  @include lin_hei(60);
+  position: fixed;
+  @include bottom(0);
+  @include left(0);
+}
+
+.barrage_item {
+  position: absolute;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  animation: moveLeft 8s linear forwards;
+}
+
+.pic {
+  @include ele-box(35, 35);
+  border-radius: 50%;
+  @include m_r(10);
+}
+
+.pic img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.barrage_box {
+  @include size_color(25, #fff);
+  display: flex;
+  flex-direction: row;
+}
+
+.barrage_nickname {
+
+  @include m_r(10);
+}
+
+/**定义从右边向左边的移动的动画**/
+@keyframes moveLeft {
+  from {
+    left: 100%;
+  }
+
+  to {
+    left: -100%;
+  }
+}

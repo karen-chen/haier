@@ -1,0 +1,717 @@
+<template>
+  <div class="pcphone">
+    <!-- 等待开始界面 -->
+    <div class="startbox" v-show="startbox">
+      <div class="pctitle"></div>
+      <div class="startMa">
+        <div class="picleft">
+          <img v-for="item in rowslistleft" :src="item.head" class="personleft">
+        </div>
+        <div class="picma">
+          <div class="img" id="qrcode_img"></div>
+          <div class="showbox">
+            已有 <span>{{amount}}</span> 人加入
+          </div>
+        </div>
+        <div class="picright">
+          <img v-for="(item,index) in rowslistright" :src="item.head" class="personleft">
+        </div>
+      </div>
+      <div class="tipsbox">等待主持人口令，比赛开始后用最快速度摇动手机</div>
+    </div>
+    <!-- 赛道 -->
+    <div class="trackbox" v-show="trackbox">
+      <div class="tracktitle">
+        <i></i>
+        <span></span>
+      </div>
+      <ul class="trackbg">
+        <li v-for="(item,index) in rankList"><img :style="'left:'+item.speed+'%;'" :src="item.user.head"></li>
+      </ul>
+    </div>
+    <!-- 比赛排行榜 -->
+    <div class="rankbox" v-show="rankbox">
+      <div class="rankTitle">
+        <h2>本轮比赛排行榜</h2>
+        <p>获奖人数{{amount}}人</p>
+        <span></span>
+      </div>
+      <div class="rankbody">
+        <ul>
+          <li v-for="(item,index) in rankList1" :key="index">
+            <div :class="[ index==0? 'num1' : 'num']" v-show="index==0">
+              <img :src="item.user.head">
+              <p>{{item.user.nickname}}</p>
+              <span v-show="index==0 || index==1 || index==2">第{{index+1}}名</span>
+            </div>
+            <div :class="[ index==1? 'num2' : 'num']" v-show="index==1">
+              <img :src="item.user.head">
+              <p>{{item.user.nickname}}</p>
+              <span v-show="index==0 || index==1 || index==2">第{{index+1}}名</span>
+            </div>
+            <div :class="[ index==2? 'num3' : 'num']" v-show="index==2">
+              <img :src="item.user.head">
+              <p>{{item.user.nickname}}</p>
+              <span v-show="index==0 || index==1 || index==2">第{{index+1}}名</span>
+            </div>
+            <div class="num" v-show="index!=0 && index!=1 && index!=2">
+              <img :src="item.user.head">
+              <p>{{item.user.nickname}}</p>
+              <span>{{index+1}}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- 倒计时 -->
+    <div class="pc-countdown" v-show="countdown">
+      <div class="countdownBg">
+        <span class="bounceIn">{{leftInMs}}</span>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  getParam,
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+export default {
+  data() {
+    return {
+      startbox: true,
+      trackbox: false,
+      rankbox: false,
+      countdown: false,
+      actSid: '',
+      timerSid: '',
+      t_countdown: null,
+      amount: 0,
+      rowslistleft: [],
+      rowslistright: [],
+      rankList: [],
+      rankList1: [],
+      targetTime: 0,
+      erweima: config.cdnUrl,
+      leftInMs: -1,
+      link: '',
+      t_ranklist: null
+    }
+  },
+  created() {
+    //订单ID
+    var _this = this;
+    var t_checkSpeedTimer = setInterval(function() {
+      _this.checkSpeedTimer();
+    }, 2000);
+    document.title = "摇一摇拼手速";
+    _this.actSid = getParam('actSid');
+    _this.link = _this.erweima + '/index.html?actSid=' + _this.actSid + '#/runbox';
+    //生成二维码
+    _this.prodaMa();
+
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+      _this.t_ranklist = setInterval(function() {
+        _this.getRankList();
+      }, 1000)
+  },
+
+  methods: {
+    //拉取时段接口
+    checkSpeedTimer() {
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/timer/checkSpeedTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: _this.actSid,
+        },
+        success: function(data) {
+
+          if (data.ret == 0) {
+            localStorage.setItem('timerSid', data.timerSid);
+            _this.targetTime = data.targetTime;
+            if (data.flagStatus == '2') {
+              _this.startbox = true;
+              _this.trackbox = false;
+              _this.rankbox = false;
+              _this.countdown = false;
+              //参与人数头像
+              _this.getParticipantList();
+              //参与人数总数
+              _this.getParticipantAmount();
+            }
+            if (data.flagStatus == '3') {
+
+              if (data.leftInMs > 1000) {
+                _this.leftInMs = Math.floor(data.leftInMs / 1000)
+                _this.startCountDown();
+                _this.rankList.length=0;
+              } else {
+                if (!_this.shakeBox) {
+                 _this.toSaidao();
+                }
+              }
+
+              // if (_this.leftInMs == -1 && data.leftInMs > 0) {
+              //   _this.leftInMs = Math.floor(data.leftInMs / 1000);
+              //   _this.countdown = true;
+              //   _this.t_countdown = setInterval(function() {
+              //     if (_this.leftInMs < 1) {
+              //       _this.toSaidao();
+              //     }
+              //     _this.leftInMs--
+              //   }, 1000);
+              // } else if (data.leftInMs == 0) {
+              //   if (!_this.trackbox) {
+              //     _this.toSaidao();
+              //   }
+              // }
+
+
+            }
+          }
+          if (data.ret === "-2") {
+            // if (localStorage.getItem('timerSid')) {
+            //   //活动已经结束 调出排行榜
+
+            // }
+          }
+
+        },
+      });
+    },
+
+
+    startCountDown() {
+      var _this = this;
+      clearTimeout(_this.t_countdown);
+      if (_this.leftInMs == 0) {
+        _this.countdown = false;
+        return;
+      }
+      _this.countdown = true;
+      _this.t_countdown = setTimeout(function() {
+        _this.leftInMs--;
+        _this.startCountDown();
+      }, 1000);
+    },
+
+
+    //生成二维码
+
+    prodaMa() {
+      var _this = this;
+      clearInterval(this.t_checkSpeedTimer);
+      $.ajax({
+        type: "GET",
+        url: config.authUrl + "/shorturl/long2short",
+        dataType: "jsonp",
+        data: {
+          appId: config.appid,
+          long_url: _this.link
+        },
+        success: function(data) {
+          console.log("after createQcode");
+          console.log(data);
+          if (data.errcode == 0) {
+            //text任意内容
+            $("#qrcode_img").qrcode({
+              width: 300,
+              height: 300,
+              render: "canvas", //table/canvas方式
+              text: data.short_url
+            });
+          } else {
+            console.log('createQcode:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('createQcode:', 'fail');
+        }
+      });
+    },
+
+
+    //参与人物头像
+    getParticipantList() {
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/speed_act/getParticipantList",
+        dataType: "jsonp",
+        data: {
+          timerSid: localStorage.getItem('timerSid'),
+        },
+        success: function(data) {
+          _this.rowslistright = [];
+          _this.rowslistleft = [];
+          if (data.ret == 0) {
+            if (data.rows) {
+              data.rows.forEach((item, index) => {
+                if (index % 2 == 0) {
+                  _this.rowslistleft.push(item);
+                } else {
+                  _this.rowslistright.push(item);
+                }
+              })
+            }
+            console.log(_this.rowslistright);
+          }
+        },
+      });
+    },
+
+    //参与人总数
+    getParticipantAmount() {
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/speed_act/getParticipantAmount",
+        dataType: "jsonp",
+        data: {
+          timerSid: localStorage.getItem('timerSid'),
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            _this.amount = data.amount;
+          }
+        },
+      });
+    },
+
+    //赛道赛跑
+    getRankList() {
+      var _this = this;
+      if(!_this.trackbox){
+return;
+      }
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/speed_act/getRankList",
+        dataType: "jsonp",
+        data: {
+          timerSid: localStorage.getItem('timerSid'),
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            if (data.rank) {
+              data.rank.forEach((item, index) => {
+                item.speed = Math.min(item.total / _this.targetTime * 100, 100);
+              })
+              _this.rankList = data.rank.slice(0, 10);
+              _this.rankList1 = data.rank;
+              console.log(_this.rankList)
+            }
+          }
+          if (data.end == 1) {
+            _this.startbox = false;
+            _this.trackbox = false;
+            _this.rankbox = true;
+            _this.countdown = false;
+            // _this.getRankList();
+            _this.getParticipantAmount();
+          }
+        },
+      });
+    },
+
+    //调出赛道
+    toSaidao() {
+      var _this = this;
+      clearInterval(this.t_countdown);
+      // clearInterval(this.t_ranklist);
+      _this.startbox = false;
+      _this.trackbox = true;
+      _this.rankbox = false;
+      _this.countdown = false;
+
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../assets/scss/_mixins.scss';
+
+.pcphone {
+  width: 100%;
+  min-height: 100%;
+  background: url(../assets/czlImg/pcBg.jpg) 0 0 no-repeat;
+  background-size: cover;
+  overflow: hidden;
+  .startbox {
+    padding-top: pTR(126);
+    .pctitle {
+      width: pTR(1033);
+      height: pTR(138);
+      background: url(../assets/czlImg/pctitle.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+    }
+  }
+  .startMa {
+    padding-top: pTR(80);
+    display: flex;
+    justify-content: center;
+    .picma {
+      width: 300px;
+      height: 300px;
+      position: relative;
+      margin: 0 pTR(60);
+      .img {
+        width: 100%;
+        height: 100%;
+        background: #fff;
+      }
+      .showbox {
+        position: absolute;
+        bottom: pTR(-115);
+        left: 50%;
+        transform: translateX(-50%);
+        width: pTR(583);
+        height: pTR(115);
+        background: url(../assets/czlImg/showBox.png) 0 0 no-repeat;
+        background-size: 100%;
+        text-align: center;
+        line-height: pTR(80);
+        color: #836d27;
+        font-size: pTR(38);
+        span {
+          color: #d84046;
+        }
+      }
+    }
+    .picleft {
+      width: pTR(360);
+      height: pTR(100);
+      padding-right: pTR(20);
+      margin-top: pTR(150);
+      text-align: right;
+      overflow: hidden;
+      .personleft {
+        display: inline-block;
+        width: pTR(100);
+        height: pTR(100);
+        border-radius: 50%;
+        border: pTR(4) solid #fff;
+        margin-right: pTR(-20);
+      }
+      .personleft:last-child {
+        margin-right: 0;
+      }
+    }
+    .picright {
+      overflow: hidden;
+      width: pTR(360);
+      height: pTR(100);
+      margin-top: pTR(150);
+      text-align: left;
+      .personleft {
+        display: inline-block;
+        width: pTR(100);
+        height: pTR(100);
+        border-radius: 50%;
+        border: pTR(4) solid #fff;
+        margin-left: pTR(-20);
+      }
+      .personleft:first-child {
+        margin-left: 0;
+      }
+    }
+  }
+  .tipsbox {
+    margin: pTR(160) auto 0;
+    width: pTR(1001);
+    height: pTR(100);
+    background: url(../assets/czlImg/wordBox.png) 0 0 no-repeat;
+    background-size: 100%;
+    line-height: pTR(100);
+    text-align: center;
+    color: #fffbcc;
+    font-size: pTR(36);
+  }
+  .pc-countdown {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-left: pTR(-1035);
+    margin-top: pTR(-1000);
+    width: pTR(2000);
+    height: pTR(1909);
+    background: url(../assets/czlImg/pennants.png) 0 0 no-repeat;
+    background-size: 100%;
+    .countdownBg {
+      width: pTR(429);
+      height: pTR(429);
+      background: url(../assets/czlImg/flageBg.png) 0 0 no-repeat;
+      background-size: 100%;
+      position: absolute;
+      top: pTR(800);
+      left: 50%;
+      transform: translateX(-42%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      span {
+        font-size: pTR(280);
+        color: #f3efb1;
+      }
+    }
+  }
+  .trackbox {
+    padding-top: pTR(77);
+    .tracktitle {
+      display: flex;
+      justify-content: center;
+      span {
+        width: pTR(541);
+        height: pTR(145);
+        background: url(../assets/czlImg/tracktitle.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      i {
+        width: pTR(94);
+        height: pTR(129);
+        background: url(../assets/czlImg/pchand.png) 0 0 no-repeat;
+        background-size: 100%;
+        margin-top: pTR(-20);
+        margin-right: pTR(30);
+      }
+    }
+    .trackbg {
+      width: pTR(1240);
+      height: pTR(786);
+      background: url(../assets/czlImg/track.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+      padding: pTR(13) pTR(128) pTR(15) pTR(77);
+      overflow: hidden;
+      li {
+        width: 100%;
+        height: pTR(76);
+        position: relative;
+        img {
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: pTR(73);
+          height: pTR(73);
+          transition: all 2s;
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+  .rankbox {
+
+    .rankTitle {
+      width: pTR(939);
+      margin: 0 auto;
+      padding: pTR(65) 0 pTR(57);
+      color: #fff;
+      h2 {
+        padding-top: pTR(10);
+        font-size: pTR(52);
+      }
+      p {
+        padding-top: pTR(20);
+        font-size: pTR(32);
+      }
+      span {
+        display: block;
+        width: pTR(180);
+        height: pTR(353);
+        background: url(../assets/czlImg/pc-badge.png) 0 0 no-repeat;
+        background-size: 100%;
+        position: absolute;
+        top: pTR(-90);
+        left: 50%;
+        transform: translateX(-42%);
+      }
+    }
+    .rankbody {
+      width: pTR(1199);
+      margin: 0 auto;
+      position: relative;
+      height: pTR(780);
+      overflow-y: scroll;
+      overflow-X: auto;
+      z-index: 99;
+      ul {
+        li {
+          width: pTR(939);
+          height: pTR(76);
+          display: flex;
+          align-items: center;
+
+          position: relative;
+          margin: 0 auto pTR(2);
+          img {
+            width: pTR(76);
+            height: pTR(76);
+            border-radius: 50%;
+          }
+          p {
+            color: #8d7524;
+            font-size: pTR(26);
+            padding: pTR(10) 0 0 pTR(20);
+          }
+        }
+
+        .num {
+          width: pTR(939);
+          height: pTR(76);
+          background: url(../assets/czlImg/linebox.png) 0 0 no-repeat;
+          background-size: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .num1 {
+          width: pTR(939);
+          height: pTR(76);
+          background: url(../assets/czlImg/champion-bg.png) 0 0 no-repeat;
+          background-size: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        .num1:after {
+          content: '';
+          position: absolute;
+          right: pTR(50);
+          top: 50%;
+          transform: translateY(-50%);
+          background: url(../assets/czlImg/champion.png) 0 0 no-repeat;
+          background-size: 100%;
+          -webkit-background-size: 100%;
+          width: pTR(187);
+          height: pTR(50);
+        }
+        .num2 {
+          width: pTR(939);
+          height: pTR(76);
+          background: url(../assets/czlImg/second-bg.png) 0 0 no-repeat;
+          background-size: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .num2:after {
+          content: '';
+          position: absolute;
+          right: pTR(50);
+          top: 50%;
+          transform: translateY(-50%);
+          background: url(../assets/czlImg/second.png) 0 0 no-repeat;
+          background-size: 100%;
+          -webkit-background-size: 100%;
+          width: pTR(138);
+          height: pTR(51);
+        }
+
+
+        .num3 {
+          width: pTR(939);
+          height: pTR(76);
+          background: url(../assets/czlImg/bronze-bg.png) 0 0 no-repeat;
+          background-size: 100%;
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .num3:after {
+          content: '';
+          position: absolute;
+          right: pTR(50);
+          top: 50%;
+          transform: translateY(-50%);
+          background: url(../assets/czlImg/bronze.png) 0 0 no-repeat;
+          background-size: 100%;
+          -webkit-background-size: 100%;
+          width: pTR(87);
+          height: pTR(50);
+        }
+        span {
+          display: block;
+          position: absolute;
+          width: pTR(100);
+          left: pTR(-110);
+          color: #fff29b;
+          font-size: pTR(32);
+          text-align: right;
+        }
+      }
+    }
+  }
+}
+
+@keyframes bounceIn {
+  from,
+  20%,
+  40%,
+  60%,
+  80%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  }
+
+  0% {
+    opacity: 0;
+    transform: scale3d(.3, .3, .3);
+  }
+
+  20% {
+    transform: scale3d(1.1, 1.1, 1.1);
+  }
+
+  40% {
+    transform: scale3d(.9, .9, .9);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale3d(1.03, 1.03, 1.03);
+  }
+
+  80% {
+    transform: scale3d(.97, .97, .97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.bounceIn {
+  -webkit-animation-name: bounceIn;
+  -webkit-animation-duration: 1s;
+  -webkit-animation-timing-function: linear;
+  -webkit-animation-delay: 0s;
+  /*动画延迟时间*/
+  -webkit-animation-iteration-count: infinite;
+  -webkit-animation-direction: normal;
+}
+
+</style>

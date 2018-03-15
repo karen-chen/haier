@@ -1,0 +1,120 @@
+/*@font-face {
+  font-family: "HanYiLingheart";
+  src:url('../../assets/fonts/hanyilingxintijian_1.TTF')
+}*/
+
+.screen_body{
+  @include bg(url("../../assets/images/screen_bj.jpg"));
+  width: 100%;
+  height: 100%;
+  position: relative;
+  .title_h2{
+    position: absolute;
+    @include top(230);
+    left: 50%;
+    transform: translate(-50%,0);
+    max-width: 72%;
+    overflow: hidden;
+   @include lin_hei(110);
+    @include size_color(110,#fff);
+    font-family:"HanYiLingheart";
+    font-weight: 700;
+    white-space : nowrap;
+  }
+  .erweima_pic{
+    width: 12.5%;
+    position: absolute;
+    @include top(52);
+    @include right(52);
+  }
+  .barrage_main{
+    @include h(453);
+    position: absolute;
+    @include bottom(0);
+    left: 0;
+    width: 100%;
+    .item{
+      padding: 2px 5px 2px 0;
+      background-color: rgba(0,0,0,.3);
+      border-radius: 30px;
+    }
+    .item > img {
+      width: 30px;
+      height: 30px;
+      vertical-align: middle;
+      border-radius: 15px;
+      margin-right: 10px;
+    }
+    .item > b {
+      margin-right: 10px;
+      display: inline-block;
+      @include size_color(28,#fce537);
+    }
+    .item > span {
+       margin-right: 5px;
+       @include size_color(28,#fff);
+    }
+  }
+  .screen_main{
+    position: absolute;
+    top:40%;
+    left:50%;
+    transform: translate(-50%,0);
+    @include ele-box(784,187);
+  }
+  .screen_content {
+    @include ele-box(890, 408);
+    @include bg(url("../../assets/images/screen_main.png"));
+    position: absolute;
+    top: 47%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    text-align: center;
+    h2 {
+      @include size_color(35, #333);
+      @include m_t(85);
+      @include m_b(35);
+    }
+    .count_box {
+      @include size_color(33, #333);
+      @include m_t(20);
+      span {
+        display: inline-block;
+        @include ele-box(83, 93);
+        @include lin_hei(93);
+        @include size_color(56, #fff);
+        @include bg(url("../../assets/images/count_span.png"));
+        @include m_r(15);
+      }
+    }
+  }
+  .screen_bottom{
+    @include ele-box(1008,161);
+    position: absolute;
+    @include bottom(0);
+    left: 50%;
+    transform: translate(-50%,0);
+    @include bg(url("../../assets/images/screen_bottom.png"));
+    text-align: center;
+    h2{
+      @include size_color(24,#ca0a17);
+      @include m_t(10);
+      @include m_b(15);
+    }
+    .gift_list{
+      @include p(20,20);
+      ul{
+        width: 100%;
+        @include center;
+        flex-direction: row;
+        li{
+          width: 33%;
+          @include size_color(20,#ca0a17);
+        }
+      }
+    }
+  }
+}
+@-webkit-keyframes wy-animation-15052890845894351{0%{opacity:0;-webkit-transform:scale(0,0);}100%{opacity:1;-webkit-transform:scale(1,1);}}
+@-webkit-keyframes wy-animation-15052890845892932{0%{opacity:1;}100%{opacity:0;}}
+@-webkit-keyframes wy-animation-15052890846002504{0%{margin-left:-10px;}100%{margin-left:10px;}}

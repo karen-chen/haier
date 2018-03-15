@@ -1,0 +1,212 @@
+<template>
+    <div class="seach_body list_body">
+      <!--定位搜索框-->
+      <div class="el-row row_p17">
+        <div class="el-col el-col-2">
+          <div class="pic_icon">
+            <img src="../../assets/images/icon_address.png">
+          </div>
+        </div>
+        <div class="text-center el-col el-col-4">
+          <input class="p" type="text" readonly="" id="address" @click="positionAdress" value="武汉">
+          <input id="value" type="hidden" value="20,234,504">
+        </div>
+        <div class="el-col el-col-18 inputbox">
+              <input placeholder="搜索" class="el-input" v-model="seachValue">
+              <button @click="seachBtn">搜索</button>
+        </div>
+      </div>
+      <div class="find">
+        <!--banner-->
+        <div class="row_p0 el-row">
+          <div class="el-col">
+            <img :src="imageServerUrl+imgUrl">
+          </div>
+        </div>
+        <!-- 搜索到门店-->
+        <div class="list_seach el-row">
+          <ul>
+              <li v-for="item in rows" @click="listShop(item)">
+                <div class="el-row">
+                  <div class="el-col el-col-3">
+                    <div class="logo_shop">
+                      <img :src="imageServerUrl+item.merchantLogo">
+                    </div>
+                  </div>
+                  <div class="p10 el-col el-col-19">
+                    <h3>{{item.name}}</h3>
+                    <h4>距离8km</h4>
+                  </div>
+                  <div class="text-right el-col el-col-2">
+                    <i class="seach_icon"></i>
+                  </div>
+                </div>
+                <div class="el-row p0">
+                  <div class="el-col el-col-2">
+                    <div class="pic_icon">
+                      <img src="../../assets/images/icon_hui.jpg">
+                    </div>
+                  </div>
+                  <div class="el-col el-col-22">
+                    <p>{{item.discountInfo}}</p>
+                  </div>
+                </div>
+              </li>
+          </ul>
+        </div>
+      </div>
+      <!--没有搜索到门店-->
+      <!--没有结果-->
+      <div class="not_find" v-show="showSeach">
+        <span></span>
+        <p>被你难倒了，暂时没找到结果</p>
+      </div>
+    </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_seach.scss';
+  @import '../../assets/scss/pages/LArea.css';
+  .area_roll>div:last-child{display: none;}
+</style>
+
+<script>
+  import {
+    mapState
+  } from 'vuex';
+
+  import '@/assets/js/LArea';
+  import p from  '@/assets/js/LAreaData';
+  import * as config from '@/lib/config'
+  import {
+    wxconfig,
+    getJsSign,
+    wxlocationFn,
+    userData
+  } from '@/lib/tools';
+
+
+  export default {
+    data(){
+      return{
+        seachValue:'',
+        showSeach:false,
+        pageIndex: 0,
+        pageSize: 10,
+        rows: [],
+        imageServerUrl: config.imageServerUrl,
+        imgUrl:''
+      }
+    },
+
+    created(){
+    getJsSign(function (sign) {
+      wxconfig(sign);
+      wxlocationFn();
+    });
+ var _this = this;
+    $.ajax({
+      type: "GET",
+      url: config.locationUrl + "/banner/getCityBannerList",
+      dataType: "jsonp",
+      data: {
+        city:userData.city
+      },
+      success: function(data) {
+        if (data.ret == 0) {
+          _this.imgUrl=data.list[0].imgUrl;
+        }else {
+          console.log('banner/getCityBannerList:', 'ret != 0');
+        }
+      },
+      error(res) {
+        console.log('banner/getCityBannerList:', 'fail');
+      }
+    });
+
+     this.getShopList();
+
+    },
+    methods:{
+      positionAdress() {
+        var area = new LArea();
+        area.init({
+          'trigger': '#address',
+          'valueTo': '#value',
+          'keys': {
+            id: 'value',
+            name: 'text'
+          },
+          'type': 2,
+          'data': [p.provs_data, p.citys_data]
+        });
+      },
+      getShopList(){
+        var self = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/shop/getShopList",
+          dataType: "jsonp",
+          data: {
+            pageIndex:this.pageIndex,
+            pageSize:this.pageSize,
+            city:userData.city
+          },
+          success: function(data) {
+        if (data.ret == 0) {
+            console.log(data);
+            self.pageIndex = data.pageIndex;
+            self.rows =self.rows.concat(data.rows);
+            console.log(111, this);
+
+       }else {
+         console.log('shop/getShopList:', 'ret != 0');
+        }
+          },
+          error(res) {
+            console.log('shop/getShopList:', 'fail');
+          }
+        });
+      },
+      listShop(item){
+        this.$router.push(
+          {
+            name:'Activity',
+            params:{
+              item:item.sid
+            }
+          })
+      },
+      seachBtn(){
+        var self = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/shop/getShopList",
+          dataType: "jsonp",
+          data: {
+            pageIndex:self.pageIndex,
+            pageSize:this.pageSize,
+            city:userData.city,
+            searchKey:this.seachValue
+          },
+          success: function(data) {
+            if (data.ret == 0) {
+              console.log(data);
+              self.pageIndex = data.pageIndex;
+              self.rows = []
+              self.rows =data.rows;
+              console.log(111, this);
+
+            }else {
+              console.log('shop/getShopList:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('shop/getShopList:', 'fail');
+          }
+        });
+      }
+    }
+  }
+</script>

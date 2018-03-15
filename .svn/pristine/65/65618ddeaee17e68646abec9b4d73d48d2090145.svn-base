@@ -1,0 +1,22 @@
+export const locationUrl = 'http://192.168.10.213:9028'
+export const imageServerUrl ='http://tmp.s.weshaketv.com/1234567/haier'
+export const signServerUrl ='http://m.duyouyou.com/jfwx'
+
+
+export const url = process.env.NODE_ENV == 'production' ? 'http://app38.s.weshaketv.com:9017/fybk3/' : locationUrl
+
+
+export const appid = 'wx29cd2d8b59f3f707';
+
+
+//摇电视连接
+export const shakeTvUrl = '';
+
+//微信分享
+export const wxShareData = {
+    title: "",
+    link: "",
+    imgUrl: "",
+    desc: ""
+};
+

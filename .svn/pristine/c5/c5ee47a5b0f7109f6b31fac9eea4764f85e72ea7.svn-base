@@ -1,0 +1,310 @@
+<template>
+  <div class="buysuccess">
+    <div class="right">
+      <img src="../../assets/czlImg/right.png">
+      <p>认筹券购买成功</p>
+    </div>
+    <ul class="list">
+      <li>
+        <div class="tips1">商品名称：</div>
+        <div class="tips2">{{title}}</div>
+      </li>
+      <li>
+        <div class="tips1">交易时间：</div>
+        <div class="tips2">{{createTime}}</div>
+      </li>
+      <li>
+        <div class="tips1">交易单号：</div>
+        <div class="tips2">{{useId}}</div>
+      </li>
+      <li>
+        <div class="tips1">支付金额：</div>
+        <div class="tips2">{{price}}元</div>
+      </li>
+    </ul>
+    <div class="successBtn" @click="showQuanList">查看认筹券包</div>
+    <div class="successBtn MemberBtn" @click="showMembershipcard" v-show="successBtn">领取会员卡</div>
+  </div>
+</template>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script>
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  formatDate
+
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      successBtn: false,
+      sign: {},
+      cardId: '',
+      state: '',
+      cardOrderId: '',
+      title: '',
+      useId: '',
+      price: ''
+    }
+  },
+
+  created() {
+    document.title = '购买成功页面';
+    var self = this;
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    //存储接口传参所需数据
+    //卡券ID
+    this.cardId = localStorage.getItem('cardSid');
+    //订单ID
+    this.cardOrderId = localStorage.getItem('cardOrderId');
+
+    $.ajax({
+      url: config.locationUrl + "/order/getMyRecognizeCardDetail",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid,
+        cardOrderId: self.cardOrderId
+      },
+      success: function(data) {
+        console.log(data);
+        if (data.ret === "0") {
+          self.picUrl = data.order.logoUrl;
+
+          //券名称
+          self.title = data.order.title;
+          self.createTime = self.formatDate(data.order.createTime, 'yyyy-MM-dd hh:mm:ss');
+          self.useId = data.order.sid;
+          self.price = data.order.price;
+          self.description = "<p style='padding-bottom:0.2rem'>" + data.card.configBean.description.value.replace(/\n/g, "</p><p style='padding-bottom:0.2rem'>") + "</p>";
+          self.orderStatus = data.order.orderStatus;
+
+        }
+        if (data.ret === "-1") {
+          self.nofang = true;
+          setTimeout(() => {
+            self.$router.push({
+              name: 'Quanlist'
+            })
+          }, 2000);
+        } else {
+          //处理接口调用失败
+          self.error('getMyRecognizeCardDetail');
+        }
+      },
+      error(res) {
+        self.error('getMyRecognizeCardDetail');
+      }
+    });
+
+
+    //获取微信会员卡签名
+    $.ajax({
+      url: config.locationUrl + "/wxMember/checkMemberBtn",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid,
+        cardId: this.cardId
+
+      },
+      success: function(data) {
+        console.log(data);
+        self.state = data.ret;
+
+        //为0 则显示获取信息资料按钮 需要填写资料,为1 则显示按钮 资料已经填写 直接调微信卡券接口 ,-1 不显示按钮
+        if (data.ret === "0") {
+          self.successBtn = true;
+
+        } else if (data.ret === "1") {
+          self.successBtn = true;
+          self.sign = data.sign;
+          //获取到微信签名
+          // 
+
+        } else {
+          // console.log(3);
+          //处理接口调用失败
+
+        }
+      },
+      error(res) {
+        self.error('getRecognizeCardList');
+      }
+    });
+
+
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    showMembershipcard() {
+
+      this.$router.push({
+        name: 'Membershipcard'
+      })
+      // switch (this.state) {
+      //   case '0':
+      //     {
+      //       this.$router.push({
+      //         name: 'Membershipcard'
+      //       })
+      //       break;
+      //     }
+      //   case '1':
+      //     {
+      //       this.openCard(this.sign);
+      //       break;
+      //     }
+      // }
+
+      // this.$router.push({
+      //         name: 'Membershipcard'
+      //       })
+
+    },
+
+    //调取微信接口,获取卡片相关信息
+    openCard(sign) {
+      var cardExt = {};
+      cardExt.code = sign.code;
+      cardExt.openid = sign.openid;
+      cardExt.timestamp = sign.timestamp;
+      cardExt.signature = sign.signature;
+      cardExt.nonce_str = sign.nonce_str;
+      wx.addCard({
+        cardList: [{
+          cardId: sign.card_id,
+          cardExt: JSON.stringify(cardExt)
+        }],
+        success: function(res) {
+          this.successApi()
+        },
+        cancel: function(res) {}
+      });
+
+    },
+
+
+    //领取成功之后回调接口,通知后台,相应加积分
+
+    successApi() {
+      $.ajax({
+
+        url: config.locationUrl + "/wxMember/addWxPackage",
+        dataType: "jsonp",
+        type: "post",
+        data: {
+          openid: userData.openid
+        },
+        success: function(data) {
+          console.log('用户已经领取会员卡')
+        },
+        error(res) {
+
+        }
+      });
+    },
+
+    showQuanList() {
+
+    },
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss');
+    }
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.buysuccess {
+  width: 100%;
+  min-height: 100%;
+  background: #fff;
+  .right {
+    width: 100%;
+    height: pTR(330);
+    background: #fff url(../../assets/czlImg/buysuccessBg.jpg) 0 0 no-repeat;
+    -webkit-background-size: 100%;
+    background-size: 100%;
+    padding: pTR(72) pTR(52) 0;
+    text-align: center;
+    img {
+      width: pTR(120);
+      height: pTR(120);
+      display: inline-block;
+    }
+    p {
+      color: #fff;
+      font-size: pTR(36);
+      padding-top: pTR(26);
+    }
+  }
+  .list {
+    padding: 0 pTR(52) pTR(75);
+    li {
+      height: pTR(120);
+      border-bottom: pTR(2) solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      font-size: pTR(30);
+      color: #666666;
+      .tips1 {
+        width: pTR(160);
+      }
+      .tips2 {
+        -webkit-box-flex: 1;
+        box-flex: 1;
+        flex: 1;
+      }
+    }
+  }
+  .successBtn {
+    width: pTR(562);
+    height: pTR(94);
+    background: #f9f9f9 url(../../assets/czlImg/btn1.png) 0 0 no-repeat;
+    -webkit-background-size: 100%;
+    background-size: 100%;
+    text-align: center;
+    color: #fff;
+    font-size: pTR(32);
+    line-height: pTR(94);
+    bottom: pTR(100);
+    margin: 0 auto pTR(30);
+  }
+  .MemberBtn {
+    width: pTR(562);
+    height: pTR(94);
+    background: #fff;
+    border-radius: pTR(10);
+    border: 1px solid #f66051;
+    color: #ea4141;
+    font-size: pTR(32);
+  }
+}
+
+</style>

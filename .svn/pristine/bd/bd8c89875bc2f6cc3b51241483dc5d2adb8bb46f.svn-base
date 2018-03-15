@@ -1,0 +1,93 @@
+<template>
+	<div class="content">
+		<div class="main">
+				<img class="personPic" src="../../assets/czlImg/personPic.png">
+				<p class="logo">海尔集团</p>
+				<h2 class="title">团购会奖品券</h2>
+				<div class="buyBtn">
+					立即使用
+				</div>
+				<div class="logoPic"></div>
+				<div class="tips">
+					<h2>有效日期</h2>
+					<p>2016-7-19 09:25 至 2016-7-20 09:25</p>
+				</div>
+				<div class="tips">
+					<h2>使用说明</h2>
+					<p>微票儿是微信电影票官方网站，提供超过2000家影 院的在线购票服务，是目前全国覆盖影院最多的选 座购票平台。</p>
+				</div>
+		</div>
+	</div>
+</template>
+<script>
+export default {
+
+}
+</script>
+
+<style lang="scss"  scoped>
+ @import '../../assets/scss/_mixins.scss';
+	.content{
+		width:100%;
+		min-height: 100%;
+		background: #f52b3a;
+		padding:pTR(80) pTR(20) ;
+		.main{
+			width:100%;
+			background:#fff;
+			position: relative;
+			padding:pTR(66) pTR(28) pTR(100);
+			text-align:center;
+			.personPic{
+				position: absolute;
+				width:pTR(100);
+				height:pTR(100);
+				display: block;
+				left:50%;
+				transform:translateX(-50%);
+				top:pTR(-50);
+				
+			}
+			.logo{
+				font-size:pTR(28);
+				color:#666;
+			}
+			.title{
+				padding:pTR(40) 0 pTR(60);
+			}
+			.buyBtn{
+				width:pTR(320);
+				height:pTR(70);
+				line-height:pTR(70);
+				background:#f52b3a;
+				color:#fff;
+				font-size:pTR(30);
+				border-radius: pTR(5);
+				margin:0 auto pTR(85);
+			}
+			.logoPic{
+				width:100%;
+				height:pTR(236);
+				background:url(../../assets/czlImg/activePic.png) 0 0 no-repeat;
+				background-size:100%;
+				margin-bottom:pTR(10);
+			}
+
+			.tips{
+				text-align: left;
+				padding-top:pTR(33);
+				h2{
+					font-size:pTR(28);
+					color:#333;
+					line-height: pTR(30);
+				}
+				p{
+					padding-top:pTR(10);
+					color:#999999;
+					font-size:pTR(28);
+					line-height: pTR(30);
+				}
+			}
+		}
+	}
+</style>

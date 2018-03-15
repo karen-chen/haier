@@ -1,0 +1,99 @@
+<template>
+  <div class="inputting_code">
+    <div class="input_box">
+      <input type="text" placeholder="请输入购买码" v-model="code">
+    </div>
+    <div class="code_btm" @click="codeBtn">确定</div>
+    <div class="pop_comment" v-show="showPop">
+      {{msg}}
+    </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_code.scss';
+  .pop_comment{
+    background-color: rgba(0,0,0,.6);
+    max-width: 80%;
+  @include p(10,20);
+  @include radius(10);
+  @include size_color(26,#fff);
+    position: fixed;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import '@/assets/js/jquery.qrcode.min'
+  import {
+    userData,
+    getJsSign,
+    wxconfig,
+    wxHideMenu
+  } from '@/lib/tools';
+  export default {
+    data(){
+      return{
+        code:"",
+        showPop:false,
+        msg:""
+      }
+    },
+    created(){
+      document.title = "购买认筹券";
+      getJsSign(function (sign) {
+        wxconfig(sign);
+      })
+      wxHideMenu()
+      wx.ready(function () {
+        wx.showMenuItems({
+          menuList: [
+            'menuItem:favorite',
+          ] // 要显示的菜单项，所有menu项见附录3
+        });
+      })
+    },
+    methods:{
+      codeBtn(){
+        var _this = this
+        if(_this.code == "" || !_this.code){
+          _this.showPop = true
+          _this.msg = "请输入购买码"
+          setTimeout(function(){
+            _this.showPop = false
+          },2000)
+          return
+        }
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/user/getSaleLink",
+          dataType: "jsonp",
+          data: {
+            saleCode:_this.code
+          },
+          success:function(data){
+            if(data.ret == 0){
+              if(data.data == null || data.data == "" || data.data == undefined){
+                _this.showPop = true
+                _this.msg = "购买码错误，请查验后重新输入"
+                setTimeout(function(){
+                  _this.showPop = false
+                },2000)
+                return
+              }else {
+                window.location.href = data.data.saleLink
+              }
+            }else{
+              console.log('/user/getSaleLink:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('/user/getSaleLink:', 'fail');
+          }
+        })
+      }
+    }
+  }
+</script>

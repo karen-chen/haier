@@ -1,0 +1,30 @@
+.code_body{
+  height: 100%;
+  .el-row{
+    justify-content: center;
+    @include m(0,30);
+    span{
+      display: inline-block;
+      text-align: left;
+      @include w(500);
+      word-wrap:break-word;
+      vertical-align: top;
+    }
+  }
+  .mtb{
+    @include m_t(200);
+    @include m_b(40);
+  }
+  .code_pic{
+    display: inline-block;
+    @include ele-box(450,450);
+    @include m_b(45);
+  }
+  .size30{
+    @include size_color(30,#666);
+    @include p_b(25);
+  }
+  .size24{
+    @include size_color(24,#666);
+  }
+}

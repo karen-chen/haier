@@ -1,0 +1,352 @@
+<template>
+  <div class="quanlist">
+    <ul class="bottom">
+      <li class="all">
+        <div class="quanitem" v-for="item in allVouchers">
+          <div class="item1" @click="detailBtn(item)">
+            <!-- 已经使用 -->
+            <div v-show="item.flagStatus==2" class="state4"></div>
+            <!-- 已经过期 -->
+            <div v-show="item.flagStatus==3" class="state1"></div>
+            <div class="logobox">
+              <img class="logo" :src="imageServerUrl + item.merchantLogo">
+            </div>
+            <div class="mainBox">
+              <h2>{{item.merchantName}}</h2>
+              <p>{{item.resourceName}}</p>
+            </div>
+          </div>
+          <div class="item2">
+            <p>有效期：{{item.startDate}}至{{item.endDate}}</p>
+          </div>
+        </div>
+      </li>
+      <li class="null" v-show="nullBox">
+        <div class="nullImg"></div>
+        <p class="nulltext">{{messag}}</p>
+      </li>
+    </ul>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      userName: '',
+      userPic: '',
+      allVouchers: [],
+      refundTicket: [],
+      num1: true,
+      num2: false,
+      startDate: '',
+      endDate: '',
+      totalNum: 0,
+      imageServerUrl: config.imageServerUrl,
+      nullBox: false,
+      messag: '',
+      Resure: false,
+      dataTime: false,
+      errorMessage: '',
+      tips: false,
+      cardOrderId: '',
+      nullBox: false
+    }
+  },
+
+  created() {
+    document.title = "我的奖品";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+    //获取奖券接口/prize_log/getLogList
+    $.ajax({
+      url: config.locationUrl + "/prize_log/getLogList",
+      dataType: "jsonp",
+      data: {
+        openid: userData.openid,
+      },
+      success: function(data) {
+        // console.log(data);
+        if (data.ret === "0") {
+          if (data.list.length !== 0) {
+            data.list.forEach(function(obj, index) {
+              data.list[index].startDate = self.formatDate(obj.startDate, 'yyyy-MM-dd');
+              data.list[index].endDate = self.formatDate(obj.endDate, 'yyyy-MM-dd');
+            })
+            console.log(data);
+            self.allVouchers = data.list;
+          } else {
+            self.nullBox = true;
+            self.messag = '你还没有领取任何奖品';
+          }
+
+        } else {
+          //处理接口调用失败
+          self.error('getLogList');
+        }
+      },
+      error(res) {
+        self.error('getLogList');
+      }
+    });
+
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    //点击券,跳转详细信息
+
+    detailBtn(item) {
+
+      // console.log(item,item.flagStatus, item.sid)
+      this.$router.push({
+        name: 'Prizeoffset',
+        params: {
+          sid: item.sid,
+          orderStatus: item.flagStatus
+        }
+      })
+    },
+
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd');
+    }
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.quanlist {
+  width: 100%;
+  min-height: 100%;
+  background: #f2f2f2;
+  .top {
+    width: 100%;
+    background: #fff;
+    height: pTR(250);
+    display: flex;
+    flex-direction: column;
+
+    .nameBox {
+      box-flex: 1;
+      flex: 1;
+      padding: pTR(30);
+      display: flex;
+      align-items: center;
+      border-bottom: #eeeeee solid 1px;
+      .pic {
+        width: pTR(122);
+        height: pTR(122);
+        border-radius: 50%;
+        background: #fff;
+      }
+      .detail {
+        box-flex: 1;
+        padding-left: pTR(30);
+        .name {
+          color: #333333;
+          font-size: pTR(36);
+          padding-bottom: pTR(25);
+        }
+        .num {
+          color: #999999;
+          font-size: pTR(30);
+        }
+      }
+    }
+    .chooseItem {
+      height: pTR(80);
+      padding: 0 pTR(30);
+      display: flex;
+      justify-content: space-around;
+      .item {
+        width: pTR(150);
+        height: 100%;
+        font-size: pTR(30);
+        color: #666;
+        line-height: pTR(80);
+        text-align: center;
+      }
+      .on {
+        color: #f52b3a;
+        position: relative;
+      }
+      .on:after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: pTR(3);
+        background: #f52b3a;
+      }
+    }
+  }
+  .bottom {
+    padding: pTR(30) pTR(30);
+    .quanitem {
+      width: 100%;
+      height: pTR(272);
+      background: url(../../assets/czlImg/verLine.png) 0 0 no-repeat;
+      background-size: 100%;
+      display: flex;
+      flex-direction: column;
+      margin-bottom:pTR(25);
+      .item1 {
+        width: 100%;
+        height: pTR(175);
+        display: flex;
+        align-items: center;
+        position: relative;
+        .logobox {
+          width: pTR(166);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          .logo {
+            width: pTR(102);
+            height: pTR(102);
+            border-radius: 50%;
+            background:#f3f3f3;
+          }
+        }
+        .mainBox {
+          max-width: pTR(500);
+          z-index: 99;
+          h2 {
+            font-size: pTR(26);
+            color: #999999;
+            margin-bottom: pTR(20);
+            padding-top: pTR(5);
+            word-break: break-all;
+            overflow: hidden;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          p {
+            max-width: pTR(360);
+            display:block;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            font-size: pTR(36);
+            color: #333333;
+            padding: pTR(15) 0;
+            position: relative;
+          }
+
+        }
+        .state1 {
+          position: absolute;
+          width: pTR(118);
+          height: pTR(118);
+          background: url(../../assets/czlImg/expired.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state2 {
+          position: absolute;
+          width: pTR(118);
+          height: pTR(118);
+          background: url(../../assets/czlImg/refund.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state3 {
+          position: absolute;
+          width: pTR(118);
+          height: pTR(118);
+          background: url(../../assets/czlImg/refunded.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+        .state4 {
+          position: absolute;
+          width: pTR(118);
+          height: pTR(118);
+          background: url(../../assets/czlImg/used.png) 0 0 no-repeat;
+          background-size: 100%;
+          right: pTR(25);
+          top: pTR(10);
+          z-index: 0;
+        }
+      }
+      .item2 {
+        box-flex: 1;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content:space-between;
+        padding-bottom:pTR(15);
+        p {
+          padding:0 pTR(40);
+          color: #999999;
+          font-size: pTR(24);
+          text-align:right;
+
+          i {
+            vertical-align: middle;
+            margin-left: pTR(10);
+            display: inline-block;
+            width: pTR(10);
+            height: pTR(18);
+            background: url(../../assets/czlImg/arrowright.png) 0 0 no-repeat;
+            background-size: 100%;
+          }
+          span {
+            display: inline-block;
+            vertical-align: middle;
+            color:#eb2440;
+            font-size:pTR(26);
+          }
+        }
+      }
+    }
+    .nullImg {
+      width: pTR(198);
+      height: pTR(129);
+      background: url(../../assets/czlImg/icon1.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: pTR(170) auto pTR(77);
+      display: block;
+    }
+    .nulltext {
+      color: #999;
+      font-size: pTR(36);
+      text-align: center;
+    }
+  }
+}
+
+</style>

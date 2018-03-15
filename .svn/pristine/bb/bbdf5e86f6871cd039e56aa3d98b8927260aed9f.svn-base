@@ -1,0 +1,391 @@
+<template>
+  <div class="draw_body">
+    <div class="draw_main">
+      <section class="lottery">
+        <div class="lottery-box" id="lottery">
+          <div>
+            <span class="btn-start" @click="startDraw"></span>
+            <!--<span class="btn-cold">-->
+            <!--<i>请您等待</i>-->
+            <!--02:58-->
+            <!--</span>-->
+          </div>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-0',unit_index % 12==0?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-1',unit_index % 12==1?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-2',unit_index % 12==2?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-3',unit_index % 12==3?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-4',unit_index % 12==4?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-5',unit_index % 12==5?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-6',unit_index % 12==6?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-7',unit_index % 12==7?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-8',unit_index % 12==8?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-9',unit_index % 12==9?'active':'']"><img src="../../assets/images/icon_face.png"><span class="gray"></span></span>
+
+          <span v-bind:class="['elric-dial-unit','lottery-unit-10',unit_index % 12==10?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+          <span v-bind:class="['elric-dial-unit','lottery-unit-11',unit_index % 12==11?'active':'']"><img src="../../assets/images/draw_card.png"><span class="gray"></span></span>
+        </div>
+      </section>
+    </div>
+    <div class="gift_btn" @click="showDlgGzh"></div>
+    <div class="rules_main">
+      <h2>活动规则</h2>
+      <!--<P>{{act_rule}}</p>-->
+      <div v-html="act_rule"></div>
+    </div>
+    <!--关注公众号弹框-->
+    <div class="pop_mask" v-show="showGzh" id="codeBox" >
+      <div class="pop_box code_box">
+        <h3>关注“海尔电视”公众号<br>
+          在“我的券包”中查看奖品</h3>
+        <span><img src="../../assets/images/pop_code.jpg"></span>
+        <p>长按二维码，即可关注“海尔电视”公众号</p>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+    <!--没中奖弹框-->
+    <div class="pop_mask" v-show="showNoPrize" id="noWin" >
+      <div class="pop_box not_win">
+        <span></span>
+        <p>你与大奖擦肩而过！</p>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+    <!--广告弹框-->
+    <div class="pop_mask" v-show="showAd" id="Advertising" >
+      <div class="pop_box advertising_box">
+        <!--<p>恭喜你获得{{prize_title}}<br/>{{ad_show_count_down}}秒后即可领取</p>-->
+        <p>奖品将于{{ad_show_count_down}}秒后揭晓</p>
+        <img :src="ad_img">
+        <div class="off_btn" @click="showPrizeDlg">&times;</div>
+      </div>
+    </div>
+    <!--领取成功弹框-->
+    <div class="pop_mask" v-show="showPrize" id="pickUp" >
+      <div class="pop_box pickup_box">
+        <p>恭喜你获得<span>{{prize_title}}</span></p>
+        <p class="sm_font">奖品已自动存入“我的券包”中</p>
+        <div class="btn pick_btn" @click="showDlgGzh">查看我的奖品</div>
+        <div class="off_btn" @click="closeAllpop">&times;</div>
+      </div>
+    </div>
+
+    <!-- 提示弹框 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/page.css';
+  @import '../../assets/scss/pages/_draw.scss';
+  @import '../../assets/scss/pages/_pop.scss';
+  html,body{
+    height:auto;
+    background-color: #f52b3a;
+  }
+
+  .masuccess {
+  position: fixed;
+  width:pTR(450);
+  height: pTR(100);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(100);
+  color: #fff;
+}
+
+</style>
+<script>
+
+  import * as config from '@/lib/config'
+  import {
+    userData, getParam,getJsSign,wxconfig,wxHideMenu,splitLink
+  } from '@/lib/tools';
+
+  export default {
+    data(){
+      return{
+        showAd: false,
+        showPrize: false,
+        showNoPrize: false,
+        showGzh: false,
+        prize_title:' ',
+        timer_sid: '',
+        unit_index: 0,
+        roll_speed: 20,
+        max_step: 48,
+        lottery_result: {},
+        timerAd: null,
+        timerRefreshTimer: null,
+        timerAdCountDown:null,
+        actSid: "",
+        adList: [],
+        ad_show_count_down:5,
+        act_rule: '',
+        share_info: {},
+        tips:false,
+        masseg:'',
+        timerStatus:2,
+        ad_img:""
+      }
+    },
+    created(){
+      var _this = this;
+
+      getJsSign(function(sign) {
+        wxconfig(sign);
+      })
+      //不让分享
+      wxHideMenu()
+      _this.actSid = getParam("actSid");
+      if(_this.actSid){
+        _this.refreshTimer();
+        if(_this.timerRefreshTimer){
+          clearInterval(_this.timerRefreshTimer)
+        }
+        _this.timerRefreshTimer = setInterval(this.refreshTimer, 13000);
+      }
+      _this.initPage();
+      _this.getAdList();
+
+    },
+    methods:{
+      //page title,share info
+
+      //页面配置
+      initPage(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/sys/getBaseConfigByType",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+            configType: 'draw_act_base_config'
+          },
+          success: function(data) {
+            console.log("after getBaseConfigByType");
+            console.log(data);
+            if (data.ret == 0) {
+                //refresh public info, title, act rule
+              let ruleTip = "<p>" + data.ruleTip.replace(/\n/g, "</p><p>") + "</p>";
+              _this.act_rule = ruleTip.replace(/\s/g, "&nbsp;");
+            }else {
+              console.log('getBaseConfigByType:', 'ret != 0');
+            }
+            document.title = data.title || "幸运大转盘";
+          },
+          error(res) {
+            console.log('getBaseConfigByType:', 'fail');
+          }
+        });
+      },
+
+      //拉取时段 是否可以抽奖
+      refreshTimer(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/timer/getCurrTimer",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+          },
+          success: function(data) {
+            console.log("after getCurrTimer");
+            console.log(data);
+            if (data.ret == 0) {
+              if(data.timerSid){
+                _this.timerSid = data.timerSid;
+              }
+              if(data.status=='1'){
+                _this.timerStatus= "0";
+              }else{
+                _this.timerStatus = "10";
+              }
+            }else {
+              _this.timerStatus = data.ret;
+              console.log('getCurrTimer:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getCurrTimer:', 'fail');
+          }
+        });
+      },
+
+      //开始抽奖 
+      startDraw(){
+        var _this = this;
+        if(!_this.timerSid || _this.timerStatus != "0"){
+          // alert("抽奖还未开始，请耐心等待！")
+          _this.tips=true;
+           _this.masseg='抽奖还未开始，请耐心等待！';
+          setTimeout(()=>{
+             _this.tips=false;
+          },2000)
+
+          return;
+        }
+        console.log("in startDraw");
+        if(_this.isrolling){
+          return;
+        }
+        _this.isrolling = true;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/draw",
+          dataType: "jsonp",
+          data: {
+            openid: userData.openid,
+            timerSid: _this.timerSid
+          },
+          success: function(data) {
+            _this.lottery_result = data;
+            console.log("after shake");
+            var isLucky = false;
+            if(data.ret == 0 && data.timerPrize){
+              isLucky = true;
+            }
+            _this.adjustUnitIndex(isLucky);
+            //  start roll
+            _this.roll();
+          },
+          error(res) {
+            console.log('lottery/shake:', 'fail');
+            _this.adjustUnitIndex(false);
+            _this.roll();
+          }
+        });
+      },
+      showDlgGzh(){
+        //201711161430 Hilly
+
+        //判断是否关注公众号
+        if(userData.subscribe==1){
+        window.location.href=splitLink()+"#/prizeTicket/prizelist";
+          return;
+        }
+        this.showGzh = true;
+        this.showPrize = false;
+      },
+      showDlgNoPrize(){
+        this.showNoPrize = true;
+      },
+      closeAllpop(){
+        this.showNoPrize = false;
+        this.showAd = false;
+
+        this.showGzh = false;
+        this.showPrize = false;
+        clearTimeout(this.timerAd);
+        clearInterval(this.timerAdCountDown);
+        this.roll_speed = 20;
+        this.unit_index = this.unit_index % 12;
+        this.isrolling = false;
+      },
+
+
+//转的动画
+      roll(){
+        this.roll_speed += 10;
+        if(this.roll_speed > 300){
+          this.roll_speed = 300;
+        }
+        this.unit_index++;
+        if(this.unit_index == this.max_step){
+          setTimeout(this.parsePrizeResult, 1000);
+          return;
+        }
+        setTimeout(this.roll, this.roll_speed)
+      },
+
+      //显示奖品
+      parsePrizeResult(){
+        var _this = this;
+        var data = _this.lottery_result;
+        if (data.ret == 0) {
+          console.log(data);
+          if(data.timerPrize){
+            _this.prize_title = data.timerPrize.resourceName;
+            if(_this.adList && _this.adList.length > 0){
+              console.log("in ad");
+
+              //广告视频音频自动播放
+              var adItem = _this.adList[random(0,_this.adList.length)];
+              _this.ad_img = config.imageServerUrl + adItem.imgUrl;
+              _this.ad_show_count_down = adItem.duration;
+
+              _this.showAd = true;
+              _this.timerAd = setTimeout(function(){
+                _this.showPrize = true;
+                _this.showAd = false;
+              }, parseInt(adItem.duration) * 1000);
+
+              _this.timerAdCountDown = setInterval(function (){
+                _this.ad_show_count_down--;
+                if(_this.ad_show_count_down==0){
+                  clearInterval(_this.timerAdCountDown);
+                  clearTimeout(_this.timerAd);
+                  _this.showPrize = true;
+                  _this.showAd = false;
+                }
+              }, 1000);
+
+            }else{
+              _this.showPrize = true;
+            }
+          }else{
+            _this.showDlgNoPrize();
+          }
+        }else {
+          _this.showDlgNoPrize();
+        }
+      },
+      adjustUnitIndex(isLucky){
+        if(isLucky){
+          this.max_step = 24 + 3*random(1, 3) + random(1, 2);
+        }else{
+          this.max_step = 24 + 3*random(1, 3);
+        }
+      },
+
+      //广告
+      getAdList(){
+        let _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/banner/getAdvertisingList",
+          dataType: "jsonp",
+          data: {
+            actSid:  _this.actSid
+          },
+          success: function(data) {
+            console.log("after getAdList");
+            if(data.ret == 0 && data.list){
+              _this.adList = data.list;
+              console.log(_this.adList)
+            }
+          },
+          error(res) {
+            console.log('getAdvertisingList:', 'fail');
+          }
+        });
+      },
+      showPrizeDlg(){
+        this.closeAllpop();
+        this.showPrize = true;
+      }
+    }
+  }
+  function random(min,max){
+    return Math.floor(min+Math.random()*(max-min));
+  }
+</script>

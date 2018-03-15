@@ -1,0 +1,24 @@
+/**
+ * Created by Administrator on 2017/9/19.
+ */
+import * as config from '@/lib/config'
+import * as tool from '@/lib/tools'
+
+//获取banner
+  export default{
+    getBanner(cb){
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/banner/getCityBannerList",
+        dataType: "jsonp",
+        data: {
+
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            cb && cb(data.listBanner);
+          }
+        }
+      });
+    }
+  }

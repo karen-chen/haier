@@ -1,0 +1,187 @@
+<template>
+  <div class="shopdetail">
+    <div class="shopBox">
+      <div class="left"><img :src="imageServerUrlpic+list.item_field4"></img>
+      </div>
+      <div class="right">
+        <div class="title">{{list.item_title}}</div>
+        <div class="discount">团购价：<i>￥{{list.item_field3}}</i></div>
+        <div class="original">原价：<i>{{list.item_field2}}</i></div>
+      </div>
+    </div>
+    <div class="detailBox">
+      <div class="head"><i></i><span>商品详情</span></div>
+      <ul class="pic" v-for="item in imgList">
+        <li><img :src="item.imgUrl"></li>
+      </ul>
+    </div>
+  </div>
+</template>
+<script src="//wximg.gtimg.com/shake_tv/include/js/lib/jquery.2.1.1.min.js"></script>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script src="//wximg.gtimg.com/shake_tv/include/js/jsapi.js"></script>
+<script>
+import * as purl from '@/assets/js/purl'
+import * as constants from '@/assets/js/constants'
+import * as auth from '@/assets/js/auth'
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      page_item_sid: '',
+      imgList: [],
+      list: {},
+      imageServerUrlpic: config.imageServerUrl,
+    }
+  },
+
+  created() {
+
+    this.page_item_sid = localStorage.getItem('page_item_sid');
+    this.get_act_page_item();
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+
+    //获商品信息
+    get_act_page_item() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/product/get_act_page_item",
+        dataType: "jsonp",
+        data: {
+          page_item_sid: this.page_item_sid
+        },
+        success: function(data) {
+          console.log("33333", data);
+          if (data.ret === "0") {
+            data.data.imgList = data.data.imgList || [];
+            data.data.imgList.forEach(obj => {
+                obj.imgUrl = config.imageServerUrl + obj.imgUrl;
+            });
+            self.list = data.data.item;
+            self.imgList=data.data.imgList;
+            // console.log(data.list);
+          } else {
+            //处理接口调用失败
+            self.error('getBannerList');
+          }
+        },
+        error(res) {
+          self.error('getBannerList');
+        }
+      });
+    },
+
+
+      }
+    }
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+
+.shopdetail {
+  width: 100%;
+  min-height: 100%;
+  background: #f9f9f9 url(../../assets/czlImg/shopdetail.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+  padding: pTR(30);
+  .shopBox {
+    width: 100%;
+    height: pTR(360);
+    background: #fff;
+    border-radius: pTR(10);
+    box-shadow: 0 0 pTR(30) rgba(0, 0, 0, 0.1);
+    padding: 0 pTR(40);
+    display: flex;
+    align-items: center;
+    .left {
+      width: pTR(230);
+      height: pTR(230);
+      img {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .right {
+      box-flex: 1;
+      flex: 1;
+      padding-left: pTR(40);
+      .title {
+        color: #333;
+        font-size: pTR(36);
+        min-height: pTR(80);
+        line-height: pTR(48);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: pTR(30);
+        width: pTR(340);
+        word-break: break-all;
+        word-wrap: break-word;
+      }
+      .discount {
+        color: #ff4242;
+        font-size: pTR(24);
+        padding: 0 0 pTR(20);
+        i {
+          font-size: pTR(48);
+        }
+      }
+      .original {
+        color: #999999;
+        font-size: pTR(24);
+      }
+    }
+  }
+  .detailBox {
+    width: 100%;
+    margin: pTR(10) 0 pTR(40);
+    background: #fff;
+    border-radius: pTR(10);
+    box-shadow: 0 0 pTR(30) rgba(0, 0, 0, 0.1);
+    .head {
+      width: 100%;
+      height: pTR(85);
+      padding: 0 pTR(40);
+      display: flex;
+      align-items: center;
+      i {
+        width: pTR(28);
+        height: pTR(28);
+        background: url(../../assets/czlImg/text.png) 0 0 no-repeat;
+        -webkit-background-size: 100%;
+        background-size: 100%;
+      }
+      span {
+        color: #333333;
+        font-size: pTR(28);
+        margin-left: pTR(25);
+      }
+    }
+    .pic {
+      border-bottom-left-radius: pTR(10);
+      border-bottom-right-radius: pTR(10);
+      overflow: hidden;
+    }
+  }
+}
+
+</style>

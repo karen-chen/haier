@@ -1,0 +1,1346 @@
+<template>
+  <div>
+    <div class="bgTop">
+      <div class="head">
+        <marquee>{{caption}}</marquee>
+        <i></i>
+      </div>
+      <div class="headings"></div>
+      <div class="telPic"></div>
+      <div class="quanmain">
+        <div class="quanTop"></div>
+        <div class="box">
+          <i></i>
+          <p>时间:{{activityTime}}</p>
+          <p>地点:{{activityAddress}}</p>
+        </div>
+        <div class="quanBody">
+          <div v-for="item in cardlist" class="quanlist" v-show="havequan">
+            <div class="buyTop">
+              <div class="nameList">
+                <div class="nameLogo"><img :src="imageServerUrlpic+item.card.merchant.merchantLogo"><i>{{item.card.merchant.merchantName}}</i></div>
+                <div class="particulars" @click="particulars(item)">特权详情</div>
+              </div>
+              <div class="partTxt">{{item.card.resourceName}}</div>
+            </div>
+            <div class="buyBottom">
+              <div class="contentTxt">
+                <div class="money"><span>￥</span><i>{{item.card.configBean.price.value}}</i></div>
+                <div class="moneyBtn" @click="showmessRoute(item)">购买</div>
+              </div>
+            </div>
+          </div>
+          <div class="noquan" v-show="noquan"></div>
+        </div>
+        <div class="quanBottom"></div>
+      </div>
+    </div>
+    <div class="bgBottom">
+      <div class="mian">
+        <div class="shopping" v-for="title in list" v-show="title.item_list.length !==0">
+          <div class="totle">{{title.cat.cat_title}}</div>
+          <ul>
+            <li class="item" v-for="item in title.item_list" @click="shopDetail(item)">
+              <div class="left">
+                <img :src="item.item_field4">
+              </div>
+              <div class="right">
+                <h2>{{item.item_title}}</h2>
+                <p class="price"><i>￥{{item.item_field2}}</i></p>
+                <p class="tunprice">活动价:<span>￥</span><i>{{item.item_field3}}</i></p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <!-- <img @click="showvoucherRoute" class="couponBtn" src="../../assets/czlImg/couponBtn.jpg"> -->
+    <!--该活动已经结束-->
+    <div class="endBox" v-show="endMess">
+      <div class="text">
+        <div class="img"></div>
+        该活动已关闭
+      </div>
+    </div>
+    <!--详情弹框-->
+    <div class="popBox" v-show="showDetail">
+      <div class="partBox">
+        <div class="mainBox">
+          <div class="top">
+            <img class="logoPic" :src="imageServerUrlpic+ picUrl">
+            <span class="logoName">{{logo}}</span>
+            <span class="logoText">{{title}}</span>
+          </div>
+          <div class="bottom">
+            <div class="bottomMain">
+              <div class="bottomTitle"></div>
+              <div class="tips">
+                <h2><i></i>有效日期</h2>
+                <p>{{startDate}}至 {{endDate}}</p>
+              </div>
+              <div class="tips">
+                <h2><i></i>使用说明</h2>
+                <p class="scrollTop" v-html="description"></p>
+              </div>
+            </div>
+          </div>
+          <div class="closePart" @click="particularsClose"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 卡券已经停止投放 -->
+    <div class="popBox" v-show="Resure">
+      <div class="RefundBox">
+        <div class="cryno"></div>
+        <div class="text">
+          卡券已下架，暂时无法购买
+        </div>
+        <div class="butList">
+          <div class="btn2" @click="clickClose">
+            确定
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 提示弹框 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+    <!-- 验证码 -->
+    <div class="popBox" v-show="verificationcode">
+      <div class="verificationcode">
+        <div class="input_box"><input placeholder="请输入4位验证码完成领取" v-model="inputCode" maxlength="4"></div>
+        <p>请向销售员索要验证码</p>
+        <div class="sureBtn" @click="submitSure">确认</div>
+        <div class="closeSure" @click="closeSure"></div>
+      </div>
+    </div>
+  </div>
+</template>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  wxShare,
+  wxHideMenu
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      caption: '',
+      activityAddress: '',
+      activityTime: '',
+      list: [],
+      shareTitle: '',
+      title: '',
+      shareImg: '',
+      shareUrl: '',
+      shareDesc: '',
+      endMess: false,
+      documentTitle: '',
+      cardlist: [],
+      imageServerUrlpic: config.imageServerUrl,
+      nameLogo: '',
+      logo: '',
+      allow: true,
+      status: 0,
+      money: 0,
+      money1: 0,
+      canCustomerInfo: '',
+      recognizeCardSid: '',
+      recognizeCardSid1: '',
+      onoff: true,
+      cardNo: '',
+      picUrl: '',
+      showDetail: false,
+      startDate: '',
+      endDate: '',
+      description: '',
+      canCustomerInfo: '',
+      recognizeCardSid: '',
+      Resure: false,
+      tips: false,
+      masseg: '',
+      noquan: false,
+      havequan: true,
+      verificationcode: false,
+      vcodesid: '',
+      inputCode: '',
+      pageHash:'',
+      submitSureIndex:true
+    }
+  },
+
+  created() {
+    this.pageHash=window.location.hash;
+    console.log(1111111111,userData.hash);
+    if (typeof WeixinJSBridge === "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', this.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', this.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', this.onBridgeReady);
+      }
+    } else {
+      this.onBridgeReady();
+    }
+
+
+    var self = this;
+
+    //分享功能
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wxHideMenu();
+      wx.showMenuItems({
+        menuList: [
+          'menuItem:share:qq', //分享到QQ
+          'menuItem:share:weiboApp', //分享到Weibo
+          'menuItem:favorite', //收藏
+          'menuItem:share:facebook', //分享到facebook
+          'menuItem:share:QZone', //分享到QQ空间
+          "menuItem:share:timeline", //分享到朋友圈
+          //保护类
+          "menuItem:share:appMessage", //发送给朋友
+          'menuItem:editTag', //编辑标签
+          'menuItem:delete', //删除
+          'menuItem:copyUrl', //复制链接
+          'menuItem:originPage', //原网页
+          'menuItem:readMode', //阅读模式
+          'menuItem:share:email', //邮件
+          'menuItem:share:brand' //一些特殊公众号
+        ] // 要显示的菜单项，所有menu项见附录3
+      });
+
+    });
+
+
+    //判断活动是否有效
+    $.ajax({
+      url: config.locationUrl + "/activity/checkActivityIng",
+      dataType: "jsonp",
+      data: {
+        actSid: userData.actSid,
+      },
+      success: function(data) {
+        if (data.ret === "0") {
+
+          //获取页面配置信息
+          self.getBaseConfig();
+          self.getProductModuleList();
+          self.getRecognizeCardList();
+
+          $.ajax({
+            url: config.locationUrl + "/visitor_log/addVisitorLog",
+            dataType: "jsonp",
+            data: {
+              actSid: userData.actSid,
+              saleOpenid: userData.saleOpenid,
+              openid:userData.openid,
+              sourcePage:this.pageHash,
+              actionType:1
+            },
+            success: function(data) {
+
+            }
+          });
+
+
+        } else {
+          //处理接口调用失败
+          self.endMess = true;
+        }
+      },
+      error(res) {
+        self.error('checkActivityIng');
+      }
+    });
+    // console.log(5555555, this.activityAddress);
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    showvoucherRoute() {
+      this.$router.push({
+        name: 'Quan'
+      })
+    },
+
+    //获取分享基本信息以及相关权限
+    getBaseConfig() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/sys/getBaseConfigByType",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+          configType: EnumConfigType.RECOGNIZE
+        },
+        success: function(data) {
+          // console.log(11111, data);
+          if (data.ret === "0") {
+
+            self.activityAddress = data.activityAddress;
+
+            self.activityTime = data.activityTime;
+            self.caption = data.caption;
+            if (userData.saleOpenid) {
+              config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '&saleOpenid=' + userData.saleOpenid + '#/cardmain';
+            } else {
+              config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '#/cardmain';
+            }
+
+            // config.wxShareData.link = config.cdnUrl + 'http://1251097942.cdn.myqcloud.com/1251097942/haier/test/index.html#/shoplist';
+            // console.log(self.activityTime);
+            //文章标题
+            if (data.title) {
+              document.title = data.title;
+              self.documentTitle = data.title;
+
+            } else {
+              document.title = '认筹活动详情';
+              self.documentTitle = '认筹活动详情';
+            }
+            //分享标题
+            if (data.shareTitle) {
+              config.wxShareData.title = data.shareTitle;
+            } else {
+              config.wxShareData.title = '超值认筹劵，再不来领就没有了!';
+            }
+
+            //分享详情
+            if (data.shareDesc) {
+              config.wxShareData.desc = data.shareDesc;
+            } else {
+              config.wxShareData.desc = '超值认筹劵，再不来领就没有了!';
+            }
+
+            //分享图片
+            if (data.shareImg) {
+              config.wxShareData.imgUrl = config.imageServerUrl + data.shareImg;
+            } else {
+              config.wxShareData.imgUrl = config.cdnUrl + '/static/share/share5.jpg';
+            }
+            wxShare();
+            // console.log(self.shareImg);
+
+
+          } else {
+            document.title = '认筹活动详情';
+            config.wxShareData.title = '超值认筹劵，再不来领就没有了!';
+            config.wxShareData.desc = '超值认筹劵，再不来领就没有了!';
+            config.wxShareData.imgUrl = config.cdnUrl + '/static/share/share5.jpg';
+            if (userData.saleOpenid) {
+              config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '&saleOpenid=' + userData.saleOpenid + '#/cardmain';
+            } else {
+              config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '#/cardmain';
+            }
+            wxShare();
+            //处理接口调用失败
+            self.error('getBaseConfigByType');
+          }
+        },
+        error(res) {
+          self.error('getBaseConfigByType');
+        }
+      });
+    },
+
+    // banner/getProductModuleList 获取产品信息
+
+    getProductModuleList() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/product/list_act_page_cat_item",
+        dataType: "jsonp",
+        data: {
+          act_sid: userData.actSid
+        },
+        success: function(data) {
+          console.log("33333", data);
+          if (data.ret === "0") {
+            data.data = data.data || [];
+            data.data.forEach(obj => {
+              obj.item_list = obj.item_list || [];
+              obj.item_list.forEach(item => {
+                item.item_field4 = config.imageServerUrl + item.item_field4;
+              });
+            });
+            self.list = data.data;
+            // console.log(data.list);
+          } else {
+            //处理接口调用失败
+            self.error('getBannerList');
+          }
+        },
+        error(res) {
+          self.error('getBannerList');
+        }
+      });
+    },
+
+    //获取券列表
+    getRecognizeCardList() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/activity/getRecognizeCardList",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+          openid: userData.openid
+        },
+        success: function(data) {
+          console.log(6666666, data);
+          if (data.ret === "0") {
+
+            if (data.list.length == 0) {
+              //没有券可以购买 显示没有购买信息
+              self.noquan = true;
+              self.havequan = false;
+            } else {
+              //有券购买,显示列表
+              self.noquan = false;
+              self.havequan = true;
+              self.cardlist = data.list;
+            }
+            // console.log(self.endMess);
+            //返回值为-88 表示活动已经结束
+          }
+          if (data.ret === "-88") {
+            self.endMess = true;
+          } else {
+            //处理接口调用失败
+            self.error('getRecognizeCardList');
+          }
+        },
+        error(res) {
+          self.error('getRecognizeCardList');
+        }
+      });
+    },
+    //点击购买按钮判断
+    showmessRoute(item) {
+      // localStorage.setItem('recognizeCardSid', item.sid);
+      // console.log(item.card.configBean.price.value);
+      var self = this;
+      if (!self.allow) {
+        return;
+      }
+      self.allow = false;
+      setTimeout(() => {
+        self.allow = true;
+      }, 500)
+      self.money = Math.round(item.card.configBean.price.value * 100);
+      self.recognizeCardSid = item.sid;
+      self.canCustomerInfo = item.card.configBean.canCustomerInfo.value;
+      localStorage.setItem('recognizeCardSid', self.recognizeCardSid);
+      localStorage.setItem('money', self.money);
+      $.ajax({
+        url: config.locationUrl + "/activity/getRecognizeCardDetial",
+        dataType: "jsonp",
+        data: {
+          recognizeCardSid: self.recognizeCardSid,
+          openid: userData.openid
+        },
+        success: function(data) {
+          console.log(1111111222222,data.obj.card.configBean.canSaleCode);
+          if (data.ret === "0") {
+
+            self.status = parseInt(data.ret);
+            self.cardNo = data.obj.card.sid;
+            localStorage.setItem('checkMember', self.cardNo);
+
+            if (data.obj.card.configBean.canSaleCode == null || data.obj.card.configBean.canSaleCode.value == '0') {
+              self.wx_pay();
+
+            } else {
+              self.verificationcode = true;
+            }
+
+          }
+          if (data.ret === "-1") {
+            self.Resure = true;
+            self.tipsShow('卡券已下架');
+            return;
+          }
+          if (data.ret === "2") {
+            self.tipsShow('卡券已过期');
+            return;
+          }
+          if (data.ret === "3") {
+            self.tipsShow('库存不够');
+            return;
+          }
+          if (data.ret === "4") {
+            self.tipsShow('购买数量已达上限');
+            return;
+          }
+          if (data.ret === "-88") {
+            self.endMess = true;
+          }
+        },
+        error(res) {
+          self.error('getRecognizeCardList');
+        }
+      });
+
+
+      // this.$router.push({
+      //   name: 'Buy'
+      // })
+    },
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+    //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      self.tips = true;
+      self.masseg = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 600);
+    },
+    wx_pay() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/wx_pay/pay_sign",
+        dataType: "jsonp",
+        type: "post",
+        data: {
+          openid: userData.openid,
+          money: self.money,
+          cardNo: self.cardNo,
+          recognizeCardSid: self.recognizeCardSid,
+          actId: userData.actSid,
+          saleOpenid: userData.saleOpenid,
+          codeSid: self.vcodesid
+        },
+        success: function(data) {
+
+          if (data.ret === "0") {
+            //订单ID
+            localStorage.setItem('orderId', data.order.sid);
+            if (self.money == 0) {
+              if (self.canCustomerInfo === '1') {
+                self.$router.push({
+                  name: 'Submit'
+                })
+              } else {
+                self.$router.push({
+                  name: 'Buysuccess'
+                })
+              }
+              return
+            } else {
+
+              self.invokePayDlg(data);
+            }
+            // self.sign = data.sign;
+
+          } else {
+            //处理接口调用失败
+            self.error('getCustomData');
+          }
+        },
+        error(res) {
+          self.error('getCustomData');
+        }
+      });
+    },
+
+    invokePayDlg(ret) {
+      var self = this;
+      WeixinJSBridge.invoke(
+        'getBrandWCPayRequest',
+        ret.sign,
+        function(res) {
+          //alert(res.err_msg);
+          // $("#log_info").append("<p>支付结果："+res.err_msg+"</p>");
+          // 使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回    ok，但并不保证它绝对可靠。
+          if (res.err_msg == "get_brand_wcpay_request:ok") {
+            //CT：实际是否成交以后台接口为准
+            // $("#out_trade_no").val(now_time);
+            if (self.canCustomerInfo === '1') {
+              self.$router.push({
+                name: 'Submit'
+              })
+            } else {
+              self.$router.push({
+                name: 'Buysuccess'
+              })
+            }
+
+          } else {
+            //其他情况：get_brand_wcpay_request:cancel或者get_brand_wcpay_request:fail，后者在配置错误时也会出现，日
+          }
+        }
+      );
+    },
+    particulars(item) {
+      this.showDetail = true;
+      var self = this;
+      self.recognizeCardSid1 = item.sid;
+      $.ajax({
+        url: config.locationUrl + "/activity/getRecognizeCardDetial",
+        dataType: "jsonp",
+        data: {
+          recognizeCardSid: self.recognizeCardSid1,
+          openid: userData.openid
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.status = parseInt(data.ret);
+            // self.buyBtn = data.obj.card.configBean.price.value + '元购买';
+          }
+          self.obj = data.obj;
+          // self.money1 = Math.round(data.obj.card.configBean.price.value * 100);
+          self.picUrl = data.obj.card.merchant.merchantLogo;
+          self.logo = data.obj.card.merchant.merchantName;
+          self.title = data.obj.card.resourceName;
+          self.startDate = data.obj.card.configBean.startDate.value;
+          self.endDate = data.obj.card.configBean.endDate.value;
+          self.description = "<p>" + data.obj.card.configBean.description.value.replace(/\n/g, "</p><p>") + "</p>";
+          self.canCustomerInfo = data.obj.card.configBean.canCustomerInfo.value;
+          self.cardNo = data.obj.card.sid;
+          //卡券ID
+          localStorage.setItem('checkMember', self.cardNo);
+          localStorage.setItem('money', self.money);
+        },
+        error(res) {
+          self.error('getRecognizeCardList');
+        }
+      });
+    },
+    particularsClose() {
+      this.showDetail = false;
+    },
+    clickClose() {
+      this.Resure = false;
+      this.getRecognizeCardList();
+    },
+
+    //商品列表跳转详情
+    shopDetail(item) {
+
+      localStorage.setItem('page_item_sid', item.sid);
+      if (item.img_count > 0) {
+        this.$router.push({
+          name: 'Shopdetail'
+        })
+      }
+      // console.log(item.sid)
+
+    },
+    submitSure() {
+      var self = this;
+      console.log(this.inputCode);
+      if(!self.submitSureIndex){
+        console.log(12121211111111)
+        return
+      }
+      self.submitSureIndex = false
+      console.log('hhhhhhhhh')
+      $.ajax({
+        url: config.locationUrl + "/code/useCode",
+        dataType: "jsonp",
+        data: {
+          code: this.inputCode
+        },
+        success: function(data) {
+          if (data.ret === "0") {
+            self.vcodesid = data.data.sid;
+            self.wx_pay();
+          } else {
+            console.log(111111111);
+            self.tipsShow('验证码错误');
+          }
+          self.submitSureIndex = true
+        },
+
+      });
+    },
+    closeSure() {
+      this.verificationcode = false;
+     /* this.submitSureIndex = false*/
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.bgTop {
+  width: 100%;
+  background: #e80613 url(../../assets/czlImg/bgTop.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+  height: auto;
+  padding-top: pTR(17);
+  padding-bottom: pTR(100);
+  .head {
+    width: pTR(700);
+    height: pTR(70);
+    text-align: center;
+    line-height: pTR(70);
+    font-size: pTR(28);
+    color: #fff;
+    background: rgba(149, 0, 0, 0.3);
+    border-radius: pTR(50);
+    margin: 0 auto pTR(20);
+    position: relative;
+    marquee {
+      margin: 0 pTR(20) 0 pTR(120);
+      overflow: hidden;
+    }
+    i {
+      position: absolute;
+      display: inline-block;
+      width: pTR(37);
+      height: pTR(39);
+      background: url(../../assets/czlImg/tel.png) 0 0 no-repeat;
+      background-size: 100%;
+      left: pTR(50);
+      top: 50%;
+      -webkit-transform: translateY(-50%);
+    }
+  }
+  .quanmain {
+    position: relative;
+    margin: 0 auto;
+    width: pTR(619);
+    height: auto;
+    background: url(../../assets/czlImg/quanbody.png) 0 0 repeat-y;
+    background-size: 100%;
+    position: relative;
+    .quanTop {
+      position: absolute;
+      left: 0;
+      top: pTR(-112);
+      width: pTR(619);
+      height: pTR(113);
+      background: url(../../assets/czlImg/quantop.png) 0 0 no-repeat;
+      background-size: 100%;
+      z-index: 8;
+    }
+    .box {
+      z-index: 10;
+      position: absolute;
+      left: 0;
+      top: pTR(-220);
+      width: pTR(603);
+      height: pTR(208);
+      background: url(../../assets/czlImg/indexBox.png) 0 0 no-repeat;
+      background-size: 100%;
+      font-size: pTR(26);
+      padding-top: pTR(50);
+      padding-left: pTR(200);
+      p {
+        text-align: left;
+        line-height: pTR(40);
+        max-width: pTR(350);
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #fff;
+        font-weight: 500;
+      }
+      i {
+        display: block;
+        width: pTR(92);
+        height: pTR(80);
+        background: url(../../assets/czlImg/timetxt.png) 0 0 no-repeat;
+        background-size: 100%;
+        position: absolute;
+        left: pTR(80);
+        top: 50%;
+        -webkit-transform: translateY(-70%);
+      }
+    }
+    .quanBottom {
+      position: absolute;
+      left: 0;
+      bottom: pTR(-92);
+      width: pTR(619);
+      height: pTR(92);
+      background: url(../../assets/czlImg/quanbottom.png) 0 0 no-repeat;
+      background-size: 100%;
+      z-index: 8;
+    }
+    .quanBody {
+      position: relative;
+      .quanlist {
+        width: pTR(534);
+        height: pTR(318);
+        background: url(../../assets/czlImg/quanMain.jpg) 0 0 no-repeat;
+        background-size: 100%;
+        margin: 0 auto;
+        border: pTR(10) solid #fff1cc;
+        display: flex;
+        flex-direction: column;
+        .buyTop {
+          width: 100%;
+          height: pTR(185);
+          padding-top: pTR(50);
+          .nameList {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 pTR(50) 0 pTR(60);
+            .nameLogo {
+              display: flex;
+              align-items: center;
+              img {
+                width: pTR(60);
+                height: pTR(60);
+                display: inline-block;
+                vertical-align: center;
+                border-radius: 50%;
+                margin-right: pTR(10);
+              }
+              i {
+                display: inline-block;
+                font-size: pTR(24);
+                color: #e6213a;
+                vertical-align: center;
+                height: pTR(60);
+                line-height: pTR(60);
+                max-width: pTR(150);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+            }
+            .particulars {
+              width: pTR(130);
+              height: pTR(39);
+              border-radius: pTR(30);
+              border: pTR(2) solid #e6213a;
+              color: #e6213a;
+              text-align: center;
+              line-height: pTR(39);
+            }
+          }
+          .partTxt {
+            text-align: center;
+            font-size: pTR(36);
+            color: #e6213a;
+            padding: pTR(15) 0 pTR(5);
+            font-weight: bold;
+            max-width: pTR(430);
+            margin: 0 auto;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+          }
+        }
+        .buyBottom {
+          -webkit-box-flex: 1;
+          box-flex: 1;
+          flex: 1;
+          .contentTxt {
+            display: flex;
+            justify-content: space-between;
+            height: 100%;
+            align-items: center;
+            padding: 0 pTR(50) pTR(15) pTR(60);
+            .money {
+              color: #e6213a;
+              span {
+                font-size: pTR(24);
+                display: inline-block;
+                margin-right: pTR(10);
+              }
+              i {
+                font-size: pTR(36);
+                display: inline-block;
+              }
+            }
+            .moneyBtn {
+              width: pTR(146);
+              height: pTR(54);
+              background: url(../../assets/czlImg/buyBtn.png) 0 0 no-repeat;
+              line-height: pTR(54);
+              background-size: 100%;
+              text-align: center;
+              color: #fff;
+              font-size: pTR(28);
+            }
+          }
+        }
+      }
+      quanlist:first-child {
+        border-top-left-radius: pTR(20);
+        border-top-right-radius: pTR(20);
+      }
+      quanlist:last-child {
+        border-bottom-left-radius: pTR(20);
+        border-bottom-right-radius: pTR(20);
+      }
+      .noquan {
+        width: pTR(534);
+        height: pTR(318);
+        background: url(../../assets/czlImg/noquan.png) 0 0 no-repeat;
+        background-size: 100%;
+        margin: 0 auto;
+        border: pTR(10) solid #fff1cc;
+        border-bottom-left-radius: pTR(20);
+        border-bottom-right-radius: pTR(20);
+      }
+    }
+  }
+
+
+  .headings {
+    margin: 0 auto;
+    width: pTR(433);
+    height: pTR(178);
+    background: url(../../assets/czlImg/logo.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .telPic {
+    margin: 0 auto;
+    width: pTR(572);
+    height: pTR(301);
+    background: url(../../assets/czlImg/telPic.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin-bottom: pTR(190);
+  }
+}
+
+.bgBottom {
+  width: 100%;
+  background: #ffb602 url(../../assets/czlImg/bgbottom.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+  height: auto;
+}
+
+.mian {
+  width: 100%;
+  padding: pTR(20) pTR(36) pTR(20);
+  .titleLine {
+    width: pTR(679);
+    height: pTR(144);
+    color: #fff;
+    padding: pTR(20) pTR(25);
+    margin-bottom: pTR(20);
+    .title {
+      font-size: pTR(37);
+      padding: pTR(10) 0;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .text {
+      width: pTR(500);
+      line-height: pTR(35);
+      font-size: pTR(21);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .line1 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine1.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .line2 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine2.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .line3 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine3.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+
+  .shopping {
+    width: 100%;
+    .totle {
+      width: pTR(429);
+      height: pTR(60);
+      margin: pTR(13) auto pTR(40);
+      text-align: center;
+      line-height: pTR(60);
+      color: #fff;
+      text-shadow: pTR(5) pTR(5) pTR(20) rgba(248, 29, 33, 0.75);
+      font-size: pTR(40);
+      font-weight: bold;
+    }
+    .item {
+      display: flex;
+      width: 100%;
+      height: pTR(266);
+      background: #fff;
+      margin-bottom: pTR(40);
+      padding: pTR(15) pTR(20) pTR(15) pTR(15);
+      border-radius: pTR(10);
+      .left {
+        width: pTR(235);
+        height: pTR(236);
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .right {
+        box-flex: 1;
+        flex: 1;
+        padding: pTR(30) 0 0 pTR(25);
+        position: relative;
+        h2 {
+          color: #414141;
+          font-size: pTR(35);
+          line-height: pTR(46);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          width: pTR(350);
+          word-wrap: break-word;
+        }
+        .price {
+          position: absolute;
+          bottom: pTR(70);
+          color: #9a9a9a;
+          font-size: pTR(29);
+          i {
+            display: inline-block;
+            text-decoration: line-through;
+          }
+        }
+        .tunprice {
+          position: absolute;
+          bottom: pTR(20);
+          color: #9a9a9a;
+          font-size: pTR(28);
+
+          span {
+            color: #e6213a;
+            font-size: pTR(28);
+            margin-left: pTR(10);
+          }
+          i {
+            display: inline-block;
+            font-size: pTR(43);
+            color: #e6213a;
+            font-weight: bold;
+          }
+        }
+      }
+    }
+  }
+}
+
+.couponBtn {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+}
+
+.endBox {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  z-index: 9999;
+  .text {
+    font-size: pTR(35);
+    color: #999;
+    text-align: center;
+    padding-top: pTR(180);
+    .img {
+      display: block;
+      width: pTR(198);
+      height: pTR(129);
+      background: url(../../assets/czlImg/endPic.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto pTR(75);
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  .partBox {
+    width: pTR(600);
+    height: pTR(880);
+    background: url(../../assets/czlImg/partBox.png) 0 0 no-repeat;
+    background-size: 100%;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    .mainBox {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      .top {
+        -webkit-box-flex: 1;
+        box-flex: 1;
+        flex: 1;
+        padding: pTR(35);
+        text-align: center;
+        .logoPic {
+          width: pTR(115);
+          height: pTR(115);
+          display: block;
+          margin: 0 auto;
+          border-radius: 50%;
+        }
+        .logoName {
+          padding: pTR(20) 0 0;
+          color: #fff;
+          font-size: pTR(30);
+          display: block;
+          width: 100%;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .logoText {
+          color: #fff;
+          font-size: pTR(38);
+          display: block;
+          margin: 0 auto;
+          font-weight: bold;
+          max-width: pTR(500);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding: pTR(20) 0 0;
+        }
+      }
+      .bottom {
+        padding: pTR(22) pTR(35) pTR(40);
+        height: pTR(580);
+        .bottomMain {
+          width: 100%;
+          height: 100%;
+        }
+        .bottomTitle {
+          width: pTR(530);
+          height: pTR(56);
+          display: block;
+          margin: 0 auto pTR(22);
+          background: url(../../assets/czlImg/partTitle.png) 0 0 no-repeat;
+          background-size: 100%;
+        }
+        .tips {
+          text-align: left;
+          padding: pTR(33) 0 0 0;
+          h2 {
+            font-size: pTR(28);
+            color: #333;
+            line-height: pTR(30);
+            color: #ec1324;
+            position: relative;
+            padding-left: pTR(10);
+            i {
+              position: absolute;
+              width: pTR(10);
+              height: pTR(10);
+              border-radius: 50%;
+              background: url(../../assets/czlImg/point.png) 0 0 no-repeat;
+              background-size: 100%;
+              left: pTR(-10);
+              top: 50%;
+              -webkit-transform: translateY(-50%);
+              line-height: pTR(40);
+            }
+          }
+          p {
+            padding-left: pTR(10);
+            padding-top: pTR(10);
+            color: #8a8a8a;
+            font-size: pTR(28);
+            line-height: pTR(30);
+            word-break: break-all;
+            font-size: pTR(26);
+          }
+        }
+      }
+      .closePart {
+        position: absolute;
+        left: 50%;
+        bottom: pTR(-80);
+        width: pTR(54);
+        height: pTR(54);
+        -webkit-transform: translateX(-50%);
+        background: url(../../assets/czlImg/maclose.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+    }
+  }
+  .RefundBox {
+    width: pTR(500);
+    height: pTR(446);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    .cryno {
+      width: pTR(126);
+      height: pTR(162);
+      background: url(../../assets/czlImg/cryno.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: pTR(44) auto 0;
+      display: block;
+    }
+    .text {
+      padding: pTR(22) 0 pTR(50);
+      text-align: center;
+      color: #333333;
+      font-size: pTR(32);
+    }
+    .butList {
+      display: flex;
+      justify-content: center;
+      .btn1 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #929292;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+      .btn2 {
+        width: pTR(245);
+        height: pTR(70);
+        border-radius: pTR(10);
+        background: #f52b3a;
+        font-size: pTR(36);
+        text-align: center;
+        line-height: pTR(70);
+        color: #fff;
+      }
+    }
+  }
+}
+
+.scrollTop {
+  height: pTR(270);
+  overflow-y: scroll;
+}
+
+
+.scrollTop::-webkit-scrollbar {
+  width: 20px;
+  height: 16px;
+  background-color: red;
+}
+
+.scrollTop::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  background-color: #F5F5F5;
+}
+
+.scrollTop::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+  background-color: #555;
+}
+
+.masuccess {
+  position: fixed;
+  width: pTR(288);
+  height: pTR(100);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%);
+  font-size: pTR(32);
+  text-align: center;
+  line-height: pTR(100);
+  color: #fff;
+  z-index: 9999;
+}
+
+.verificationcode {
+  width: pTR(604);
+  height: pTR(472);
+  background: #fff;
+  border-radius: pTR(10);
+  padding: pTR(70) pTR(55) 0;
+.input_box{
+  padding: pTR(30) 0;
+  background: #f4f4f4;
+}
+  input {
+    width: 100%;
+    height: pTR(55);
+    line-height: pTR(55);
+    background: #f4f4f4;
+    font-size: pTR(36);
+    color: #666666;
+    text-align: center;
+
+  }
+  p {
+    font-size: pTR(30);
+    color: #999;
+    text-align: center;
+    padding: pTR(55) 0 pTR(60);
+  }
+  .sureBtn {
+    width: 100%;
+    height: pTR(80);
+    line-height: pTR(80);
+    text-align: center;
+    color: #fff;
+    font-size: pTR(36);
+    background: #f66051;
+    border-radius: pTR(15);
+  }
+  .closeSure {
+    width: pTR(54);
+    height: pTR(54);
+    background: url(../../assets/czlImg/maclose.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin: pTR(150) auto 0;;
+  }
+}
+
+</style>

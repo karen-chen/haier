@@ -1,0 +1,224 @@
+<template>
+	
+	<div style="background:#f52b3a;">
+		 <div class="head">参与团购会享工厂价<i>预存50抵500</i></div>
+        <div class="mian">
+            <div class="box">
+                <p>时间:11月23日-11月29日</p>
+                <p>地点:龙湖海尔社区店</p>
+            </div>
+            <div class='titleLine  line1'>
+              <h2 class="title">最低价</h2>
+              <p class="text">参与团购专场可享团购最低价购买海尔家电。详情咨询：023-86785638</p>
+            </div>
+            <div class='titleLine  line2'>
+              <h2 class="title">最低价</h2>
+              <p class="text">参与团购专场可享团购最低价购买海尔家电。详情咨询：023-86785638</p>
+            </div>
+            <div class='titleLine  line3'>
+              <h2 class="title">最低价</h2>
+              <p class="text">参与团购专场可享团购最低价购买海尔家电。详情咨询：023-86785638</p>
+            </div>
+            <div class="shopping">
+               <div class="totle">热销商品</div>
+               <ul>
+                 <li class="item">
+                   <div class="left">
+                      <img src="../../assets/czlImg/shoppic.png" >
+                   </div>
+                   <div class="right">
+                      <h2>智能变频洗烘一体洗衣机</h2>
+                      <p class="price">原价<i>￥4000</i></p>
+                      <p class="tunprice">团购价￥<i>3299</i></p>
+                   </div>
+                 </li>
+                 <li class="item">
+                   <div class="left">
+                      <img src="../../assets/czlImg/shoppic.png" >
+                   </div>
+                   <div class="right">
+                      <h2>智能变频洗烘一体洗衣机</h2>
+                      <p class="price">原价<i>￥4000</i></p>
+                      <p class="tunprice">团购价￥<i>3299</i></p>
+                   </div>
+                 </li>
+               </ul>
+            </div>
+            
+        </div>
+        <img class="couponBtn" src="../../assets/czlImg/couponBtn.jpg">
+	</div>
+</template>
+<script>
+import {
+    mapState
+} from 'vuex'
+
+
+import api from '@/vuex/api';
+
+
+export default {
+  created(){
+
+    //调用页面接口
+    api.indexTitle({
+     
+    })
+  }
+
+}
+</script>
+
+<style lang="scss" scoped>
+     @import '../../assets/scss/_mixins.scss';
+     
+      .head{
+      width:100%;
+      height:pTR(82);
+      background:url(../../assets/czlImg/indexTitle.jpg) 0 0 no-repeat;
+      background-size:100%;
+      text-align: center;
+      line-height: pTR(82);
+      font-size: pTR(30);
+      color:#fff;
+      i{
+        display: inline-block;
+        margin-left:pTR(30);
+      }
+      }
+
+      .mian{
+           width:100%;
+           background:url(../../assets/czlImg/indexBg.jpg) 0 0 no-repeat;
+           background-size:100%;
+           padding:pTR(262) pTR(36) 0;
+            .box{
+              width:pTR(603);
+              height:pTR(208);
+              background:url(../../assets/czlImg/indexBox.png) 0 0 no-repeat;
+              background-size:100%;
+              text-align:center;
+              color:#fc1a62;
+              font-size:pTR(30);
+              padding-top:pTR(60);
+              margin:0 auto;
+              p{
+                line-height:pTR(45);
+              }
+            }
+        
+
+      .titleLine{
+        width:pTR(679);
+        height:pTR(144);
+        color:#fff;
+        padding:pTR(20) pTR(25);
+        margin-bottom:pTR(20);
+        .title{
+          font-size:pTR(37);
+          padding-bottom:pTR(10);
+
+        }
+        .text{
+          width:pTR(500);
+          line-height:pTR(35);
+			     font-size:pTR(21);
+        }
+
+      }
+
+      .line1{
+        width:100%;
+        background:url(../../assets/czlImg/indexLine1.png) 0 0 no-repeat;
+        background-size:100%;
+      }
+      .line2{
+        width:100%;
+        background:url(../../assets/czlImg/indexLine2.png) 0 0 no-repeat;
+        background-size:100%;
+      }
+      .line3{
+        width:100%;
+        background:url(../../assets/czlImg/indexLine3.png) 0 0 no-repeat;
+        background-size:100%;
+      }
+
+      .shopping{
+        width: 100%;
+        padding-bottom:pTR(50);
+        .totle{
+          width:pTR(429);
+          height:pTR(60);
+          background:url(../../assets/czlImg/hotLine.png) 0 0 no-repeat;
+          background-size:100%;
+          margin:pTR(50) auto pTR(45);
+          text-align:center;
+          line-height:pTR(60);
+          color:#f52b3a;
+          font-size:pTR(30);
+          font-weight: bold;
+        }
+        .item{
+            display: flex;
+            width:100%;
+            height:pTR(266);
+            background:#fff;
+            margin-bottom:pTR(20);
+            padding:pTR(15) pTR(20) pTR(15) pTR(15);
+            .left{
+                width:pTR(235);
+                height:pTR(236);
+                img{
+                  width: 100%;
+                  height:100%;
+                }
+            }
+            .right{
+              box-flex: 1;
+              flex:1;
+              padding:pTR(20) 0 0 pTR(25);
+              position: relative;
+              
+              h2{
+               color:#414141;
+              font-size:pTR(35);
+              line-height:pTR(46);
+              overflow:hidden; 
+				text-overflow:ellipsis;
+				display:-webkit-box; 
+				-webkit-box-orient:vertical;
+				-webkit-line-clamp:2; 
+              width:pTR(350);
+              }
+              .price{
+                position: absolute;
+                bottom:pTR(50);
+                color:#9a9a9a;
+                font-size:pTR(29);
+                i{
+                  display: inline-block;
+                  text-decoration:line-through; 
+                }
+              
+              }
+              .tunprice{
+                position: absolute;
+                bottom:0;
+                color:#f52b3a;
+                font-size:pTR(29);
+                i{
+                  display: inline-block;
+                  font-size:pTR(43);
+                }
+        
+              }
+            }
+          }
+      }
+      
+    }
+.couponBtn{
+        width:100%;
+      }
+</style>

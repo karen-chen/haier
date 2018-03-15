@@ -1,0 +1,139 @@
+<!-- pc's count down and prizes-->
+
+<template>
+  <div class="screen_body">
+    <h2 class="title_h2">海尔家电团购会</h2>
+    <div class="erweima_pic">
+      <img src="../../assets/images/screen_code.jpg">
+    </div>
+    <div class="screen_content">
+      <h2>距离下一轮摇奖开始</h2>
+      <div class="count_box">
+        <span>01</span>时
+        <span>01</span>分
+        <span>01</span>秒
+      </div>
+    </div>
+    <div class="screen_bottom">
+      <h2>下轮奖品</h2>
+      <div class="gift_list">
+        <ul>
+          <li v-for = "prize in prize_list" :key="prize.resourceId">
+            <h3>{{prize.resourceName}}</h3>
+            <p><span>{{prize.launchAmount}}</span>个</p>
+          </li>
+        </ul>
+      </div>
+  </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_screen.scss';
+</style>
+<script>
+  import * as config from '@/lib/config'
+  import {
+    getParam
+  } from '@/lib/tools';
+
+  export default {
+    data() {
+      return {
+        prize_list: [],
+        count_hour: 0,
+        count_min: 0,
+        count_second: 0,
+        timer_refresh_interval: 13000,
+        actSid: "",
+        timerSid: ""
+      }
+    },
+    created(){
+      this.actSid = getParam("actSid");
+      this.initPage();
+
+      this.refreshTimer();
+      setTimeout(this.refreshTimer, this.user_refresh_interval);
+    },
+    methods:{
+      initPage(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/sys/getBaseConfigByType",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+            configType: 'shake_act_base_config'
+          },
+          success: function(data) {
+            console.log("after getBaseConfigByType");
+            console.log(data);
+            if (data.ret == 0) {
+              document.title = data.title;
+            }else {
+              console.log('getBaseConfigByType:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getBaseConfigByType:', 'fail');
+          }
+        });
+      },
+      refreshTimer(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/timer/getCurrTimer",
+          dataType: "jsonp",
+          data: {
+            actSid: _this.actSid,
+          },
+          success: function(data) {
+            console.log("after getCurrTimer");
+            console.log(data);
+            if (data.ret == 0) {
+              if(data.timerSid){
+                _this.timerSid = data.timerSid;
+              }
+            }else {
+              console.log('getCurrTimer:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getCurrTimer:', 'fail');
+          }
+        });
+      },
+      countDown(){},
+      getPrizeList(){
+        var _this = this;
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/getTimerPrizeList",
+          dataType: "jsonp",
+          data: {
+            timerSid: _this.timerSid
+          },
+          success: function(data) {
+            console.log("after getTimerPrizeList");
+            console.log(data);
+            if (data.ret == 0) {
+              if(data.rows){
+                _this.prize_list = data.rows;
+              }
+            }else {
+              console.log('getCurrTimer:', 'ret != 0');
+            }
+          },
+          error(res) {
+            console.log('getCurrTimer:', 'fail');
+          }
+        });
+      }
+    }
+
+  }
+</script>

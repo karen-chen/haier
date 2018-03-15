@@ -1,0 +1,77 @@
+<template>
+  <div class="seach_body">
+    <div class="row_p17 el-row">
+      <div class="el-col-19">
+        <div class="el-input">
+          <!----><!---->
+          <input autocomplete="off" placeholder="请输入内容" type="text" rows="2" validateevent="true" class="el-input__inner">
+          <!----><!---->
+        </div>
+      </div>
+      <div class="text-right el-col-4 el-col-offset-1">
+        <button type="button" class="el-button el-button--text" @click="onBack">取消</button>
+      </div>
+    </div>
+    <!-- 点击搜索-->
+    <div class="el-row">
+      <div class="el-col-2">
+        <i class="seach_icon"></i>
+      </div>
+      <div class="el-col-22">
+        <p>搜索“佳园路”</p>
+      </div>
+    </div>
+    <!-- 搜索到门店-->
+    <div class="list_seach" style="display: none;">
+      <ul>
+        <li>
+          <div class="el-row">
+            <div class="el-col el-col-3">
+              <div class="logo_shop">
+                <img src="../../assets/images/card_logo_02.jpg">
+              </div>
+            </div>
+            <div class="p10 el-col el-col-19">
+              <h3>海尔（佳园路店）</h3>
+              <h4>距离8km</h4>
+            </div>
+            <div class="text-right el-col el-col-2">
+              <i class="seach_icon"></i>
+            </div>
+          </div>
+          <div class="el-row">
+            <div class="el-col el-col-2">
+              <div class="pic_icon">
+                <img src="../../assets/images/icon_hui.jpg">
+              </div>
+            </div>
+            <div class="el-col el-col-22">
+              <p>现在参加认筹活动即可享受10元抵扣100元，数量有限先到先得</p>
+            </div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_seach.scss';
+</style>
+<script>
+  export default {
+    data(){
+      return{
+
+      }
+    },
+    methods:{
+      onBack() {
+        window.history.back(-1);
+      },
+    }
+  }
+</script>

@@ -1,0 +1,198 @@
+
+.draw_body{
+  background-color: #f52b3a;
+  height:100%;
+  .draw_main{
+    @include h(856);
+    @include bg(url("../../assets/images/draw_bj.jpg"));
+    position: relative;
+    @include m_b(15);
+    .lottery{
+      @include ele-box(603,588);
+      @include bg(url("../../assets/images/draw_main.png"));
+      position: absolute;
+      @include bottom(0);
+      left:50%;
+      transform: translate(-50%,0);
+      .lottery-box{
+        @include ele-box(493,493);
+        position: relative;
+        @include m(62,55);
+      }
+      .lottery-box > div{
+        @include ele-box(240,243);
+        position: absolute;
+        top:50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        .btn-start{
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .lottery-box img{ z-index:88; position:relative; width:60%;display: inline-block;}
+
+      .elric-dial-unit {
+        display: block;
+        @include ele-box(119,119);
+        @include bg( url("../../assets/images/bg_pan.png"));
+        position: absolute;
+        @include top(0);
+        @include left(0);
+        text-align: center;
+        padding: 0;
+      }
+
+      .gray {
+        @include bg( url("../../assets/images/gray.png"));
+        z-index: 10;
+        position: absolute;
+        @include top(0);
+        @include left(0);
+        width: 100%;
+        height: 100%;
+        display: block; }
+
+      .lottery-box .active .gray {
+        display: none; }
+
+      .lottery-box .active {
+        /*box-shadow: 0px 5px 5px 0px rgba(204, 40, 30, 0.75);*/ }
+
+      .lottery-unit-0 {
+        @include p_t(20);
+        }
+
+      .lottery-unit-1 {
+        @include left(125);
+        @include top(0);
+        @include p_t(40);
+        }
+
+      .lottery-unit-2 {
+        @include left(250);
+        @include top(0);
+        @include p_t(40);
+    }
+
+      .lottery-unit-3 {
+        @include left(375);
+        @include top(0);
+        @include p_t(20);
+      }
+
+      .lottery-unit-4 {
+        @include left(375);
+        @include top(125);
+        @include p_t(40);
+  }
+
+      .lottery-unit-5 {
+        @include left(375);
+        @include top(250);
+        @include p_t(40);
+  }
+
+      .lottery-unit-6 {
+        @include left(375);
+        @include top(375);
+        @include p_t(20);
+      }
+
+      .lottery-unit-7 {
+        @include left(250);
+        @include top(375);
+        @include p_t(40);
+       }
+
+      .lottery-unit-8 {
+        @include left(125);
+        @include top(375);
+        @include p_t(40);
+   }
+
+      .lottery-unit-9 {
+        @include left(0);
+        @include top(375);
+        @include p_t(20);
+   }
+
+      .lottery-unit-10 {
+        @include left(0);
+        @include top(250);
+        @include p_t(40);
+  }
+
+      .lottery-unit-11 {
+        @include left(0);
+        @include top(125);
+        @include p_t(40);
+  }
+
+
+    }
+  }
+  .not_win{
+    @include ele-box(646,412);
+    background-color: #f52b3a;
+    @include p(83,0);
+    p{
+      @include size_color(36,#fff);
+    }
+    span{
+      display: inline-block;
+      @include ele-box(149,149);
+      @include bg(url("../../assets/images/icon_draw.png"));
+      @include m_b(60);
+    }
+  }
+  .advertising_box{
+    @include w(642);
+    height:auto;
+    position: relative;
+    p{
+      @include p(30,0);
+      @include lin_hei(50);
+      @include size_color(36,#f52b3a);
+      background-color: #fff;
+      border-radius: pTR(10) pTR(10) 0 0;
+    }
+  }
+  .pickup_box{
+    @include ele-box(642,400);
+    background-color: #f52b3a;
+    @include p(63,60);
+    p{
+      @include size_color(36,#fff);
+      @include m_t(35);
+    }
+    .pick_btn{
+      background-color: #fff;
+      color: #f52b3a;
+      @include m_t(95);
+    }
+  }
+  .gift_btn{
+    @include ele-box(540,80);
+    @include bg(url("../../assets/images/mine_gift.png"));
+    @include m(70,104);
+  }
+  .rules_main{
+    @include m(0,34);
+    h2{
+      @include size_color(42,#fff);
+      @include p_b(30);
+      text-align: center;
+      font-weight: bold;
+    }
+    div{
+      @include lin_hei(50);
+      @include size_color(35,#fff);
+      word-break: break-all;
+      word-wrap: break-word;
+      p{
+        min-height: pTR(20);
+      }
+    }
+  }
+}

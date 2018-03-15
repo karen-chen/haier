@@ -1,0 +1,83 @@
+<template>
+  <div class="shake_body">
+    <div class="tips_main">
+      <span></span>
+      <p>您已完成本次问券，感谢您的帮助与支持！</p>
+    </div>
+    <div class="top el-row">
+      <div class="text-center el-col el-col-4"><span>1526</span><br>参与互动
+      </div>
+      <div class="el-col el-col-16 el-col-offset-4">
+        <div class="marquee_main"><div id="marquee" class="marquee"></div></div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        <div class="title"></div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        摇奖正在进行，一起来摇吧~
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        <div class="shake_main"><span class="tada"></span></div>
+      </div>
+    </div>
+    <div class="el-row">
+      <div class="text-center el-col el-col-24">
+        <div class="gifts_title"></div>
+      </div>
+    </div>
+    <div class="gigts_list">
+      <div class="el-row">
+        <div class="el-col el-col-18">测试自定义code</div>
+        <div class="el-col el-col-5 el-col-offset-1">剩余<span>81</span>个</div>
+      </div>
+    </div>
+  <!--未中奖弹框-->
+  <div class="pop_mask" id="noWin" style="display: none;">
+    <div class="pop_box no_win">
+      <h3>未中奖</h3>
+      <p>活动最重要的是开心咯！</p>
+      <span></span>
+      <div class="btn">再来一次</div>
+      <div class="off_btn">&times;</div>
+    </div>
+  </div>
+  <!--关注公众号弹框-->
+  <div class="pop_mask" id="codeBox" style="display: none;">
+    <div class="pop_box code_box">
+      <h3>请在“海尔电视”公众号<br>
+        菜单“我的券”中进行查看</h3>
+      <span><img src="../../assets/images/pop_code.jpg"></span>
+      <p>长按二维码，即可关注“海尔电视”公众号</p>
+      <div class="off_btn">&times;</div>
+    </div>
+  </div>
+  <!--中奖弹框-->
+  <div class="pop_mask" id="giftBox" style="display: none;">
+    <div class="pop_box gift_box">
+      <h3>恭喜你获得<span>xx</span>奖品</h3>
+      <p>奖品已自动放入“我的券”中</p>
+      <div class="btn">查看奖品使用说明</div>
+      <div class="off_btn">&times;</div>
+    </div>
+  </div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_shake.scss';
+</style>
+<script>
+/*  import '@/assets/js/jquery.marquee.min';
+  import '@/assets/js/wy.base.steadyoutput';
+  import '@/assets/js/wy.effect.marquee';*/
+
+
+
+</script>

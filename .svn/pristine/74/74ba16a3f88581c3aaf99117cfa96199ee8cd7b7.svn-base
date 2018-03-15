@@ -1,0 +1,38 @@
+<template>
+  <div class="shake_body countdown_body">
+    <div class="top el-row">
+      <div class="text-center el-col el-col-4"><span>1526</span><br>参与互动
+      </div>
+      <div class="el-col el-col-17 el-col-offset-3">
+        <div class="top_right">
+          <ul>
+            <li class="biandan">
+              <img
+                src="http://1251097942.cdn.myqcloud.com/1251097942/demos/photo/photo1.jpg"
+                width="200" height="200">
+            </li>
+            <li>
+              <img
+                src="http://1251097942.cdn.myqcloud.com/1251097942/demos/photo/photo1.jpg"
+                width="200" height="200">
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="count_main text-center">
+      <h2>距离下一轮摇奖开始</h2>
+    </div>
+    <div class="rule_btn"></div>
+    <div class="minegift_btn"></div>
+  </div>
+</template>
+<style lang="scss">
+  @import '../../assets/scss/_mixins.scss';
+  @import '../../assets/scss/pages/_index.scss';
+  @import '../../assets/scss/pages/_countdown.scss';
+  @import '../../assets/scss/pages/_shake.scss';
+</style>
+<script>
+
+</script>

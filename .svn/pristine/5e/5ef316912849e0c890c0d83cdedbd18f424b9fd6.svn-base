@@ -1,0 +1,174 @@
+* {
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  // -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+  // pointer-events: none;
+}
+
+body,
+div,
+dl,
+dt,
+dd,
+ul,
+ol,
+li,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+pre,
+form,
+fieldset,
+input,
+textarea,
+p,
+blockquote,
+th,
+td {
+  margin: 0;
+  padding: 0;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+fieldset,
+img,
+abbr,
+acronym {
+  border: 0;
+}
+
+address,
+caption,
+cite,
+code,
+dfn,
+em,
+strong,
+th,
+var {
+  font-style: normal;
+  font-weight: normal;
+}
+
+ol,
+ul,
+li {
+  list-style: none;
+}
+
+caption,
+th {
+  text-align: left;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: normal;
+}
+
+input {
+  border: none;
+  -webkit-appearance: none;
+  outline: none;
+  border-radius: 0;
+}
+
+i {
+  font-style: normal
+}
+
+a,
+img {
+  -webkit-touch-callout: none;
+  text-decoration: none;
+}
+
+img{
+  display: block;
+}
+
+a,
+a:active,
+a:hover,
+a:focus {
+  color: #333;
+  text-decoration: none;
+  outline:0;
+  outline:none;
+}
+
+html,
+body {
+  line-height: 1;
+  height: 100%;
+  //-webkit-user-select: none;
+  //user-select: none;
+  -webkit-touch-callout: none;
+  font-family: "Helvetica", Verdana, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  text-rendering: optimizelegibility;
+}
+
+body {
+  min-width: 300px;
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  background-color:#fff;
+}
+
+select {
+  -webkit-appearance: none;
+  border: none;
+  background-color: transparent;
+}
+
+textarea {
+  -webkit-appearance: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+div,
+span {
+  -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+}
+
+input[type="datetime-local"] {
+  background-color: transparent;
+}
+img{
+  width: 100%;
+  height: auto;
+}

@@ -1,0 +1,1067 @@
+<template>
+  <div class="content">
+    <div class="main">
+      <div class="top">
+        <img class="personPic" :src="imageServerUrl + picUrl">
+        <p class="logo">{{title}}</p>
+        <h2 class="title">{{buyBtn}}</h2>
+        <div class="codetime">
+          有效日期{{startDate}} 至 {{endDate}}
+        </div>
+      </div>
+      <div class="listBar">
+        <div :class="[ num2 ? 'left' : 'on','left']" @click="hexiaocontent">核销</div>
+        <div @click="refundcontent" :class="[ num1 ? 'right' : 'on','right']">退款</div>
+      </div>
+      <ul>
+        <li class="hexiao" v-show="num1">
+          <div class="inputma" v-show="orderStatus == 2">
+            <input type="" placeholder="请输入核销密码" v-model="code">
+          </div>
+          <div class="addGoods" v-show="orderStatus == 2">
+            <div class="addBox">
+              <div class="topBox">添加用户购买的商品信息</div>
+              <div class="shopBox" v-show="shoplist">
+                <ul class="shoplist">
+                  <li v-for="(obj,index) in shoplistItem" :key="index">
+                    <div class="left"><img :src="obj.item_field4"></div>
+                    <div class="right">
+                      <h2>{{obj.item_title}}</h2>
+                      <p>型号：{{obj.item_code}}</p>
+                      <h2>数量：{{obj.num}}</h2>
+                    </div>
+                    <span class="closelistItem" @click="closeAddList(obj)"></span>
+                  </li>
+                </ul>
+              </div>
+              <div class="addLogo" @click="addBox"></div>
+            </div>
+          </div>
+          <div class="remark" v-show="orderStatus == 2">
+            <textarea v-model="textarea" @focus="textCenter" maxlength="50"></textarea>
+            <div class="beizhu" v-show="beizhu">备注(选填)</div>
+          </div>
+          <div @click="codeMatch" :class="[ allow ? '' : 'nouse','buyBtn']">{{btnmass}}</div>
+        </li>
+        <li class="refund" v-show="num2">
+          <div class="inputma" v-show="orderStatus == 2">
+            <input type="" placeholder="请输入核销密码完成退券" v-model="code1">
+          </div>
+          <div @click="refund" :class="[ allow ? '' : 'nouse','buyBtn']">{{btnmass}}</div>
+        </li>
+      </ul>
+    </div>
+    <!-- 核销成功 -->
+    <div class="masuccess" v-show="tips">{{masseg}}</div>
+    <!-- 列表弹框 -->
+    <div class="popBox" v-show="popShoplist">
+      <div class="shopPop">
+        <div class="pop_information">
+          <div class="titlePop">添加用户购买的商品信息</div>
+          <div class="itemlist">
+            <ul class="selectBar">
+              <li>
+                <select v-model="selectItem" @change="changeItem()" @focus="textCenter1" @keydown="downItem()" id="select">
+                  <!-- listcat @change="areaChange('province')"-->
+                  <option v-for="(list,index) in listcat" :key="index" :value="list">{{list.cat_title}}</option>
+                </select>
+                <div class="selectBtn"></div>
+                <div class="selectText" v-show="selectText">请选择商品类型</div>
+              </li>
+              <li>
+                <input placeholder="输入商品名称/型号" v-model="itemcode">
+                <div class="searchBtn" @click="searchClick"></div>
+              </li>
+            </ul>
+            <ul class="shopItem">
+              <li v-for="(item,index) in shopItem" :key="index" @click="rebackItem(item)">
+                <div class="left"><img :src="item.item_field4"></div>
+                <div class="right">
+                  <h2>{{item.item_title}}</h2>
+                  <p>{{item.item_code}}</p>
+                </div>
+              </li>
+              <div @click="addMore" v-show="addMorelist" class="addMore">点击加载更多</div>
+            </ul>
+          </div>
+        </div>
+        <div class="off_btn" @click="offBtn">&times;</div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      imageServerUrl: config.imageServerUrl,
+      picUrl: '',
+      logo: '',
+      title: '',
+      buyBtn: '',
+      startDate: '',
+      endDate: '',
+      masseg: '',
+      code: '',
+      code1: '',
+      tips: false,
+      onoff: true,
+      orderStatus: 0,
+      allow: false,
+      btnmass: '',
+      btnmass1: '',
+      textarea: '',
+      num1: true,
+      num2: false,
+      money: 0,
+      beizhu: true,
+      shoplist: false,
+      shoplistItem: [],
+      popShoplist: false,
+      listcat: [],
+      selectItem: '',
+      itemtitle: '',
+      itemcode: '',
+      shopItem: [],
+      cat_sid: '',
+      pageSize: '2',
+      pageNumber: 1,
+      count: 0,
+      addMorelist: false,
+      selectText: true,
+      catTitle:{
+        cat_title:"请选择商品类型",selected:true}
+    }
+  },
+
+  created() {
+    document.title = "店员核销页面";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+    var self = this;
+    if (typeof WeixinJSBridge === "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', self.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', self.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', self.onBridgeReady);
+      }
+    } else {
+      self.onBridgeReady();
+    }
+
+    if (localStorage.getItem('picUrl')) {
+      self.picUrl = localStorage.getItem('picUrl');
+      self.title = localStorage.getItem('title');
+      self.buyBtn = localStorage.getItem('buyBtn');
+      self.startDate = localStorage.getItem('startDate');
+      self.endDate = localStorage.getItem('endDate');
+    }
+
+    //获取相关卡片详情
+    this.getMyRecognizeCardDetail();
+
+  },
+  watch: {
+    'itemcode': function(val) {
+      if (val.length > 3) {
+        this.shopItem = [];
+        this.pageNumber = 1;
+        this.productList();
+      }
+    }
+  },
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+    formatDate(time) {
+      var date = new Date(time);
+      return formatDate(date, 'yyyy-MM-dd hh:mm:ss');
+    },
+    textCenter() {
+      this.beizhu = false;
+    },
+
+    //提交核销购买信息
+    codeMatch() {
+      var self = this;
+      if (self.onoff) {
+        self.getMyRecognizeCardDetail(function() {
+          if (self.orderStatus == 2) {
+            if (self.code == '') {
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.tipsShow('核销码不能为空');
+            } else {
+              self.onoff = false;
+              //提交核销密码,进行核销
+              var productInfo = [];
+              self.shoplistItem.forEach(el => {
+                let product = {};
+                product.productId = el.sid;
+                product.productName = el.item_title;
+                product.total = el.num;
+                productInfo.push(product);
+              })
+              $.ajax({
+                url: config.locationUrl + "/order/hexiao",
+                dataType: "jsonp",
+                data: {
+                  //核销员的openID
+                  openid: userData.openid,
+                  cardOrderId: userData.cardOrderId,
+                  code: self.code,
+                  remark: self.textarea,
+                  productInfo: JSON.stringify(productInfo)
+                },
+                success: function(data) {
+                  console.log(data);
+                  setTimeout(() => {
+                    self.onoff = true;
+                  }, 2000);
+                  if (data.ret === "0") {
+                    self.$router.push({
+                      name: 'Quansuccess'
+                    })
+                  }
+                  if (data.ret === '1') {
+                    self.tipsShow('订单号无效');
+                  }
+                  if (data.ret === '2') {
+                    self.tipsShow('密码错误');
+                  }
+                  if (data.ret === '3') {
+                    self.tipsShow('该卡券已过期');
+                  }
+                  if (data.ret === '4') {
+                    self.tipsShow('该卡券正在退款中');
+                  }
+                  if (data.ret === '-99') {
+                    self.tipsShow('参数异常');
+                  }
+
+                },
+                error(res) {
+                  self.onoff = true;
+                  self.error('getMyRecognizeCardDetail');
+                }
+              });
+
+            }
+
+          } else {
+            return
+          }
+        })
+      } else {
+        return
+      }
+
+    },
+    //提交核销退款信息
+    refund() {
+      var self = this;
+      if (self.onoff) {
+        self.getMyRecognizeCardDetail(function() {
+          if (self.orderStatus == 2) {
+            if (self.money > 0) {
+              if (self.code1 == '') {
+                self.onoff = false;
+                setTimeout(() => {
+                  self.onoff = true;
+                }, 2000)
+                self.tipsShow('核销码不能为空');
+                return
+              } else {
+                self.onoff = false;
+                //提交核销密码, 进行退款
+                $.ajax({
+                  url: config.locationUrl + "/wx_pay/refund",
+                  dataType: "jsonp",
+                  data: {
+                    //核销员的openID
+                    openid: userData.openid,
+                    cardOrderId: userData.cardOrderId,
+                    code: self.code1
+                  },
+                  success: function(data) {
+
+                    console.log(data.ret);
+                    setTimeout(() => {
+                      self.onoff = true;
+                    }, 2000);
+                    if (data.ret === "0") {
+                      self.$router.push({
+                        name: 'Refundsuccess'
+                      })
+                    }
+                    if (data.ret === '1') {
+                      self.tipsShow('订单不存在或者非法用户操作')
+                    }
+                    if (data.ret === '2') {
+                      self.tipsShow('退款失败，请稍后重试')
+                    }
+                    if (data.ret === '3') {
+                      self.tipsShow('订单状态错误')
+                    }
+                    if (data.ret === '4') {
+                      self.tipsShow('该卡券不支持退款')
+                    }
+                    if (data.ret === '5') {
+                      self.tipsShow('认筹券核销密码错误')
+                    }
+                    if (data.ret === '-99') {
+                      self.tipsShow('参数异常')
+                    }
+                  },
+                  error(res) {
+                    self.onoff = true;
+                    self.error('getMyRecognizeCardDetail');
+                  }
+                });
+
+              }
+
+            } else {
+              self.onoff = false;
+              setTimeout(() => {
+                self.onoff = true;
+              }, 2000)
+              self.tipsShow('金额为0,不能退款');
+            }
+
+
+          } else {
+            return
+          }
+        })
+      } else {
+        return
+      }
+
+    },
+
+    //弹框定时显示
+    tipsShow(meg) {
+      var self = this;
+      this.tips = true;
+      this.masseg = meg;
+      setTimeout(() => {
+        self.tips = false;
+      }, 2000);
+    },
+
+
+    //获取核销内容页详情
+    getMyRecognizeCardDetail(cb) {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/order/getMyRecognizeCardDetail",
+        dataType: "jsonp",
+        data: {
+          //顾客的openID
+          openid: userData.userId,
+          cardOrderId: userData.cardOrderId
+        },
+        success: function(data) {
+          console.log(data);
+          if (data.ret === "0") {
+            self.picUrl = data.card.merchant.merchantLogo;
+            localStorage.setItem('picUrl', self.picUrl);
+            self.title = data.card.merchant.merchantName;
+            localStorage.setItem('title', self.title);
+            self.buyBtn = data.card.resourceName;
+            localStorage.setItem('buyBtn', self.buyBtn);
+            self.startDate = self.formatDate(data.order.startDate);
+            localStorage.setItem('startDate', self.startDate);
+            self.endDate = self.formatDate(data.order.endDate);
+            localStorage.setItem('endDate', self.endDate);
+            self.orderStatus = data.order.orderStatus;
+            self.money = Math.round(data.order.price * 100);
+            if (self.orderStatus == 2) {
+              self.allow = true;
+              self.btnmass = '确定';
+            }
+            if (self.orderStatus == 3) {
+              self.allow = false;
+              self.btnmass = '已核销';
+            }
+            if (self.orderStatus == 4) {
+              self.allow = false;
+              self.btnmass = '失败订单';
+            }
+            if (self.orderStatus == 5) {
+              self.allow = false;
+              self.btnmass = '取消订单';
+            }
+            if (self.orderStatus == 6) {
+              self.allow = false;
+              self.btnmass = '退款进行中';
+            }
+            if (self.orderStatus == 7) {
+              self.allow = false;
+              self.btnmass = '退款订单';
+            }
+            if (self.orderStatus == 8) {
+              self.allow = false;
+              self.btnmass = '订单过期';
+            }
+            if (self.orderStatus == 9) {
+              self.allow = false;
+              self.btnmass = '卡券还未开始使用';
+            }
+            console.log(self.orderStatus);
+            cb && cb();
+          }
+          if (data.ret === "-1") {
+            self.allow = false;
+            self.btnmass = '已退款';
+          } else {
+            //处理接口调用失败
+            self.error('getMyRecognizeCardDetail');
+          }
+        },
+        error(res) {
+          self.error('getMyRecognizeCardDetail');
+        }
+      });
+    },
+    //微信调取组件
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+    //关闭按钮
+    offBtn(){
+      this.popShoplist = false
+    },
+    hexiaocontent() {
+      this.num1 = true;
+      this.num2 = false;
+    },
+
+    refundcontent() {
+      this.num1 = false;
+      this.num2 = true;
+    },
+    addBox() {
+      this.popShoplist = true;
+      this.list_cat();
+    },
+    list_cat() {
+      var self = this;
+      if(self.listcat){
+        self.listcat = []
+      }
+      $.ajax({
+        url: config.locationUrl + "/product/list_cat",
+        dataType: "jsonp",
+        success: function(data) {
+          console.log(22222,data)
+          self.listcat.unshift(self.catTitle)
+          if (data.data.length > 0) {
+            data.data.forEach(el => {
+              self.listcat.push(el);
+              el.selected = true
+            })
+            console.log(44444,self.listcat)
+          } else {
+            self.listcat = [];
+          }
+        }
+      });
+    },
+    changeItem() {
+      console.log(1111,this.selectItem);
+
+      if (this.selectItem == undefined) {
+        return
+      }
+      this.cat_sid = this.selectItem.sid;
+      var self = this;
+      this.pageNumber = 1;
+      self.shopItem = [];
+      this.productList();
+    },
+    downItem() {
+      console.log(1111,this.selectItem);
+
+      if (this.selectItem == undefined) {
+       return
+
+      }
+      console.log(6666,this.selectItem.sid)
+      this.cat_sid = this.selectItem.sid;
+      var self = this;
+      this.pageNumber = 1;
+      self.shopItem = [];
+      this.productList();
+    },
+
+    addMore() {
+      if (this.shopItem.length == this.count) {
+        this.addMorelist = false;
+      } else {
+        this.addMorelist = true;
+        this.pageNumber++;
+        this.productList();
+      }
+    },
+
+    productList() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/product/list_item",
+        dataType: "jsonp",
+        data: {
+          cat_sid: this.cat_sid,
+          item_title: this.itemcode,
+          item_code: this.itemcode,
+          pageNumber: this.pageNumber,
+          pageSize: this.pageSize
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            data.data.rows = data.data.rows || [];
+            data.data.rows.forEach(obj => {
+              obj.item_field4 = config.imageServerUrl + obj.item_field4;
+            })
+            // self.navigationList = self.navigationList.concat(data.rows);
+
+            self.shopItem = self.shopItem.concat(data.data.rows);
+            self.count = data.data.count;
+            if (data.data.rows.length == data.data.count) {
+              self.addMorelist = false;
+            } else {
+              self.addMorelist = true;
+            }
+            console.log('self.shopItem', self.shopItem);
+          }
+        }
+      });
+    },
+
+    //选择商品,添加的列表
+    rebackItem(item) {
+      console.log('AAAA', item.num);
+      // console.log(item.sid);
+      var itemSid = item.sid;
+      if (this.shoplistItem.length !== 0) {
+        console.log(1111111111);
+        var numfind = false;
+        this.shoplistItem.forEach(el => {
+          console.log(el.sid);
+          if (el.sid === itemSid) {
+            console.log('CCCC', el.num);
+            el.num++;
+            numfind = true;
+            return true;
+          }
+        })
+
+        if (!numfind) {
+          item.num = 1;
+          this.shoplistItem.push(item);
+        }
+      } else {
+        item.num = 1;
+        this.shoplistItem.push(item);
+      }
+      console.log(this.shoplistItem);
+      // this.shoplistItem.push(item);
+      this.popShoplist = false;
+      this.shoplist = true;
+    },
+    //删除商品
+    closeAddList(obj) {
+      var self = this;
+      var objSid = obj.sid;
+      var indexId;
+      console.log(objSid);
+      $.each(this.shoplistItem, function(index, el) {
+        if (el.sid === objSid) {
+          indexId = index;
+        }
+      })
+
+      this.shoplistItem.splice(indexId, 1);
+    },
+    textCenter1() {
+      this.selectText = false;
+    },
+    searchClick() {
+      this.pageNumber = 1;
+      this.shopItem = [];
+      this.productList();
+    }
+  }
+}
+
+</script>
+<style lang="scss">
+@import '../../assets/scss/_mixins.scss';
+
+.content {
+  width: 100%;
+  min-height: 100%;
+  background: #f2f2f2;
+padding-bottom:pTR(85);
+  .main {
+    .top {
+      padding-top: pTR(30);
+      text-align: center;
+      width: 100%;
+      height: pTR(368);
+      background: url(../../assets/czlImg/hexiaoBg.jpg) 0 0 no-repeat;
+      background-size: 100%;
+      .personPic {
+        width: pTR(120);
+        height: pTR(120);
+        display: block;
+        margin: 0 auto;
+        border-radius: 50%;
+      }
+      .logo {
+        font-size: pTR(28);
+        color: #fff;
+        padding-top: pTR(20);
+      }
+      .title {
+        padding: pTR(40) 0 0;
+        color: #fff;
+      }
+      .codetime {
+        height: pTR(100);
+        line-height: pTR(100);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: pTR(24);
+      }
+    }
+    .listBar {
+      width: 100%;
+      height: pTR(80);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 pTR(110);
+      color: #666666;
+      font-size: pTR(30);
+      .left {
+        width: pTR(160);
+        height: pTR(80);
+        line-height: pTR(80);
+        text-align: center;
+        position: relative;
+      }
+      .right {
+        width: pTR(160);
+        height: pTR(80);
+        line-height: pTR(80);
+        text-align: center;
+        position: relative;
+      }
+
+      .on:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        width: 100%;
+        background: #f47365;
+        height: pTR(5);
+        bottom: 0;
+      }
+      .on {
+        color: #f47365;
+      }
+    }
+
+    .hexiao {
+      .buyBtn {
+        width: pTR(687);
+        height: pTR(95);
+        line-height: pTR(70);
+        background: #f66051;
+        color: #fff;
+        font-size: pTR(30);
+        border-radius: pTR(5);
+        margin: pTR(40) auto 0;
+        text-align: center;
+        line-height: pTR(95);
+        font-size: pTR(32);
+        border-radius: pTR(5);
+      }
+      .nouse {
+        background: #929292;
+      }
+      .inputma {
+        padding: pTR(20) 0;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        color: #666;
+        input {
+          width: 100%;
+          background: #fff;
+          font-size: pTR(30);
+          height: pTR(100);
+          line-height: pTR(100);
+          padding-left: pTR(40);
+        }
+      }
+      .addGoods {
+        padding-bottom: pTR(20);
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        .addBox {
+          background: #fff;
+          width: 100%;
+          padding: 0 pTR(30);
+          overflow: hidden;
+          .topBox {
+            height: pTR(95);
+            line-height: pTR(95);
+            font-size: pTR(30);
+            color: #666;
+            border-bottom: solid #eeeeee pTR(2);
+          }
+          .shopBox {
+            padding-top: pTR(36);
+            background: #fff;
+            .shoplist li {
+              background: #fafafa;
+              height: pTR(224);
+              display: flex;
+              position: relative;
+              margin-bottom: pTR(36);
+              .left {
+                width: pTR(223);
+                height: 100%;
+                img {
+                  widdth: 100%;
+                  height: 100%;
+                }
+              }
+              .right {
+                box-flex: 1;
+                flex: 1;
+                margin-left: pTR(40);
+                padding: pTR(17) 0 0;
+
+                h2 {
+                  font-size: pTR(30);
+                  color: #666666;
+                  margin-bottom: pTR(20);
+                  max-height: pTR(70);
+                  max-width: pTR(400);
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  display: -webkit-box;
+                  -webkit-box-orient: vertical;
+                  -webkit-line-clamp: 2;
+                  line-height: pTR(36);
+                }
+                p {
+                  font-size: pTR(30);
+                  color: #666666;
+                  margin-bottom: pTR(20);
+                  max-width: pTR(400);
+                  line-height: pTR(36);
+                  display: block;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                }
+              }
+              .closelistItem {
+                display: block;
+                position: absolute;
+                right: pTR(-40);
+                top: pTR(-40);
+                width: pTR(100);
+                height: pTR(100);
+                background: url(../../assets/czlImg/itemclose.png) center center no-repeat;
+                background-size: pTR(42) pTR(42);
+                border-radius: 50%;
+              }
+            }
+          }
+
+          .addLogo {
+            width: 100%;
+            height: pTR(185);
+            background: #fff url(../../assets/czlImg/shopAdd.png) center center no-repeat;
+            background-size: pTR(102) pTR(102);
+          }
+        }
+      }
+      .remark {
+        width: 100%;
+        height: pTR(200);
+        padding: pTR(30);
+        background: #fff;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        position: relative;
+        textarea {
+          border: none;
+          width: 100%;
+          height: 100%;
+          color: #666666;
+          font-size: pTR(30);
+          line-height: pTR(40);
+        }
+        .beizhu {
+          color: #666666;
+          font-size: pTR(30);
+          position: absolute;
+          left: pTR(30);
+          top: pTR(30);
+          point-event: none;
+        }
+      }
+    }
+    .refund {
+      .inputma {
+        padding: pTR(20) 0;
+        border-top: solid #eeeeee pTR(2);
+        border-bottom: solid #eeeeee pTR(2);
+        input {
+          width: 100%;
+          background: #fff;
+          font-size: pTR(30);
+          height: pTR(100);
+          line-height: pTR(100);
+          padding-left: pTR(40);
+        }
+      }
+      .buyBtn {
+        width: pTR(687);
+        height: pTR(95);
+        line-height: pTR(70);
+        background: #f66051;
+        color: #fff;
+        font-size: pTR(30);
+        border-radius: pTR(5);
+        margin: pTR(40) auto pTR(85);
+        text-align: center;
+        line-height: pTR(95);
+        font-size: pTR(32);
+        border-radius: pTR(5);
+      }
+      .nouse {
+        background: #929292;
+      }
+    }
+  }
+}
+
+
+.masuccess {
+  position: fixed;
+  width: pTR(340);
+  height: pTR(88);
+  background: rgba(0, 0, 0, 0.8);
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  font-size: pTR(30);
+  text-align: center;
+  line-height: pTR(88);
+  color: #fff;
+  z-index: 9999;
+}
+
+html {
+  background: #f2f2f2;
+}
+.off_btn{
+  width: pTR(50);
+  height: pTR(50);
+  border-radius: 50%;
+border:pTR(2) #fff solid;
+  color:#fff;
+  line-height:pTR(46);
+  font-size:pTR(40);
+  text-align: center;
+  margin: pTR(60) auto 0;
+}
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 99;
+  .shopPop {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: pTR(650);
+    height: auto;
+    border-radius: pTR(15);
+    .titlePop {
+      width: 100%;
+      height: pTR(121);
+      background: #fff url(../../assets/czlImg/popTitel.jpg) 0 0 no-repeat;
+      background-size: 100%;
+      text-align: center;
+      line-height: pTR(121);
+      font-size: pTR(36);
+      color: #fff;
+      font-weight: bold;
+      border-top-left-radius: pTR(15);
+      border-top-right-radius: pTR(15);
+    }
+    .itemlist {
+      padding: pTR(40);
+      background: #fff;
+      border-bottom-left-radius: pTR(15);
+      border-bottom-right-radius: pTR(15);
+      .selectBar {
+        li {
+          width: 100%;
+          height: pTR(90);
+          border: pTR(2) solid #d7d7d7;
+          margin-bottom: pTR(30);
+          position: relative;
+          select {
+            height: pTR(60);
+            color: #999;
+            font-size: pTR(36);
+            padding: 0 pTR(100) 0 pTR(40);
+            width: 100%;
+            height: 100%;
+          }
+          input {
+            line-height: pTR(90);
+            color: #999;
+            font-size: pTR(36);
+            padding: 0 pTR(100) 0 pTR(40);
+            width: 100%;
+            height: 100%;
+          }
+          input::-webkit-input-placeholder {
+            color: #999;
+            font-size: pTR(36);
+          }
+          .selectBtn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: pTR(95);
+            height: pTR(60);
+            background: url(../../assets/czlImg/select.png) center center no-repeat;
+            background-size: pTR(37) pTR(37);
+            pointer-events: none;
+            border-left: pTR(2) solid #d7d7d7;
+          }
+          .selectText {
+            position: absolute;
+            left: pTR(40);
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: pTR(36);
+            pointer-events: none;
+          }
+          .searchBtn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: pTR(95);
+            height: pTR(60);
+            background: url(../../assets/czlImg/shearch.png) center center no-repeat;
+            background-size: pTR(35) pTR(36);
+            border-left: pTR(2) solid #d7d7d7;
+          }
+        }
+      }
+      .shopItem {
+        max-height: pTR(520);
+        overflow-y: scroll;
+      }
+      .shopItem li {
+        background: #fafafa;
+        height: pTR(150);
+        display: flex;
+        position: relative;
+        margin-bottom: pTR(36);
+
+        .left {
+          width: pTR(151);
+          height: 100%;
+          img {
+            widdth: 100%;
+            height: 100%;
+          }
+        }
+        .right {
+          box-flex: 1;
+          flex: 1;
+          margin-left: pTR(40);
+          padding: pTR(17) 0 0;
+
+          h2 {
+            font-size: pTR(30);
+            color: #666666;
+            margin-bottom: pTR(20);
+            max-height: pTR(70);
+            max-width: pTR(400);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            line-height: pTR(36);
+          }
+          p {
+            font-size: pTR(30);
+            color: #666666;
+            margin-bottom: pTR(20);
+            max-width: pTR(400);
+            line-height: pTR(36);
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+        }
+      }
+      .addMore {
+        width: pTR(180);
+        height: pTR(42);
+        border-radius: pTR(5);
+        border: pTR(2) solid #f66051;
+        color: #f66051;
+        font-size: pTR(24);
+        text-align: center;
+        line-height: pTR(42);
+        margin: pTR(30) auto pTR(20);
+      }
+    }
+  }
+}
+
+</style>

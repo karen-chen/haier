@@ -1,0 +1,594 @@
+<template>
+  <div class="submit">
+    <div class="mainBox">
+      <div class="title">
+        请填写你的信息
+      </div>
+      <div class="titleTips">海尔尊重您的隐私并对您填写的信息严格保密，保证不将您的信息透漏给任何不相关的第三方，请放心填写 </div>
+      <div class="main">
+        <ul class="list">
+          <li v-for="(item,index) in list" :key="index">
+            <div v-show="item.value">
+              <div v-show="item.name=='address'">
+                <div class="item">
+                  <span>所在地区： </span>
+                  <!-- selectData -->
+                  <div class="selectTitle" @click="show" v-model="selectData">{{selectData}}</div>
+                </div>
+                <div class="item">
+                  <span>街道 / 镇： </span>
+                  <select class="selectBox" v-model="town">
+                    <option v-for="(list, index) in areaData" :key="index" :value="list">{{list.townName}}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="item">
+                <span>{{item.label}}: </span>
+                <input v-model="item.input" :placeholder="'请填写您的' + item.label" :maxlength="item.max" @blur="phoneNum(item)">
+              </div>
+            </div>
+          </li>
+          <vue-city-picker ref="picker" @select="select" :selected-index="selectedIndex" :data="data"></vue-city-picker>
+        </ul>
+        <div class="submitBtn" @click="showsuccesspage">
+          提交
+        </div>
+      </div>
+    </div>
+    <div class="pop_tips" v-show="showTips">{{messg}}</div>
+    <!-- 活动结束 -->
+    <div class="endBox" v-show="endActive">
+      <div class="textline">
+        <div class="img"></div>
+        该活动已关闭
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as purl from '@/assets/js/purl';
+import * as constants from '@/assets/js/constants';
+import * as auth from '@/assets/js/auth';
+import * as config from '@/lib/config';
+
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  checkInject,
+  checkTel
+} from '@/lib/tools';
+import AreaData from '@/lib/AreaData';
+import vueCityPicker from "vue-city-bspicker";
+import { province, city, area } from "@/lib/city-data";
+
+export default {
+  components: {
+    vueCityPicker
+  },
+  data() {
+    return {
+      town: '',
+      list: [],
+      cardNo: '',
+      customDataId: '',
+      localStorageList: {},
+      showTips: false,
+      msg: '',
+      endActive: false,
+      onoff: true,
+      pagemess: '',
+      messg: '',
+      areaData: [], //区数据
+      selectedIndex: [0, 0, 0], //数据回显
+      selectData: '',
+      selectArry: [],
+      selectcode: [],
+      data: [province, city, area],
+      province: '',
+      city: '',
+      country: '',
+      actId: '',
+      cardOrderId: ''
+    }
+  },
+
+  created() {
+    document.title = '购买信息填写';
+    var self = this;
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    //接口传参的数据需要存储在本地缓存
+    //卡券ID
+    self.cardNo = localStorage.getItem('cardSid');
+    //活动ID
+    self.actId = localStorage.getItem('actId');
+    //订单ID
+    self.cardOrderId = localStorage.getItem('cardOrderId');
+    //判断微信接口是否加载
+    if (typeof WeixinJSBridge == "undefined") {
+      if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', self.onBridgeReady, false);
+      } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', self.onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', self.onBridgeReady);
+      }
+    } else {
+      self.onBridgeReady();
+    }
+
+
+    // recognizeCard/getCustomData
+
+    $.ajax({
+      url: config.locationUrl + "/recognizeCard/getCustomData",
+      dataType: "jsonp",
+      data: {
+        //卡券ID
+        cardId: self.cardNo,
+        openid: userData.openid
+      },
+      success: function(data) {
+        if (data.ret === "0") {
+          console.log(data);
+          //console.log(JSON.parse(data.data.town).text);
+          // if (data.data.town == "") {
+          //   data.data.town = JSON.stringify({ "text": "", "value": "" });
+          // }
+          data.list = data.list || [];
+          data.list.forEach(function(obj, index) {
+            if (data.data) {
+              obj.input = data.data[obj.name];
+              // if (obj.name == 'address' && obj.value == 1) {
+
+              //   self.province = JSON.parse(data.data.province).text;
+              //   self.city = JSON.parse(data.data.city).text;
+              //   self.country = JSON.parse(data.data.country).text;
+              //   var Arry = [self.province, self.city, self.country];
+              //   var countryCode = JSON.parse(data.data.country).value;
+              //   self.selectData = Arry.join(" ");
+              //   self.getArea(countryCode, res => {
+              //     if (res.length > 0) {
+              //       self.areaData.length = 0;
+
+              //       res.forEach(el => {
+              //         self.areaData.push(el);
+
+              //         if (el.townId == JSON.parse(data.data.town).value) {
+              //           self.town = el;
+              //         }
+              //       });
+
+              //     } else {
+              //       self.areaData = [];
+              //     }
+
+              //   });
+
+              // }
+            } else {
+
+            }
+
+            if (obj.name == 'name') {
+              obj.max = '10'
+            }
+            if (obj.name == 'intention') {
+              obj.max = '20'
+            }
+            if (obj.name == 'address') {
+              obj.max = '30'
+            }
+          });
+          // console.log(data);
+          self.list = data.list
+          // console.log(self.list);
+        } else {
+          //处理接口调用失败
+          self.error('getCustomData');
+        }
+      },
+
+      error(res) {
+        self.error('getCustomData');
+      }
+
+    });
+  },
+
+  methods: {
+
+    phoneNum(item) {
+      var self = this;
+      console.log(item);
+      var val = item.input;
+
+      //手机输入框,验证手机号码和特殊js脚本字段  
+      if (item.name == "phone") {
+        var pattern1 = /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1})|(17[0-9]{1}))+\d{8})$/;
+        if (checkTel(val) && !checkInject(val)) {
+          return true;
+        } else {
+          if (self.showTips == false) {
+            self.showTips = true;
+            self.messg = "号码填写错误";
+            setTimeout(() => {
+              self.showTips = false;
+            }, 1000)
+          }
+          return false;
+        }
+      } else {
+        //其它输入框特殊js脚本字段        
+        if (!checkInject(val)) {
+          return true
+        } else {
+          if (self.showTips == false) {
+            self.showTips = true;
+            self.messg = "输入内容不能包含字符<>";
+            setTimeout(() => {
+              self.showTips = false;
+            }, 1000)
+          }
+          return false;
+        }
+      }
+
+    },
+    //报错提示
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+
+    //点击提交并支付按钮事件
+    showsuccesspage() {
+
+      //提交用户保存数据
+      var self = this;
+
+      self.getRecognizeCardDetial();
+
+    },
+
+
+    //请求接口,保存用户填写信息
+    getRecognizeCardDetial() {
+      var self = this;
+      if (self.onoff) {
+        self.onoff = false;
+        setTimeout(() => {
+          self.onoff = true;
+        }, 1000)
+        var result = {};
+        //填充所需数据
+        self.list.forEach(item => {
+          if (item.value == "1") {
+            if (item.input && item.input.length > 0 && self.phoneNum(item)) {
+              result[item.name] = item.input;
+              if (item.name == 'address') {
+                if (self.selectData.length > 0 && ((self.areaData.length > 0 && self.town) || self.areaData.length == 0)) {
+                  result.province = JSON.stringify({ "text": self.selectArry[0], "value": self.selectcode[0] });
+                  result.city = JSON.stringify({ "text": self.selectArry[1], "value": self.selectcode[1] });
+                  result.country = JSON.stringify({ "text": self.selectArry[2], "value": self.selectcode[2] });
+                  if (self.areaData.length == 0) {
+                    result.town = JSON.stringify({ "text": "", "value": "" });
+                  } else {
+                    result.town = JSON.stringify({ "text": self.town.townName, "value": self.town.townId });
+                  }
+
+                } else {
+                  if (self.showTips == false) {
+                    self.showTips = true;
+                    self.messg = "请填写完整信息";
+                    setTimeout(() => {
+                      self.showTips = false;
+                    }, 1000)
+                  }
+                  throw ''
+                }
+              }
+            } else {
+              console.log(item.label + 'bu neng wei kong!');
+              if (self.showTips == false) {
+                self.showTips = true;
+                self.messg = "请填写完整信息";
+                setTimeout(() => {
+                  self.showTips = false;
+                }, 1000)
+              }
+
+              throw ''
+            }
+          }
+        })
+        result.openid = userData.openid;
+        result.actSid = self.actId;
+        result.orderId = self.cardOrderId;
+        console.log(result);
+        //传活动ID 和订单ID
+        $.ajax({
+          url: config.locationUrl + "/recognizeCard/saveCustomData",
+          dataType: "jsonp",
+          type: "post",
+          data: result,
+          success: function(data) {
+            console.log(data);
+            if (data.ret === "0") {
+              self.customDataId = data.data.sid;
+              self.$router.push({
+                name: 'Fullok'
+              })
+              console.log(self.$router);
+              // self.$router.push({
+              //   path: '/confessTicket/fullok'
+              // })
+            }
+          },
+          error(res) {
+            self.error('getCustomData');
+          }
+        });
+
+      } else {
+        return
+      }
+    },
+
+    onBridgeReady() {
+      console.log("组件加载完毕");
+    },
+    //返回页面弹框
+    returnPage() {
+      this.$router.push({
+        name: 'Main'
+      })
+    },
+    show: function() {
+      this.$refs["picker"].show();
+    },
+    select: function() {
+      console.log(1111111, arguments);
+      console.log("区接口参数：", arguments[0]);
+      console.log("区接口参数：", arguments[0][2]);
+      console.log("回显：", arguments[1]);
+      console.log("地址：", arguments[2]);
+
+      this.selectData = arguments[2].join(" ")
+      this.selectArry = arguments[2];
+
+      this.selectcode = arguments[0];
+      console.log(this.selectArry);
+
+      //区id
+      if (arguments[0][2]) {
+        this.getArea(arguments[0][2], res => {
+          if (res.length > 0) {
+            this.areaData.length = 0;
+            res.forEach(el => {
+              this.areaData.push(el);
+            });
+          } else {
+            this.areaData = [];
+          }
+
+        });
+
+      }
+    },
+    getArea(villageId, cb) {
+      $.ajax({
+        url: config.locationUrl + "/town/getTowns",
+        dataType: "jsonp",
+        data: {
+          villageId: villageId
+        },
+        success: (data) => {
+          console.log(data);
+          if (data.ret == 0) {
+            cb && cb(data.rows);
+          }
+        }
+      });
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+
+.picker {
+  z-index: 999;
+}
+
+.textCenter {
+  position: absolute;
+  font-size: pTR(30);
+  color: #777;
+  left: pTR(200);
+  pointer-events: none;
+}
+
+.pop_tips {
+  background-color: rgba(0, 0, 0, .6);
+  min-width: pTR(400);
+  padding: pTR(20) 0;
+  text-align: center;
+  color: #fff;
+  font-size: pTR(30);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.submit {
+  width: 100%;
+  min-height: 100%;
+  background: #f9f9f9 url(../../assets/czlImg/informBg.jpg) 0 0 no-repeat;
+  -webkit-background-size: 100%;
+  background-size: 100%;
+  position: relative;
+  .mainBox {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 pTR(32);
+    .title {
+      height: pTR(152);
+      line-height: pTR(152);
+      color: #fff;
+      font-size: pTR(36);
+      text-align: center;
+    }
+    .titleTips {
+      font-size: pTR(26);
+      color: #fff;
+      line-height: pTR(36);
+      padding-bottom: pTR(50);
+      text-align: center;
+    }
+    .main {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: pTR(10);
+      padding: 0 pRT(60);
+      .list {
+        padding: pTR(50) pTR(60);
+        width: 100%;
+        .item {
+          height: pTR(100);
+          display: flex;
+          align-items: center;
+          border-bottom: pTR(2) solid #e5e5e5;
+          padding-top: pTR(50);
+          position: relative;
+          span {
+            width: pTR(200);
+            height: pTR(50);
+            line-height: pTR(50);
+            color: #333333;
+            font-size: pTR(30);
+            font-weight: 500;
+            text-align: justify;
+          }
+          input {
+            width: pTR(400);
+            height: pTR(50);
+            line-height: pTR(50);
+            background: transparent;
+            padding-left: pTR(30);
+            font-size: pTR(30);
+          }
+          .selectBox {
+            width: pTR(400);
+            height: pTR(50);
+            padding-left: pTR(30);
+            line-height: pTR(50);
+            background: transparent;
+            font-size: pTR(30);
+          }
+          .selectTitle {
+            width: pTR(400);
+            height: pTR(50);
+            padding-left: pTR(30);
+            line-height: pTR(50);
+            font-size: pTR(30);
+            overflow: hidden;
+          }
+        }
+      }
+      .submitBtn {
+        width: pTR(562);
+        height: pTR(94);
+        background: #f9f9f9 url(../../assets/czlImg/btn1.png) 0 0 no-repeat;
+        -webkit-background-size: 100%;
+        background-size: 100%;
+        line-height: pTR(94);
+        border-radius: pTR(10);
+        margin: pTR(20) auto pTR(50);
+        font-size: pTR(36);
+        color: #fff;
+        text-align: center;
+      }
+    }
+  }
+}
+
+.popBox {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 999;
+  .tipsBox {
+    width: pTR(560);
+    height: pTR(356);
+    position: absolute;
+    background: #fff;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: pTR(10);
+    padding: 0 pTR(22);
+    text-align: center;
+    .tipstext {
+      padding: pTR(114) 0 pTR(50);
+      color: #757575;
+      font-size: pTR(36);
+    }
+
+    .tipsday {
+      color: #999999;
+      font-size: pTR(30);
+    }
+    .tipsBtn {
+      position: absolute;
+      width: pTR(50);
+      height: pTR(50);
+      background: url(../../assets/czlImg/closeBtn.png) center center no-repeat;
+      background-size: pTR(16) pTR(16);
+      right: 0;
+      top: 0;
+    }
+  }
+}
+
+
+.endBox {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  .textline {
+    font-size: pTR(35);
+    color: #999;
+    text-align: center;
+    padding-top: pTR(180);
+    .img {
+      display: block;
+      width: pTR(198);
+      height: pTR(129);
+      background: url(../../assets/czlImg/endPic.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto pTR(75);
+    }
+  }
+}
+
+</style>

@@ -1,0 +1,49 @@
+import api from '../api'
+import * as types from '../types'
+
+//2 定义初始状态；
+const state={
+	title:'',
+	shareTitle:'',
+	shareUrl:'',
+	caption:'',
+	shareDesc:'',
+	shareImg:'',
+	activityAddress:'',
+	activityTime:'',
+	
+}
+
+
+//4 action
+const actions={
+	getBaseConfigByType({commit, state}, req){
+		api.getBaseConfigByType(req, (res)=>{
+			commit(types.BM_GET_BASE_CONFING_BY_TYPE, res);
+		});
+	}
+}
+
+const getters={}
+
+//3 mutations
+const  mutations={
+	[types.BM_GET_BASE_CONFING_BY_TYPE](state, res){
+		state.title = res.title;
+		state.shareTitle = res.shareTitle;
+		state.shareUrl = res.shareUrl;
+		state.caption = res.caption;
+		state.shareDesc = res.shareDesc;
+		state.shareImg = res.shareImg;
+		state.activityAddress = res.activityAddress;
+		state.activityTime = res.activityTime;
+	}
+}
+
+
+export default{
+	state,
+	actions,
+	getters,
+	mutations
+}

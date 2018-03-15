@@ -1,0 +1,460 @@
+<template>
+  <div style="background:#f52b3a; min-height: 100%;">
+    <div class="head">
+      <marquee>{{caption}}</marquee>
+    </div>
+    <div class="mian">
+      <div class="box">
+        <p>时间:{{activityTime}}</p>
+        <p>地点:{{activityAddress}}</p>
+      </div>
+      <div :class="'titleLine line'+(index+1)" v-for="(item,index) in bannerGrop">
+        <h2 class="title">{{item.elementTitle}}</h2>
+        <p class="text">{{item.elementContent}}</p>
+      </div>
+      <div class="shopping" v-for="title in list">
+        <div class="totle">{{title.groupName}}</div>
+        <ul>
+          <li class="item" v-for="item in title.items">
+            <div class="left">
+              <img :src="item.imgUrl">
+            </div>
+            <div class="right">
+              <h2>{{item.elementContent}}</h2>
+              <p class="price">原价<i>￥{{item.clickCount}}</i></p>
+              <p class="tunprice">团购价￥<i>{{item.viewCount}}</i></p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <img @click="showvoucherRoute" class="couponBtn" src="../../assets/czlImg/couponBtn.jpg">
+    <div class="endBox" v-show="endMess">
+      <div class="text">
+        该活动已结束
+      </div>
+    </div>
+  </div>
+</template>
+<script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+<script>
+import * as config from '@/lib/config'
+import {
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+
+export default {
+  data() {
+    return {
+      caption: '',
+      activityAddress: '',
+      activityTime: '',
+      bannerGrop: {},
+      list: [],
+      shareTitle: '',
+      title: '',
+      shareImg: '',
+      shareUrl: '',
+      shareDesc: '',
+      endMess: false
+    }
+  },
+
+  created() {
+    var self = this;
+    // /activity/checkActivityIng 检测活动是否有效
+    $.ajax({
+      url: config.locationUrl + "/activity/checkActivityIng",
+      dataType: "jsonp",
+      data: {
+        actSid: userData.actSid,
+      },
+      success: function(data) {
+        if (data.ret === "0") {
+          console.log(111111111);
+          self.getBaseConfig();
+          self.getBannerList();
+          self.getProductModuleList()
+
+
+
+        } else {
+          //处理接口调用失败
+          self.endMess = true;
+        }
+      },
+      error(res) {
+        self.error('checkActivityIng');
+      }
+    });
+
+
+    console.log(5555555, this.activityAddress);
+
+
+
+
+  },
+
+  methods: {
+    error(msg) {
+      console.log('msg:', 'fail');
+    },
+
+    showvoucherRoute() {
+      this.$router.push({
+        name: 'Quan'
+      })
+    },
+
+    //获取分享基本信息以及相关权限
+    getBaseConfig() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/sys/getBaseConfigByType",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+          configType: EnumConfigType.RECOGNIZE
+        },
+        success: function(data) {
+          console.log(11111, data);
+          if (data.ret === "0") {
+
+            self.activityAddress = data.activityAddress;
+
+            self.activityTime = data.activityTime;
+            self.caption = data.caption;
+            config.wxShareData.link = config.cdnUrl + '/index.html?actSid=' + userData.actSid + '#/cardmain';
+            // config.wxShareData.link = config.cdnUrl + 'http://1251097942.cdn.myqcloud.com/1251097942/haier/test/index.html#/shoplist';
+            console.log(self.activityTime);
+            //文章标题
+            if (data.title) {
+              document.title = data.title;
+
+            } else {
+              document.title = '认筹活动详情';
+            }
+            //分享标题
+            if (data.shareTitle) {
+              config.wxShareData.title = data.shareTitle;
+            } else {
+              config.wxShareData.title = '超值认筹劵，在不来领就没有了!';
+            }
+
+            //分享详情
+            if (data.shareDesc) {
+              config.wxShareData.desc = data.shareDesc;
+            } else {
+              config.wxShareData.desc = '超值认筹劵，在不来领就没有了!';
+            }
+
+            //分享图片
+            if (data.shareImg) {
+              config.wxShareData.imgUrl = config.imageServerUrl + data.shareImg;
+            } else {
+              config.wxShareData.imgUrl = config.cdnUrl + '/static/share/share5.jpg';
+            }
+
+            // console.log(self.shareImg);
+            getJsSign(function(sign) {
+              wxconfig(sign);
+            })
+            wx.ready(function() {
+
+              wx.onMenuShareTimeline(config.wxShareData);
+              wx.onMenuShareAppMessage(config.wxShareData);
+              wx.onMenuShareQQ(config.wxShareData);
+              wx.onMenuShareWeibo(config.wxShareData);
+              wx.onMenuShareQZone(config.wxShareData);
+              wx.hideMenuItems({
+                menuList: [
+                  'menuItem:openWithQQBrowser', //在QQ浏览器中打开
+                  "menuItem:openWithSafari"
+                ]
+              });
+            });
+
+          } else {
+            //处理接口调用失败
+            self.error('getBaseConfigByType');
+          }
+        },
+        error(res) {
+          self.error('getBaseConfigByType');
+        }
+      });
+    },
+
+
+
+    // banner/getBannerList
+    getBannerList() {
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/banner/getBannerList",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+          location: 'activity_page_custom_module_config',
+          targetType: 'text'
+        },
+        success: function(data) {
+          console.log("22222", data);
+          if (data.ret === "0") {
+            if (data.bannerGrop == null) {
+              self.bannerGrop = [];
+            } else {
+              self.bannerGrop = data.bannerGrop.items;
+            }
+
+
+          } else {
+            //处理接口调用失败
+            self.error('getBannerList');
+          }
+        },
+        error(res) {
+          self.error('getBannerList');
+        }
+      });
+
+    },
+
+    // banner/getProductModuleList
+
+    getProductModuleList() {
+
+      var self = this;
+      $.ajax({
+        url: config.locationUrl + "/banner/getProductModuleList",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+          location: 'activity_page_product_module_config',
+          targetType: 'img'
+        },
+        success: function(data) {
+          console.log("33333", data);
+          if (data.ret === "0") {
+            data.list = data.list || [];
+            data.list.forEach(obj => {
+              obj.items = obj.items || [];
+              obj.items.forEach(item => {
+                item.imgUrl = config.imageServerUrl + item.imgUrl;
+              });
+            });
+            self.list = data.list;
+            console.log(data.list);
+          } else {
+            //处理接口调用失败
+            self.error('getBannerList');
+          }
+        },
+        error(res) {
+          self.error('getBannerList');
+        }
+      });
+    }
+
+
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+
+.head {
+  width: 100%;
+  height: pTR(82);
+  background: url(../../assets/czlImg/indexTitle.jpg) 0 0 no-repeat;
+  background-size: 100%;
+  text-align: center;
+  line-height: pTR(82);
+  font-size: pTR(30);
+  color: #fff;
+  p {
+    width: 80%;
+    margin: 0 auto;
+    height: 100%;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  i {
+    display: inline-block;
+    margin-left: pTR(30);
+  }
+}
+
+.mian {
+  width: 100%;
+  background: url(../../assets/czlImg/indexBg.jpg) 0 0 no-repeat;
+  background-size: 100%;
+  padding: pTR(262) pTR(36) pTR(150);
+  .box {
+    width: pTR(603);
+    height: pTR(208);
+    background: url(../../assets/czlImg/indexBox.png) 0 0 no-repeat;
+    background-size: 100%;
+    text-align: center;
+    color: #fc1a62;
+    font-size: pTR(30);
+    padding-top: pTR(60);
+    margin: 0 auto;
+    p {
+      line-height: pTR(45);
+      width: pTR(450);
+      margin: 0 auto;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+
+  .titleLine {
+    width: pTR(679);
+    height: pTR(144);
+    color: #fff;
+    padding: pTR(20) pTR(25);
+    margin-bottom: pTR(20);
+    .title {
+      font-size: pTR(37);
+      padding: pTR(10) 0;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .text {
+      width: pTR(500);
+      line-height: pTR(35);
+      font-size: pTR(21);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .line1 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine1.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .line2 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine2.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .line3 {
+    width: 100%;
+    background: url(../../assets/czlImg/indexLine3.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+
+  .shopping {
+    width: 100%;
+    padding-bottom: pTR(50);
+    .totle {
+      width: pTR(429);
+      height: pTR(60);
+      background: url(../../assets/czlImg/hotLine.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: pTR(50) auto pTR(45);
+      text-align: center;
+      line-height: pTR(60);
+      color: #f52b3a;
+      font-size: pTR(30);
+      font-weight: bold;
+    }
+    .item {
+      display: flex;
+      width: 100%;
+      height: pTR(266);
+      background: #fff;
+      margin-bottom: pTR(20);
+      padding: pTR(15) pTR(20) pTR(15) pTR(15);
+      .left {
+        width: pTR(235);
+        height: pTR(236);
+        img {
+          width: 100%;
+          height: 100%;
+        }
+      }
+      .right {
+        box-flex: 1;
+        flex: 1;
+        padding: pTR(20) 0 0 pTR(25);
+        position: relative;
+
+        h2 {
+          color: #414141;
+          font-size: pTR(35);
+          line-height: pTR(46);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          width: pTR(350);
+        }
+        .price {
+          position: absolute;
+          bottom: pTR(50);
+          color: #9a9a9a;
+          font-size: pTR(29);
+          i {
+            display: inline-block;
+            text-decoration: line-through;
+          }
+        }
+        .tunprice {
+          position: absolute;
+          bottom: 0;
+          color: #f52b3a;
+          font-size: pTR(29);
+          i {
+            display: inline-block;
+            font-size: pTR(43);
+          }
+        }
+      }
+    }
+  }
+}
+
+.couponBtn {
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+}
+
+.endBox {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  .text {
+    font-size: pTR(35);
+    color: #000;
+    text-align: center;
+    padding-top: pTR(400);
+  }
+}
+
+</style>

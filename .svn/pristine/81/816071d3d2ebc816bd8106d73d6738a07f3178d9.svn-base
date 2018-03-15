@@ -1,0 +1,28 @@
+
+
+
+export default{
+	    //点击阅读文章时候调用
+    readNews(req, cb) {
+            $.ajax({
+                type: "GET",
+                url: config.url + "rss/articleRead",
+                dataType: "jsonp",
+                data: {
+                    openid: user.openid,
+                    articleId: req.id.toString(),
+                    rtype: req.type.toString() //新闻类型: 1-热榜 2-地区 3-阅单 4-个性推荐
+                },
+                success: function(data) {
+
+                    if (data.ret != 1) {
+                        cb && cb('ajax error');
+                    }
+
+                }
+            });
+        },
+
+        
+}
+

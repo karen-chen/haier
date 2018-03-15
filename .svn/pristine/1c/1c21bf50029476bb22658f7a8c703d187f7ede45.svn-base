@@ -1,0 +1,933 @@
+<template>
+  <div class="activeBox">
+    <div class="lotteryBox">
+      <div class="main bounceIn" v-show="mainBox">
+        <img class="picPerson" src="../../assets/czlImg/haierlogo.png">
+        <p class="name">海尔</p>
+        <h2 class="cong">恭喜发财，大吉大利</h2>
+        <!-- [isActive ? activeClass : '', errorClass] -->
+        <div :class="[ open ? 'rubberBand' : '','openBtn']" @click="startDraw"></div>
+        <span class="tips">点击领取红包</span>
+        <i class="icon"></i>
+      </div>
+    </div>
+    <!-- 中奖 -->
+    <div class="wining" v-show="winning">
+      <div class="top">
+        <h2 class="title"></h2>
+        <div class="shopTitle">{{shopName}}</div>
+        <div class="content">{{quanName}}</div>
+        <ul class="listMain">
+          <li class="item">
+            <h2>兑奖时间</h2>
+            <p>2018年01月13日、14日上午10点</p>
+            <img src="../../assets/czlImg/zhong.png">
+          </li>
+          <li class="item">
+            <h2>兑奖地点</h2>
+            <p>成都市青羊区西单商场旁居然之家（金沙店）4楼海尔专卖店</p>
+            <img src="../../assets/czlImg/dz.png">
+          </li>
+        </ul>
+        <div class="jpb" @click="seePakage">查看我的奖品</div>
+        <div class="rule" @click="seeRule">兑换规则</div>
+        <ul class="repeatC">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+      <div class="bottom">本活动最终解释权归海尔电视所有</div>
+    </div>
+    <!-- 未中奖 -->
+    <div class="nowining" v-show="nowinning">
+      <div class="top">
+        <h2 class="title"></h2>
+        <div class="shopTitle">今天来晚了</div>
+        <div class="content">奖品已经被领完啦</div>
+        <div class="mainTxt">明天再来领吧</div>
+        <div class="jpb" @click="seePakage">查看我的奖品</div>
+        <div class="rule" @click="seeRule">兑换规则</div>
+        <ul class="repeatC">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+      <div class="bottom">本活动最终解释权归海尔电视所有</div>
+    </div>
+    <!-- 规则弹框 -->
+    <div class="popBox" v-show="ruleBox">
+      <div class="ruleMain bounceIn">
+        <div class="ruletop">兑换规则</div>
+        <div class="rulebottom">
+          <ul class="itemList">
+            <li>1.活动时间：2017.12.7-2018.1.8；</li>
+            <li>2.在本活动过程中若通过不正当手段获得奖品，一经查实获得的奖品将作废处理；</li>
+            <li>3.在本活动中获得的奖品请到团购会现场奖品兑换区，凭本兑换券二维码核销兑换奖品；</li>
+            <li>4.本活动最终申诉日期为2017年1月9日，逾期不再受理；</li>
+            <li>5.本活动最终解释权在法律规定的范围内归海尔电视所有。</li>
+            <li>1.活动时间：2017.12.7-2018.1.8；</li>
+            <li>2.在本活动过程中若通过不正当手段获得奖品，一经查实获得的奖品将作废处理；</li>
+            <li>3.在本活动中获得的奖品请到团购会现场奖品兑换区，凭本兑换券二维码核销兑换奖品；</li>
+            <li>4.本活动最终申诉日期为2017年1月9日，逾期不再受理；</li>
+            <li>5.本活动最终解释权在法律规定的范围内归海尔电视所有。</li>
+          </ul>
+        </div>
+        <div class="closeBtn" @click="closeRule"></div>
+      </div>
+    </div>
+    <!-- 扫码关注 -->
+    <div class="focus" v-show="focus">
+      <div class="main1">
+        <div class="top">
+          <h2>请长按扫描关注二维码</h2>
+          <p>关注【海尔电视】微信公众号，</p>
+          <p>在<i>我的奖券</i> 中查看、兑换奖品。</p>
+          <img src="../../assets/czlImg/popewm.jpg">
+          <div class="footer">本活动最终解释权归海尔电视所有</div>
+          <ul class="repeatC">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+          </ul>
+        </div>
+        <div class="bottom"></div>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import '@/assets/js/jquery.qrcode.min'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+  splitLink,
+  getParam,
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+      name: '',
+      imgUrl: '',
+      timerStatus: 2,
+      actSid: '',
+      timerSid: '',
+      winning: false,
+      nowinning: false,
+      ruleBox: false,
+      focus: false,
+      mainBox: false,
+      open: false,
+      shopName: '',
+      quanName: '',
+      pageHash: '',
+      entranceNum: '',
+      onoff: true,
+    }
+  },
+  created() {
+
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+    document.title = "领取红包";
+    var _this = this;
+    _this.entranceNum = getParam("entranceNum");
+    _this.pageHash = window.location.hash.substr(2);
+    setTimeout(function() { _this.mainBox = true }, 1000);
+    _this.name = userData.nickname;
+    _this.imgUrl = userData.headimgurl;
+    _this.refreshTimer();
+    $.ajax({
+      url: config.locationUrl + "/visitor_log/addVisitorLog",
+      dataType: "jsonp",
+      data: {
+        actSid: userData.actSid,
+        openid: userData.openid,
+        sourcePage: _this.pageHash,
+        entranceNum: _this.entranceNum,
+        actionType: 1
+      },
+      success: function(data) {
+
+      }
+    });
+  },
+
+  methods: {
+    //抽取时段
+    refreshTimer() {
+      var _this = this;
+      $.ajax({
+        type: "GET",
+        url: config.locationUrl + "/timer/getCurrTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid,
+        },
+        success: function(data) {
+          console.log("after getCurrTimer");
+          console.log(data);
+          if (data.ret == 0) {
+            if (data.timerSid) {
+              _this.timerSid = data.timerSid;
+            }
+            if (data.status == '1') {
+              _this.timerStatus = "0";
+            } else {
+              _this.timerStatus = "10";
+            }
+          } else {
+            _this.timerStatus = data.ret;
+            console.log('getCurrTimer:', 'ret != 0');
+          }
+        },
+        error(res) {
+          console.log('getCurrTimer:', 'fail');
+        }
+      });
+    },
+
+    //开始抽奖 
+    startDraw() {
+
+      var _this = this;
+      _this.open = true;
+      if (!this.onoff) {
+        return
+      }
+
+      if (!_this.timerSid || _this.timerStatus != "0") {
+        // alert("抽奖还未开始，请耐心等待！")
+        setTimeout(function() { _this.nowinning = true; }, 400);
+
+      } else {
+        $.ajax({
+          type: "GET",
+          url: config.locationUrl + "/lottery/draw",
+          dataType: "jsonp",
+          data: {
+            openid: userData.openid,
+            timerSid: _this.timerSid
+          },
+          success: function(data) {
+            console.log(data);
+            if (data.timerPrize) {
+              setTimeout(function() { _this.winning = true; }, 400);
+              _this.shopName = data.timerPrize.merchant.merchantName;
+              _this.quanName = data.timerPrize.resourceName;
+            } else {
+              setTimeout(function() { _this.nowinning = true; }, 400);
+            }
+          },
+        });
+      }
+
+    },
+
+    seeRule() {
+      this.ruleBox = true;
+    },
+    closeRule() {
+      this.ruleBox = false;
+    },
+    seePakage() {
+      if (userData.subscribe == 0) {
+        this.focus = true;
+      } else {
+        // window.location.href = splitLink() + "#/prizeTicket/prizelist";
+        this.$router.push({
+          name: 'Prizelist'
+        })
+      }
+    }
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.activeBox {
+  width: 100%;
+  height: 100%;
+}
+
+.lotteryBox {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  .main {
+    width: pTR(683);
+    height: pTR(906);
+    background: url(../../assets/czlImg/open.png) 0 0 no-repeat;
+    background-size: 100%;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-top: pTR(-453);
+    margin-left: pTR(-341);
+    padding: pTR(117) pTR(126) pTR(80);
+    text-align: center;
+    .picPerson {
+      width: pTR(120);
+      border-radius: pTR(15);
+      border: pTR(3) solid #ffeaad;
+      margin: 0 auto;
+    }
+    .name {
+      padding-top: pTR(20);
+      color: #ebcd9a;
+      font-size: pTR(34);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cong {
+      padding: pTR(60) 0 pTR(55);
+      color: #ebcd9a;
+      font-size: pTR(42);
+    }
+    .openBtn {
+      width: pTR(216);
+      height: pTR(216);
+      background: url(../../assets/czlImg/openBtn.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+    }
+    .rubberBand {
+      animation: rubberBand 1s;
+    }
+    .tips {
+      padding: pTR(40) 0 pTR(76);
+      color: #d4b37b;
+      font-size: pTR(28);
+      display: block;
+    }
+    .icon {
+      display: block;
+      margin: 0 auto;
+      width: pTR(26);
+      height: pTR(28);
+      background: url(../../assets/czlImg/icon.png) 0 0 no-repeat;
+      background-size: 100%;
+    }
+  }
+  .bounceIn {
+    animation: bounceIn 1s;
+  }
+}
+
+.wining {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  .top {
+    width: 100%;
+    box-flex: 1;
+    flex: 1;
+    background: #fff url(../../assets/czlImg/winninigbg.jpg) 0 0 no-repeat;
+    background-size: 100% pTR(442);
+    padding-top: pTR(40);
+    position: relative;
+    .title {
+      width: 100%;
+      height: pTR(34);
+      background: url(../../assets/czlImg/gx.png) center 0 no-repeat;
+      background-size: pTR(310) 100%;
+    }
+    .shopTitle {
+      padding-top: pTR(77);
+      text-align: center;
+      color: #f5d6a0;
+      font-size: pTR(36);
+      width: 80%;
+      margin: 0 auto;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .content {
+      padding-top: pTR(30);
+      text-align: center;
+      color: #f5d6a0;
+      font-size: pTR(46);
+      width: 80%;
+      margin: 0 auto;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .listMain {
+      padding: pTR(200) pTR(25) 0;
+      .item {
+        border-bottom: dotted pTR(3) #f1f1f1;
+        padding: pTR(15) 0;
+        position: relative;
+        h2 {
+          color: #333333;
+          font-size: pTR(32);
+          font-weight: bold;
+          padding: pTR(5) 0 pTR(25) pTR(53);
+        }
+        p {
+          padding-left: pTR(53);
+          font-size: pTR(28);
+          color: #737373;
+          padding: pTR(5) 0 pTR(25) pTR(53);
+          line-height: pTR(50);
+        }
+        img {
+          position: absolute;
+          width: pTR(33);
+          left: 0;
+          top: pTR(15);
+        }
+      }
+    }
+    .jpb {
+      width: pTR(645);
+      height: pTR(106);
+      line-height: pTR(106);
+      text-align: center;
+      background: url(../../assets/czlImg/goBtn.png) 0 0 no-repeat;
+      background-size: 100%;
+      color: #9b7b14;
+      font-size: pTR(36);
+      margin: pTR(30) auto;
+    }
+    .rule {
+      width: 100%;
+      font-size: pTR(30);
+      text-align: center;
+      height: pTR(60);
+      line-height: pTR(60);
+      color: #e45a41;
+      font-weight: bold;
+    }
+    .repeatC {
+      position: absolute;
+      width: 100%;
+      bottom: pTR(-10);
+      left: 0;
+      display: flex;
+      justify-content: space-between;
+      li {
+        width: pTR(20);
+        height: pTR(20);
+        background: #f1f1f1;
+        border-radius: 50%;
+      }
+    }
+  }
+  .bottom {
+    width: 100%;
+    height: pTR(80);
+    background: #f1f1f1;
+    font-size: pTR(24);
+    color: #b1b1b1;
+    text-align: center;
+    line-height: pTR(80);
+  }
+}
+
+.popBox {
+  position: fixed;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.6);
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  .ruleMain {
+    width: pTR(626);
+    height: pTR(800);
+    background: #fff;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-top: pTR(-400);
+    margin-left: pTR(-313);
+    border-radius: pTR(15);
+    .ruletop {
+      width: 100%;
+      height: pTR(113);
+      text-align: center;
+      line-height: pTR(113);
+      color: #4487cd;
+      font-size: pTR(42);
+      font-weight: bold;
+      letter-spacing: pTR(6);
+    }
+    .rulebottom {
+      width: 100%;
+      padding: pTR(30) pTR(58) pTR(90);
+      height: pTR(700);
+      .itemList {
+        width: 100%;
+        height: 100%;
+        overflow-y: scroll;
+        li {
+          padding-bottom: pTR(40);
+          color: #585858;
+          font-size: pTR(28);
+          line-height: pTR(40);
+        }
+      }
+    }
+    .closeBtn {
+      position: absolute;
+      width: pTR(100);
+      height: pTR(100);
+      background: url(../../assets/czlImg/rulePop.png) center center no-repeat;
+      background-size: pTR(29) pTR(29);
+      right: 0;
+      top: 0;
+    }
+  }
+  .bounceIn {
+    animation: bounceIn 1s;
+  }
+}
+
+.nowining {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  .top {
+    width: 100%;
+    box-flex: 1;
+    flex: 1;
+    background: #fff url(../../assets/czlImg/nowinning.jpg) 0 0 no-repeat;
+    background-size: 100% pTR(483);
+    position: relative;
+    .title {
+      width: pTR(197);
+      height: pTR(105);
+      background: url(../../assets/czlImg/smile.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: pTR(90) auto 0;
+    }
+    .shopTitle {
+      padding-top: pTR(30);
+      text-align: center;
+      color: #f5d6a0;
+      font-size: pTR(36);
+      width: 80%;
+      margin: 0 auto;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .content {
+      padding-top: pTR(30);
+      text-align: center;
+      color: #f5d6a0;
+      font-size: pTR(44);
+      width: 80%;
+      margin: 0 auto;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mainTxt {
+      width: 100%;
+      text-align: center;
+      color: #e05e46;
+      font-size: pTR(42);
+      font-weight: bold;
+      padding: pTR(220) 0 pTR(200);
+    }
+    .jpb {
+      display: block;
+      width: pTR(645);
+      height: pTR(106);
+      line-height: pTR(106);
+      text-align: center;
+      background: url(../../assets/czlImg/goBtn.png) 0 0 no-repeat;
+      background-size: 100%;
+      color: #9b7b14;
+      font-size: pTR(36);
+      margin: pTR(30) auto;
+    }
+    .rule {
+      width: 100%;
+      font-size: pTR(30);
+      text-align: center;
+      height: pTR(60);
+      line-height: pTR(60);
+      color: #e45a41;
+      font-weight: bold;
+    }
+    .repeatC {
+      position: absolute;
+      width: 100%;
+      bottom: pTR(-10);
+      left: 0;
+      display: flex;
+      justify-content: space-between;
+      li {
+        width: pTR(20);
+        height: pTR(20);
+        background: #f1f1f1;
+        border-radius: 50%;
+      }
+    }
+  }
+  .bottom {
+    width: 100%;
+    height: pTR(80);
+    line-height:pTR(80);
+    background: #f1f1f1;
+    font-size: pTR(24);
+    color: #b1b1b1;
+    text-align: center;
+  }
+}
+
+@keyframes bounceIn {
+  from,
+  20%,
+  40%,
+  60%,
+  80%,
+  to {
+    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
+  }
+
+  0% {
+    opacity: 0;
+    transform: scale3d(.3, .3, .3);
+  }
+
+  20% {
+    transform: scale3d(1.1, 1.1, 1.1);
+  }
+
+  40% {
+    transform: scale3d(.9, .9, .9);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale3d(1.03, 1.03, 1.03);
+  }
+
+  80% {
+    transform: scale3d(.97, .97, .97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+@keyframes rubberBand {
+  from {
+    transform: scale3d(1, 1, 1);
+  }
+
+  30% {
+    transform: scale3d(1.25, 0.75, 1);
+  }
+
+  40% {
+    transform: scale3d(0.75, 1.25, 1);
+  }
+
+  50% {
+    transform: scale3d(1.15, 0.85, 1);
+  }
+
+  65% {
+    transform: scale3d(.95, 1.05, 1);
+  }
+
+  75% {
+    transform: scale3d(1.05, .95, 1);
+  }
+
+  to {
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.focus {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #f1f1f1;
+  padding: pTR(34) pTR(34) 0;
+  z-index: 9999;
+  .main1 {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .top {
+      width: 100%;
+      box-flex: 1;
+      flex: 1;
+      background: #fff;
+      position: relative;
+      text-align: center;
+      h2 {
+        padding: pTR(88) 0;
+        color: #222222;
+        font-size: pTR(42);
+        font-weight: bold;
+        letter-spacing: pTR(5);
+      }
+      p {
+        color: #676767;
+        font-size: pTR(32);
+        padding-bottom: pTR(20);
+        letter-spacing: pTR(5);
+        i {
+          display: inline-block;
+          color: #ff0000;
+          font-size: pTR(34);
+        }
+      }
+      img {
+        width: pTR(344);
+        height: pTR(344);
+        margin: pTR(60) auto 0;
+      }
+      .repeatC {
+        position: absolute;
+        width: 100%;
+        bottom: pTR(-10);
+        left: 0;
+        display: flex;
+        justify-content: space-between;
+        li {
+          width: pTR(20);
+          height: pTR(20);
+          background: #f1f1f1;
+          border-radius: 50%;
+        }
+      }
+      .footer {
+        position: absolute;
+        width: 100%;
+        bottom: pTR(80);
+        color: #b1b1b1;
+        font-size: pTR(24);
+      }
+    }
+    .bottom {
+      width: 100%;
+      height: pTR(140);
+    }
+  }
+}
+
+
+@media screen and (max-height: 550px) {
+  .wining {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    overflow: scroll;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    .top {
+      width: 100%;
+      background: #fff url(../../assets/czlImg/winninigbg.jpg) 0 0 no-repeat;
+      background-size: 100% pTR(442);
+      padding-top: pTR(40);
+      position: relative;
+      padding-bottom: pTR(20);
+      .title {
+        width: 100%;
+        height: pTR(34);
+        background: url(../../assets/czlImg/gx.png) center 0 no-repeat;
+        background-size: pTR(310) 100%;
+      }
+      .shopTitle {
+        padding-top: pTR(77);
+        text-align: center;
+        color: #f5d6a0;
+        font-size: pTR(36);
+        width: 80%;
+        margin: 0 auto;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .content {
+        padding-top: pTR(30);
+        text-align: center;
+        color: #f5d6a0;
+        font-size: pTR(46);
+        width: 80%;
+        margin: 0 auto;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .listMain {
+        padding: pTR(200) pTR(25) 0;
+        .item {
+          border-bottom: dotted pTR(3) #f1f1f1;
+          padding: pTR(15) 0;
+          position: relative;
+          h2 {
+            color: #333333;
+            font-size: pTR(32);
+            font-weight: bold;
+            padding: pTR(5) 0 pTR(25) pTR(53);
+          }
+          p {
+            padding-left: pTR(53);
+            font-size: pTR(30);
+            color: #737373;
+            padding: pTR(5) 0 pTR(25) pTR(53);
+            line-height: pTR(50);
+          }
+          img {
+            position: absolute;
+            width: pTR(33);
+            left: 0;
+            top: pTR(15);
+          }
+        }
+      }
+      .jpb {
+        width: pTR(645);
+        height: pTR(106);
+        line-height: pTR(106);
+        text-align: center;
+        background: url(../../assets/czlImg/goBtn.png) 0 0 no-repeat;
+        background-size: 100%;
+        color: #9b7b14;
+        font-size: pTR(36);
+        margin: pTR(30) auto;
+      }
+      .rule {
+        width: 100%;
+        font-size: pTR(30);
+        text-align: center;
+        height: pTR(60);
+        line-height: pTR(60);
+        color: #e45a41;
+        font-weight: bold;
+      }
+      .repeatC {
+        position: absolute;
+        width: 100%;
+        bottom: pTR(-10);
+        left: 0;
+        display: flex;
+        justify-content: space-between;
+        li {
+          width: pTR(20);
+          height: pTR(20);
+          background: #f1f1f1;
+          border-radius: 50%;
+        }
+      }
+    }
+    .bottom {
+      width: 100%;
+      height: pTR(80);
+      background: #f1f1f1;
+      font-size: pTR(24);
+      color: #b1b1b1;
+      text-align: center;
+      line-height: pTR(80);
+    }
+  }
+}
+
+</style>

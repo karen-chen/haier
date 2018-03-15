@@ -1,0 +1,141 @@
+<template>
+  <div class="focus">
+    <div class="main">
+      <div class="top">
+        <h2>请长按扫描关注二维码</h2>
+        <p>关注【海尔电视】微信公众号，</p>
+        <p>在<i>我的奖券</i> 中查看、兑换奖品。</p>
+         <img src="../../assets/czlImg/popewm.png">
+        <div class="footer">本活动最终解释权归海尔电视所有</div>
+        <ul class="repeatC">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+      <div class="bottom"></div>
+    </div>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig
+} from '@/lib/tools';
+
+export default {
+  data() {
+    return {
+
+    }
+  },
+
+  created() {
+
+
+  },
+
+  methods: {
+    //拉取时段 是否可以抽奖
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../../assets/scss/_mixins.scss';
+.focus {
+  width: 100%;
+  height: 100%;
+  background: #f1f1f1;
+  padding: pTR(34) pTR(34) 0;
+  .main {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .top {
+      width: 100%;
+      box-flex: 1;
+      flex: 1;
+      background: #fff;
+      position: relative;
+      text-align:center;
+      h2{
+        padding:pTR(88) 0;
+        color:#222222;
+        font-size:pTR(32);
+        font-weight: bold;
+        letter-spacing: pTR(5);
+      }
+      p{
+        color:#676767;
+        font-size:pTR(24);
+        padding-bottom:pTR(20);
+         letter-spacing: pTR(5);
+        i{
+          display: inline-block;
+          color:#ff0000;
+          font-size:pTR(26);
+        }
+      }
+      img{
+        width:pTR(344);
+        height:pTR(344);
+        margin:pTR(60) auto 0;
+      }
+      .repeatC {
+        position: absolute;
+        width: 100%;
+        bottom: pTR(-10);
+        left: 0;
+        display: flex;
+        justify-content: space-between;
+        li {
+          width: pTR(20);
+          height: pTR(20);
+          background: #f1f1f1;
+          border-radius: 50%;
+        }
+      }
+      .footer{
+        position:absolute;
+        width:100%;
+        bottom:pTR(80);
+        color:#b1b1b1;
+        font-size:pTR(18);
+      }
+    }
+    .bottom {
+      width: 100%;
+      height: pTR(140);
+    }
+  }
+}
+
+</style>

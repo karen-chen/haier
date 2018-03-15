@@ -1,0 +1,96 @@
+<template>
+  <div id="app">
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+
+import {
+    wxChankeAuthorize,
+    userData
+} from '@/lib/tools';
+
+export default {
+  name: 'app',
+  created(){
+      if(wxChankeAuthorize()){
+              //判断页面路由跳转
+        this.toPage(window.location.hash.substr(2));
+      }
+
+  },
+  methods:{
+      toPage(page){
+        // console.log(111,userData.hash)
+          switch(page){
+            //陈紫菱路由页面跳转
+              case 'cardmain': //buyCard/main
+              this.$router.push('/buyCard/main')
+              break;
+              case 'prizelist': //prizeTicket/quanlist
+              this.$router.push('/prizeTicket/prizelist')
+              break;
+              case 'quanlist': //prizeTicket/quanlist
+              this.$router.push('/confessTicket/quanlist')
+              break;
+              case 'livemain': //VenueLive/livemain
+              this.$router.push('/VenueLive/livemain')
+              break;
+              case 'navigationstrat': //VenueNavigation/navigationstrat
+              this.$router.push('/VenueNavigation/navigationstrat')
+              break;
+              case 'prizeCode': //VenueNavigation/navigationstrat
+              this.$router.push('/prizeTicket/PrizeCode')
+              break;
+              case 'verificationcode': //VenueNavigation/navigationstrat
+              this.$router.push('/confessTicket/verificationcode')
+              break;
+
+            //陈红路由页面跳转
+             case 'shoplist': //shop-list/shop
+              this.$router.push('/shop-list/shop')
+              break;
+
+              case 'shake': //ConfessTicket/Quanlist
+
+              this.$router.push('/shake/countmobile')
+              break;
+
+              case 'survey': //survey/survey
+              this.$router.push('/survey/survey')
+              break;
+
+              case 'coupon': //VenueLive/livemain
+              this.$router.push('/generating-coupon/information')
+              break;
+
+              case 'draw': //draw/draw
+                this.$router.push('/draw')
+              break;
+
+              case 'flow': //draw/draw
+              this.$router.push('/flow')
+              break;
+              default:
+              this.$router.push('/' + page)
+
+          }
+      }
+  }
+
+}
+
+
+</script>
+
+<style>
+ @import './assets/scss/_reset.scss';
+  #app{
+   width:100%;
+   height:100%;
+  }
+  .body{
+    height:100%;
+  }
+</style>

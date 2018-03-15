@@ -1,0 +1,762 @@
+<template>
+  <div class="runphone">
+    <!-- shake -->
+    <div :class="[ shakeBox? 'shake' : '','countBox']" v-show="countBox">
+      <div class="title"></div>
+      <div class="cycBg">
+        <div class="hand"></div>
+        <div class="totleNum" v-show="personNum">已有 <span>{{amount}}</span> 人加入</div>
+        <div class="tan1"></div>
+        <div class="tan2"></div>
+      </div>
+      <div class="status">{{message}}</div>
+      <div class="textBox">
+        <div class="txt"></div>
+      </div>
+    </div>
+    <!-- 倒计时 -->
+    <div class="countdown" v-show="countdown">
+      <div class="head">
+        <span></span>
+      </div>
+      <div class="numbox">{{leftInMs}}</div>
+    </div>
+    <!-- 已经中过奖 -->
+    <div class="countend" v-show="countend">
+      <img class="headPic" :src="myPic">
+      <div class="personname">{{personname}}</div>
+      <div class="status">{{message}}</div>
+      <div class="tips">留点机会给别人吧 (^_^)...</div>
+      <div class="retunBtn"></div>
+    </div>
+    <!--摇奖结束排行榜-->
+    <div class="rankbox" v-show="rankbox">
+      <div class="ranktitle">
+        <h2>本轮比赛排行榜</h2>
+        <p>参与人数{{amount}}人</p>
+      </div>
+      <div class="myrank">
+        <div class="myname"><img class="img" :src="myPic">{{personname}}</div>
+        <div class="topnum">第{{myindex}}名</div>
+      </div>
+      <ul class="ranklist">
+        <li class="rankItem" v-for="item in ranklist" :key="index">
+          <div class="num">index</div>
+          <div class="mydetail">
+            <div class="persondetail">
+              <img class="left" :src="item.user.head">
+              <div class="right">{{item.user.nickname}}</div>
+            </div>
+          </div>
+          <div class="star1" v-show="index == 1"></div>
+          <div class="star2" v-show="index == 2"></div>
+          <div class="star3" v-show="index == 3"></div>
+        </li>
+      </ul>
+      <div class="canyu"><span>本次参与{{amount}}人</span></div>
+    </div>
+    <audio id="voice_ding" src="static/voice/ding.mp3" style="display: none"></audio>
+    <audio id="voice_kaka" src="static/voice/kaka.mp3" style="display: none"></audio>
+  </div>
+</template>
+<script>
+import * as config from '@/lib/config'
+import * as shake from '@/assets/js/jquery.shake'
+import {
+  formatDate,
+  userData,
+  EnumConfigType,
+  ShareInfo,
+  getJsSign,
+  wxconfig,
+} from '@/lib/tools';
+export default {
+  data() {
+    return {
+      countBox: true,
+      countdown: false,
+      countend: false,
+      rankbox: false,
+      personNum: false,
+      timerSid: null,
+      flagStatus: 0,
+      message: '等待主持人开启比赛',
+      shakeBox: false,
+      leftInMs: -1,
+      t_countdown: null,
+      personname: '',
+      shakenum: 0,
+      amount: 0,
+      myindex: 0,
+      myPic: '',
+      ranklist: [],
+      Contshaking: null
+    }
+  },
+  created() {
+    var _this = this;
+    console.log(userData.actSid);
+
+    //摇计数
+    let u = navigator.userAgent,
+      app = navigator.appVersion;
+    let isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+    let shakeSpeed = 30;
+    let timedif = 60;
+    if (isiOS) {
+      timedif = 10;
+      shakeSpeed = 8;
+    }
+    $(document).shake({
+      shake_speed: shakeSpeed,
+      time_difference: timedif,
+      shakeAfter: function() {
+        _this.doShake();
+      }
+    });
+
+
+    _this.personname = userData.nickname;
+    _this.myPic = userData.headimgurl;
+    var Period = setInterval(function() {
+      _this.ReadySpeedTimer()
+    }, 2000)
+
+    //订单ID
+    document.title = "摇一摇拼手速";
+    //拒绝分享
+    getJsSign(function(sign) {
+      wxconfig(sign);
+    })
+    wx.ready(function() {
+      wx.hideAllNonBaseMenuItem();
+    });
+
+    var self = this;
+    //接口传参的数据需要存储在本地缓存
+    // console.log(111, this.cardOrderId)
+  },
+
+  methods: {
+    // 准备时段
+    ReadySpeedTimer() {
+      var _this = this;
+      $.ajax({
+        url: config.locationUrl + "/timer/checkSpeedTimer",
+        dataType: "jsonp",
+        data: {
+          actSid: userData.actSid
+        },
+        success: function(data) {
+            var data0=data;
+          if (data.ret === "0") {
+            _this.timerSid = data.timerSid;
+
+                //判断用户是否有参与资格
+            _this.addParticipant(function(data){
+              if (data.ret == 0) {
+                _this.amount = data.amount;
+
+                //有资格参与
+                _this.permission(data0);
+              }
+              else if (data.ret == -1) {
+                _this.personNum = false;
+                _this.countBox = false;
+                _this.countdown = false;
+                _this.countend = true;
+                _this.rankbox = false;
+                _this.message = "当前用户不存在";
+              }
+              else if (data.ret == -2) {
+                _this.personNum = false;
+                _this.countBox = false;
+                _this.countdown = false;
+                _this.countend = true;
+                _this.rankbox = false;
+                _this.message = "你已经中过奖了 留点机会给别人吧";
+              }
+            });
+
+
+          }
+          if (data.ret === "-1") {
+            _this.message = "等待主持人开启比赛"
+          }
+          if (data.ret === "-2") {
+            if (_this.timerSid) {
+              //活动已经结束 调出排行榜
+              clearInterval(_this.Contshaking);
+              _this.countBox = false;
+              _this.countdown = false;
+              _this.countend = false;
+              _this.rankbox = true;
+              _this.getmyRank();
+              _this.getRankList();
+            } else {
+              _this.personNum = false;
+              _this.message = "等待主持人开启比赛"
+            }
+          }
+        }
+      });
+    },
+
+    //有资格参赛
+    permission(data){
+      var _this=this;
+      if (data.flagStatus == '2') {
+        console.log(131313);
+        _this.personNum = true;
+        _this.message = "注意！比赛马上开始";
+      }
+      else if(data.flagStatus == '3') {
+          if( _this.leftInMs ==-1) {
+            _this.leftInMs = Math.floor(data.leftInMs / 1000);
+            _this.countdown = true;
+            _this.t_countdown = setInterval(function() {
+              if (_this.leftInMs < 1) {
+                _this.toShake();
+              }
+              _this.leftInMs--
+            }, 1000);
+            console.log(123123123);
+          }
+        else if(_this.leftInMs <= 0){
+          _this.personNum = false;
+          _this.countBox = false;
+          _this.countdown = false;
+          _this.countend = true;
+          _this.rankbox = false;
+          _this.message = "比赛已开始，待参与下一轮吧";
+        }
+      }
+    },
+
+    //准备开始 出现钉的声音
+    toShake() {
+      var _this = this;
+      console.log(4564561465);
+      clearInterval(_this.t_countdown);
+      _this.countBox=true;
+      _this.shakeBox = true;
+      _this.countend = false;
+      _this.countdown = false;
+      _this.message = "快速摇动手机，不要停";
+      document.getElementById("voice_ding").play();
+    },
+    //摇并且计数
+    doShake() {
+      var _this = this;
+      if (!_this.shakeBox) {
+        return;
+      }
+      _this.shakenum++;
+      _this.Contshaking = setInterval(function() {
+        if (shakenum > 1) {
+          _this.addShake()
+        }
+      }, 2000)
+
+      if (typeof WeixinJSBridge == "object" && typeof WeixinJSBridge.invoke == "function") {
+        WeixinJSBridge.invoke('getNetworkType', {}, function(res) {
+          document.getElementById("voice_kaka").play();
+
+        });
+      }
+    },
+
+    //判断用户是否有参与资格
+    addParticipant(cb) {
+      var _this=this;
+      $.ajax({
+        url: config.locationUrl + "/speed_act/addParticipant",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid,
+          openid: userData.openid,
+          actSid: userData.actSid
+        },
+        success: function(data) {
+          cb && cb(data);
+        },
+      });
+    },
+
+    //我的排行榜
+    getmyRank() {
+      $.ajax({
+        url: config.locationUrl + "/speed_act/getRank",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid,
+          openid: userData.openid,
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            _this.amount = data.data.amount;
+          }
+          if (data.ret == -1) {
+            _this.personNum = false;
+            _this.countBox = false;
+            _this.countdown = false;
+            _this.countend = true;
+            _this.rankbox = false;
+            _this.message = "当前用户不存在";
+          }
+          if (data.ret == -2) {
+            _this.personNum = false;
+            _this.countBox = false;
+            _this.countdown = false;
+            _this.countend = true;
+            _this.rankbox = false;
+            _this.message = "你已经中过奖了 留点机会给别人吧";
+          }
+        },
+      });
+    },
+
+    //所有参与人排行
+    getRankList() {
+      var _this = this;
+      $.ajax({
+        url: config.locationUrl + "/speed_act/getRankList ",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid,
+          openid: userData.openid,
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+            _this.ranklist = data.data.rank
+          }
+        },
+      });
+    },
+
+
+    //摇动的时候 添加次数
+    addShake() {
+      var _this = this;
+      $.ajax({
+        url: config.locationUrl + "/speed_act/addShake",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid,
+          openid: userData.openid,
+          count: _this.shakenum
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+
+          }
+        },
+      });
+    },
+
+
+    //进入参与人数+1
+    getParticipantAmount() {
+      var _this = this;
+      $.ajax({
+        url: config.locationUrl + "/speed_act/getParticipantAmount",
+        dataType: "jsonp",
+        data: {
+          timerSid: _this.timerSid,
+        },
+        success: function(data) {
+          if (data.ret == 0) {
+
+          }
+        },
+      });
+    },
+
+  }
+}
+
+</script>
+<style lang="scss" scoped>
+@import '../assets/scss/_mixins.scss';
+
+.runphone {
+  font-family: Adobe 黑体 Std;
+  width: 100%;
+  height: 100%;
+  .countBox {
+    padding-top: pTR(30);
+    width: 100%;
+    min-height: 100%;
+    background: url(../assets/czlImg/phonebg.jpg) center center no-repeat;
+    background-size: cover;
+    .title {
+      width: pTR(601);
+      height: pTR(180);
+      background: url(../assets/czlImg/title.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+    }
+    .cycBg {
+      width: pTR(691);
+      height: pTR(691);
+      background: url(../assets/czlImg/handbg.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+      position: relative;
+      .hand {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        margin-top: pTR(-300);
+        margin-left: pTR(-230);
+        width: pTR(443);
+        height: pTR(542);
+        background: url(../assets/czlImg/hand.png) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .totleNum {
+        position: absolute;
+        left: 50%;
+        bottom: pTR(-20);
+        margin-left: pTR(-287);
+        width: pTR(575);
+        height: pTR(99);
+        background: url(../assets/czlImg/gift.png) 0 0 no-repeat;
+        background-size: 100%;
+        text-align: center;
+        line-height: pTR(70);
+        color: #d84046;
+        font-size: pTR(38);
+        color: #836d27;
+        display: block;
+        span {
+          color: #d84046;
+        }
+      }
+      .tan1 {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: pTR(203);
+        height: pTR(220);
+        background: url(../assets/czlImg/tan1.png) 0 0 no-repeat;
+        background-size: 100%;
+        display: none;
+      }
+      .tan2 {
+        right: 0;
+        bottom: 0;
+        position: absolute;
+        width: pTR(198);
+        height: pTR(225);
+        background: url(../assets/czlImg/tan2.png) 0 0 no-repeat;
+        background-size: 100%;
+        display: none;
+      }
+    }
+  }
+
+
+  .shake {
+    width: 100%;
+    min-height: 100%;
+    background: url(../assets/czlImg/phonebg.jpg) center center no-repeat;
+    background-size: cover;
+    .cycBg {
+      .totleNum {
+        display: none;
+      }
+      .tan1 {
+        display: block;
+      }
+      .tan2 {
+        display: block;
+      }
+    }
+  }
+
+  .status {
+    width: pTR(488);
+    height: pTR(100);
+    line-height: pTR(100);
+    background: url(../assets/czlImg/txtbox.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin: pTR(50) auto;
+    position: relative;
+    text-align: center;
+    color: #fffbcc;
+    font-size: pTR(36);
+  }
+  .textBox {
+    padding-bottom: pTR(30);
+  }
+  .txt {
+    width: pTR(461);
+    height: pTR(34);
+    background: url(../assets/czlImg/phonetxt.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin: 0 auto;
+    position: relative;
+  }
+  .txt:before {
+    content: '';
+    position: absolute;
+    left: pTR(-80);
+    top: 50%;
+    margin-top: pTR(-3);
+    width: pTR(59);
+    height: pTR(6);
+    background: url(../assets/czlImg/rankline1.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+  .txt:after {
+    content: '';
+    position: absolute;
+    right: pTR(-80);
+    top: 50%;
+    margin-top: pTR(-3);
+    width: pTR(59);
+    height: pTR(6);
+    background: url(../assets/czlImg/rankline2.png) 0 0 no-repeat;
+    background-size: 100%;
+  }
+}
+
+
+.countdown {
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100%;
+  z-index: 99;
+  .head {
+    padding: pTR(230) 0 pTR(30);
+    span {
+      display: block;
+      width: pTR(459);
+      height: pTR(64);
+      background: url(../assets/czlImg/countdown.png) 0 0 no-repeat;
+      background-size: 100%;
+      margin: 0 auto;
+      position: relative;
+    }
+  }
+  .numbox {
+    display: block;
+    width: pTR(429);
+    height: pTR(429);
+    background: url(../assets/czlImg/countBg.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #f3efb1;
+    font-size: pTR(280);
+  }
+}
+
+.countend {
+  width: 100%;
+  min-height: 100%;
+  background: url(../assets/czlImg/phonebg.jpg) center center no-repeat;
+  background-size: cover;
+  padding-top: pTR(170);
+  .headPic {
+    width: pTR(174);
+    height: pTR(174);
+    border-radius: 50%;
+    margin: 0 auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .personname {
+    padding: pTR(20) 0 pTR(80);
+    text-align: center;
+    color: #fff;
+    font-size: pTR(32);
+  }
+  .tips {
+    text-align: center;
+    color: #fffbcc;
+    font-size: pTR(33);
+  }
+  .retunBtn {
+    width: pTR(365);
+    height: pTR(86);
+    background: url(../assets/czlImg/returnwx.png) 0 0 no-repeat;
+    background-size: 100%;
+    margin: pTR(270) auto 0;
+  }
+}
+
+.rankbox {
+  width: 100%;
+  min-height: 100%;
+  background: #f1f1f1 url(../assets/czlImg/rankhead.jpg) 0 0 no-repeat;
+  background-size: 100% pTR(286);
+  .ranktitle {
+    width: 100%;
+    height: pTR(286);
+    background: #f1f1f1 url(../assets/czlImg/rankhead.jpg) 0 0 no-repeat;
+    background-size: 100%;
+    padding: pTR(100) pTR(80) 0;
+    h2 {
+      padding: pTR(10) 0;
+      color: #fff;
+      font-size: pTR(46);
+    }
+    p {
+      padding: pTR(10) 0;
+      color: #fff;
+      font-size: pTR(26);
+    }
+  }
+  .myrank {
+    height: pTR(100);
+    background: #fff;
+    padding: 0 pTR(25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .myname {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      color: #5d5d5d;
+      font-size: pTR(30);
+      .img {
+        width: pTR(80);
+        height: pTR(80);
+        border-radius: 50%;
+        border: #e5e5e5 solid pTR(4);
+        margin-right: pTR(15);
+      }
+    }
+    .topnum {
+      color: #f22e1f;
+      font-size: pTR(28);
+    }
+  }
+
+  .ranklist {
+    padding-top: pTR(20);
+    .rankItem {
+      padding: 0 pTR(25);
+      background: #fff;
+      border: pTR(2) solid #f1f1f1;
+      height: pTR(120);
+      display: flex;
+      align-items: center;
+      position: relative;
+      .num {
+        width: pTR(50);
+        height: pTR(50);
+        border-radius: 50%;
+        background: #e5e5e5;
+        text-align: center;
+        line-height: pTR(50);
+        color: #7a7a7a;
+        font-size: pTR(24);
+      }
+      .mydetail {
+        flex: 1;
+        -webkit-box-flex: 1;
+        -o-box-flex: 1;
+        -moz-box-flex: 1;
+        height: 100%;
+        .persondetail {
+          padding-left: pTR(20);
+          display: flex;
+          height: 100%;
+          align-items: center;
+          .left {
+            width: pTR(80);
+            height: pTR(80);
+            border-radius: 50%;
+            border: #e5e5e5 solid pTR(4);
+            margin-right: pTR(15);
+          }
+
+          .right {
+            color: #5d5d5d;
+            font-size: pTR(30);
+            max-width: pTR(300);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+      .star1 {
+        position: absolute;
+        right: pTR(25);
+        top: 50%;
+        transform: translateY(-50%);
+        width: pTR(197);
+        height: pTR(50);
+        background: #f1f1f1 url(../assets/czlImg/num1.jpg) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .star2 {
+        position: absolute;
+        right: pTR(25);
+        top: 50%;
+        transform: translateY(-50%);
+        width: pTR(144);
+        height: pTR(53);
+        background: #f1f1f1 url(../assets/czlImg/num2.jpg) 0 0 no-repeat;
+        background-size: 100%;
+      }
+      .star3 {
+        position: absolute;
+        right: pTR(25);
+        top: 50%;
+        transform: translateY(-50%);
+        width: pTR(97);
+        height: pTR(50);
+        background: #f1f1f1 url(../assets/czlImg/num3.jpg) 0 0 no-repeat;
+        background-size: 100%;
+      }
+    }
+  }
+
+  .canyu {
+    text-align: center;
+    span {
+      height: pTR(100);
+      line-height: pTR(100);
+      display: inline-block;
+      color: #8c8c8c;
+      font-size: pTR(26);
+      position: relative;
+    }
+    span:before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      left: pTR(-150);
+      width: pTR(100);
+      height: pTR(2);
+      background: #d9d9d9;
+    }
+    span:after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: pTR(-150);
+      width: pTR(100);
+      height: pTR(2);
+      background: #d9d9d9;
+    }
+  }
+}
+
+</style>
