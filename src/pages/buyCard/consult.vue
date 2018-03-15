@@ -11,7 +11,6 @@
         <div class="mabox">
           <img :src="consultImg">
         </div>
-        <div class="" @click="onoff"></div>
       </div>
     </div>
   </div>
@@ -103,9 +102,6 @@ export default {
 
     retrunBack() {
       this.$router.go(-1);
-    },
-    onoff(){
-      
     }
   }
 

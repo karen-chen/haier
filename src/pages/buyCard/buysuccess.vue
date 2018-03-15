@@ -23,6 +23,7 @@
       </li>
     </ul>
     <div class="successBtn" @click="showQuanList">查看认筹券包</div>
+    <div></div>
     <div class="successBtn MemberBtn" @click="showMembershipcard" v-show="successBtn">领取会员卡</div>
     <!--关注公众号弹框-->
     <!-- <div class="pop_mask" v-show="showGzh" pop_code.jpg id="codeBox"> -->
